@@ -22,9 +22,9 @@
 
 ## Fase 4: Payment Service & Automation
 
-- [ ] 4.1 Buat `payment-service` (Port 3002) untuk generate Midtrans Snap Token (`POST /checkout`) & insert ke tabel `transactions`.
-- [ ] 4.2 Setup ngrok di port 3000 dan routing Webhook di `api-gateway` (`/api/payments/webhook`) menuju `payment-service`.
-- [ ] 4.3 Buat sistem komunikasi internal: Saat Webhook sukses di `payment-service`, kirim internal HTTP request ke `provisioning-service` untuk men-trigger pembuatan container Docker.
+- [x] 4.1 Buat `payment-service` (Port 3002) untuk generate Midtrans Snap Token (`POST /checkout`) & insert ke tabel `transactions`.
+- [x] 4.2 Setup ngrok di port 3000 dan routing Webhook di `api-gateway` (`/api/payments/webhook`) menuju `payment-service`.
+- [x] 4.3 Buat sistem komunikasi internal: Saat Webhook sukses di `payment-service`, kirim internal HTTP request ke `provisioning-service` untuk men-trigger pembuatan container Docker.
 
 ## Fase 5: Frontend Dashboard
 

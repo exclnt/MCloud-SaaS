@@ -5,8 +5,7 @@ const PORT = 3000;
 const routes = {
   '/api/auth': { targetHost: 'localhost', targetPort: 3001, stripPrefix: '/api/auth' },
   '/api/servers': { targetHost: 'localhost', targetPort: 3003, stripPrefix: '/api/servers' },
-  // Future routes:
-  // '/api/payments': { targetHost: 'localhost', targetPort: 3002, stripPrefix: '/api/payments' },
+  '/api/payments': { targetHost: 'localhost', targetPort: 3002, stripPrefix: '/api/payments' },
 };
 
 const server = http.createServer((req, res) => {
