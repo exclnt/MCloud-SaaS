@@ -28,9 +28,9 @@
 
 ## Fase 5: Frontend Dashboard
 
-- [ ] 5.1 Bikin UI Login & Register (konek ke `http://localhost:3000/api/auth`).
-- [ ] 5.2 Bikin UI Dashboard List Server & Kontrol (konek ke `http://localhost:3000/api/servers`).
-- [ ] 5.3 Bikin UI Checkout & Integrasi Snap Midtrans (konek ke `http://localhost:3000/api/checkout`).
+- [x] 5.1 Bikin UI Login & Register (konek ke `http://localhost:3000/api/auth`).
+- [x] 5.2 Bikin UI Dashboard List Server & Kontrol (konek ke `http://localhost:3000/api/servers`).
+- [x] 5.3 Bikin UI Checkout & Integrasi Snap Midtrans (konek ke `http://localhost:3000/api/checkout`).
 
 ## Fase 6: Final E2E Test Lokal
 
