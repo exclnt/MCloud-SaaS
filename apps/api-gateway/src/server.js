@@ -4,8 +4,8 @@ const PORT = 3000;
 
 const routes = {
   '/api/auth': { targetHost: 'localhost', targetPort: 3001, stripPrefix: '/api/auth' },
+  '/api/servers': { targetHost: 'localhost', targetPort: 3003, stripPrefix: '/api/servers' },
   // Future routes:
-  // '/api/servers': { targetHost: 'localhost', targetPort: 3003, stripPrefix: '/api/servers' },
   // '/api/payments': { targetHost: 'localhost', targetPort: 3002, stripPrefix: '/api/payments' },
 };
 

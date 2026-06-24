@@ -16,9 +16,9 @@
 
 ## Fase 3: Provisioning Service (Docker)
 
-- [ ] 3.1 Buat `provisioning-service` (Port 3003) dengan `child_process.exec` untuk _run/stop/restart_ Docker.
-- [ ] 3.2 Bikin logika _auto-assign_ UDP Port (cek port terakhir via Drizzle ORM) pada `provisioning-service`.
-- [ ] 3.3 Tambahkan _routing_ `/api/servers` di `api-gateway` untuk diteruskan ke `provisioning-service`.
+- [x] 3.1 Buat `provisioning-service` (Port 3003) dengan `child_process.exec` untuk _run/stop/restart_ Docker.
+- [x] 3.2 Bikin logika _auto-assign_ UDP Port (cek port terakhir via Drizzle ORM) pada `provisioning-service`.
+- [x] 3.3 Tambahkan _routing_ `/api/servers` di `api-gateway` untuk diteruskan ke `provisioning-service`.
 
 ## Fase 4: Payment Service & Automation
 
