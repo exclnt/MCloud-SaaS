@@ -10,9 +10,9 @@
 
 ## Fase 2: API Gateway & Auth Service
 
-- [ ] 2.1 Buat `auth-service` (Port 3001) dengan Native HTTP untuk Register, Login, & JWT. Konek ke `sqlite.db` via Drizzle.
-- [ ] 2.2 Buat `api-gateway` (Port 3000) sebagai _reverse proxy_ manual yang meneruskan _request_ `/api/auth` ke `auth-service`.
-- [ ] 2.3 Tes _flow_ Register & Login via API Gateway (Postman / cURL).
+- [x] 2.1 Buat `auth-service` (Port 3001) dengan Native HTTP untuk Register, Login, & JWT. Konek ke `sqlite.db` via Drizzle.
+- [x] 2.2 Buat `api-gateway` (Port 3000) sebagai _reverse proxy_ manual yang meneruskan _request_ `/api/auth` ke `auth-service`.
+- [x] 2.3 Tes _flow_ Register & Login via API Gateway (Postman / cURL).
 
 ## Fase 3: Provisioning Service (Docker)
 
