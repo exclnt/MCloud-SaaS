@@ -34,5 +34,5 @@
 
 ## Fase 6: Final E2E Test Lokal
 
-- [ ] 6.1 Jalankan `npm run dev` dari _root_ untuk menyalakan API Gateway, semua Microservices, dan Frontend secara bersamaan.
-- [ ] 6.2 Test Full Flow: Register -> Beli -> Simulasi bayar Midtrans -> Webhook ngrok -> Docker nyala -> Main Minecraft via `127.0.0.1:PORT_DINAMIS`.
+- [x] 6.1 Jalankan `npm run dev` dari _root_ untuk menyalakan API Gateway, semua Microservices, dan Frontend secara bersamaan.
+- [x] 6.2 Test Full Flow: Register -> Beli -> Simulasi bayar Midtrans -> Webhook ngrok -> Docker nyala -> Main Minecraft via `127.0.0.1:PORT_DINAMIS`.
