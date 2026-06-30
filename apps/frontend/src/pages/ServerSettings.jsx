@@ -70,7 +70,7 @@ export default function ServerSettings() {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
+    <div className="w-full px-4 sm:px-8 py-4 sm:py-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
       <div>
         <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
           <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
@@ -125,7 +125,7 @@ export default function ServerSettings() {
           </div>
 
           {/* Visibility */}
-          <div className="bg-[#101010] border border-zinc-800/60 rounded-xl p-6 flex items-center justify-between">
+          <div className="bg-[#101010] border border-zinc-800/60 rounded-xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h3 className="text-base font-bold text-white mb-1">Visibilitas</h3>
               <p className="text-xs text-zinc-500 mb-2">Server Anda dapat dilihat oleh siapa saja yang menelusuri daftar server</p>

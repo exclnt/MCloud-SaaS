@@ -78,7 +78,7 @@ export default function ServerPlayers() {
   }
 
   return (
-    <div className="p-6 md:p-10 max-w-5xl mx-auto animate-fade-in">
+    <div className="w-full px-4 sm:px-6 md:px-10 py-6 md:py-10 max-w-5xl mx-auto animate-fade-in">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">Manajemen Pemain</h1>

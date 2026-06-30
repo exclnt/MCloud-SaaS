@@ -15,7 +15,7 @@ export default function Footer() {
         </p>
       </div>
       
-      <div className="grid grid-cols-3 gap-12 flex-1">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 md:gap-12 flex-1 mt-8 md:mt-0">
         <div>
           <h4 className="font-bold text-xs text-white uppercase mb-4 tracking-wider">Layanan</h4>
           <ul className="space-y-3 text-xs text-zinc-500">

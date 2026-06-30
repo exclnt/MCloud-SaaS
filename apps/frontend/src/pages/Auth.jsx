@@ -76,7 +76,7 @@ export default function Auth() {
       <div className="relative w-full max-w-4xl h-[550px] bg-[#0a0a0a] rounded-xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-zinc-800 flex">
         
         {/* ================= REGISTER FORM (LEFT) ================= */}
-        <div className={`absolute top-0 left-0 w-1/2 h-full p-8 flex flex-col justify-center transition-all duration-1000 ease-in-out z-10 ${isLogin ? 'opacity-0 pointer-events-none -translate-x-[20%]' : 'opacity-100 translate-x-0 delay-200'}`}>
+        <div className={`absolute top-0 left-0 w-full md:w-1/2 h-full p-6 md:p-8 flex flex-col justify-center transition-all duration-1000 ease-in-out z-10 ${isLogin ? 'opacity-0 pointer-events-none md:-translate-x-[20%] scale-95 md:scale-100' : 'opacity-100 translate-x-0 scale-100 delay-200'}`}>
           <div className="max-w-sm mx-auto w-full">
             <h2 className="text-3xl font-extrabold mb-2 text-white">Buat Akun</h2>
             <p className="text-sm text-zinc-400 mb-6">Bergabunglah dengan MCloud untuk hosting duniamu.</p>
@@ -126,7 +126,7 @@ export default function Auth() {
         </div>
 
         {/* ================= LOGIN FORM (RIGHT) ================= */}
-        <div className={`absolute top-0 right-0 w-1/2 h-full p-8 flex flex-col justify-center transition-all duration-1000 ease-in-out z-10 ${!isLogin ? 'opacity-0 pointer-events-none translate-x-[20%]' : 'opacity-100 translate-x-0 delay-200'}`}>
+        <div className={`absolute top-0 md:right-0 left-0 md:left-auto w-full md:w-1/2 h-full p-6 md:p-8 flex flex-col justify-center transition-all duration-1000 ease-in-out z-10 ${!isLogin ? 'opacity-0 pointer-events-none md:translate-x-[20%] scale-95 md:scale-100' : 'opacity-100 translate-x-0 scale-100 delay-200'}`}>
           <div className="max-w-sm mx-auto w-full">
             <h2 className="text-3xl font-extrabold mb-2 text-white">Selamat Datang</h2>
             <p className="text-sm text-zinc-400 mb-6">Masuk untuk mengelola servermu.</p>
@@ -176,7 +176,7 @@ export default function Auth() {
         </div>
 
         {/* ================= THUMB OVERLAY ================= */}
-        <div className={`absolute top-0 left-0 w-1/2 h-full z-20 transition-transform duration-1000 ease-in-out pointer-events-none ${isLogin ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className={`absolute top-0 left-0 hidden md:block w-1/2 h-full z-20 transition-transform duration-1000 ease-in-out pointer-events-none ${isLogin ? 'translate-x-0' : 'translate-x-full'}`}>
           <div className="w-full h-full p-4">
             <div className={`w-full h-full rounded-xl relative overflow-hidden flex flex-col items-center justify-center text-center p-10 transition-colors duration-1000 ${isLogin ? 'bg-zinc-900' : 'bg-zinc-900'}`}>
                

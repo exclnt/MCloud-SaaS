@@ -26,7 +26,7 @@ export default function ClientArea() {
     <div className="min-h-screen bg-[#0a0a0a] text-zinc-300 font-sans flex flex-col">
       <Navbar />
 
-      <main className="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full">
+      <main className="flex-1 w-full px-6 md:px-10 py-6 md:py-10 max-w-7xl mx-auto">
         <div className="mb-10 animate-fade-in">
           <h1 className="text-3xl font-bold text-white mb-2">Area Klien</h1>
           <p className="text-zinc-500">Kelola informasi profil dan pengaturan keamanan akun Anda</p>

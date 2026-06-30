@@ -110,7 +110,7 @@ export default function ServerOverview() {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
+    <div className="w-full px-4 sm:px-8 py-4 sm:py-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
       <div>
         <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
           <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
@@ -224,34 +224,6 @@ export default function ServerOverview() {
             </div>
           </div>
           
-          <div className="bg-[#101010] border border-red-900/30 rounded-xl p-6">
-            <div className="flex items-center gap-2 text-red-500 font-bold mb-1">
-              <AlertTriangle className="w-5 h-5" /> Zona Bahaya
-            </div>
-            <p className="text-sm text-zinc-500 mb-6">Tindakan merusak dan tidak dapat diubah.</p>
-            
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-red-950/10 border border-red-900/20 rounded-xl">
-                <div>
-                  <h4 className="text-sm font-bold text-zinc-200">Setel Ulang Server</h4>
-                  <p className="text-xs text-zinc-500 mt-1">Hapus semua file dan instal ulang server dari awal.</p>
-                </div>
-                <button className="flex items-center gap-2 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 border border-red-900/50 text-red-400 text-sm font-semibold rounded-md transition">
-                  <RotateCcw className="w-4 h-4" /> Setel Ulang
-                </button>
-              </div>
-              
-              <div className="flex items-center justify-between p-4 bg-red-950/10 border border-red-900/20 rounded-xl">
-                <div>
-                  <h4 className="text-sm font-bold text-zinc-200">Hapus Server</h4>
-                  <p className="text-xs text-zinc-500 mt-1">Setelah Anda menghapus server, tidak ada jalan kembali. Ini akan secara permanen menghancurkan server dan semua datanya.</p>
-                </div>
-                <button onClick={handleDelete} className="flex items-center gap-2 px-4 py-2 bg-red-950 hover:bg-red-900 border border-red-800 text-red-400 hover:text-white text-sm font-semibold rounded-md transition">
-                  <Trash2 className="w-4 h-4" /> Hapus Server
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Right Column */}
@@ -290,6 +262,35 @@ export default function ServerOverview() {
             <p className="text-xs text-zinc-500 mt-6 pt-4 border-t border-zinc-800/50">
               Gunakan \u00A7[kode] untuk warna. Contoh: \u00A7aHijau \u00A7bBiru Muda \u00A7cMerah
             </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-[#101010] border border-red-900/30 rounded-xl p-6">
+        <div className="flex items-center gap-2 text-red-500 font-bold mb-1">
+          <AlertTriangle className="w-5 h-5" /> Zona Bahaya
+        </div>
+        <p className="text-sm text-zinc-500 mb-6">Tindakan merusak dan tidak dapat diubah.</p>
+        
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-red-950/10 border border-red-900/20 rounded-xl gap-4 sm:gap-0">
+            <div className="flex-1">
+              <h4 className="text-sm font-bold text-zinc-200">Setel Ulang Server</h4>
+              <p className="text-xs text-zinc-500 mt-1">Hapus semua file dan instal ulang server dari awal.</p>
+            </div>
+            <button className="w-fit flex items-center gap-2 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 border border-red-900/50 text-red-400 text-sm font-semibold rounded-md transition shrink-0">
+              <RotateCcw className="w-4 h-4" /> Setel Ulang
+            </button>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-red-950/10 border border-red-900/20 rounded-xl gap-4 sm:gap-0">
+            <div className="flex-1">
+              <h4 className="text-sm font-bold text-zinc-200">Hapus Server</h4>
+              <p className="text-xs text-zinc-500 mt-1">Setelah Anda menghapus server, tidak ada jalan kembali. Ini akan secara permanen menghancurkan server dan semua datanya.</p>
+            </div>
+            <button onClick={handleDelete} className="w-fit flex items-center gap-2 px-4 py-2 bg-red-950 hover:bg-red-900 border border-red-800 text-red-400 hover:text-white text-sm font-semibold rounded-md transition shrink-0">
+              <Trash2 className="w-4 h-4" /> Hapus Server
+            </button>
           </div>
         </div>
       </div>

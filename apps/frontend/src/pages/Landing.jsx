@@ -78,7 +78,7 @@ export default function Landing() {
                 <span className="font-bold text-white tracking-wide">1,801</span> <span className="text-zinc-300">Server Online</span>
               </span>
             </div>
-            <h1 className="text-5xl lg:text-7xl font-extrabold text-white mb-6 tracking-tight">
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white mb-6 tracking-tight leading-tight">
               Hosting Server Minecraft<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-300">
                 Masa Depan
@@ -140,7 +140,7 @@ export default function Landing() {
               <p className="text-zinc-500">Harga transparan tanpa biaya tersembunyi. Bebas ganti paket kapan saja.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-sm md:max-w-none mx-auto">
               {pricingPlans.map((plan, i) => (
                 <div key={i} className={`relative bg-[#0a0a0a] border ${plan.recommended ? 'border-primary shadow-[0_0_30px_rgba(16,185,129,0.15)]' : 'border-zinc-800'} p-8 rounded-xl flex flex-col reveal`} style={{ transitionDelay: `${i * 150}ms` }}>
                   {plan.recommended && (

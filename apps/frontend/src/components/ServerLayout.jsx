@@ -19,7 +19,9 @@ import {
   Globe,
   Plus,
   Loader2,
-  Square
+  Square,
+  PanelLeft,
+  X
 } from 'lucide-react';
 import Navbar from './Navbar';
 import Footer from './Footer';
@@ -30,6 +32,7 @@ export default function ServerLayout() {
   const [serverInfo, setServerInfo] = useState(null);
   const [status, setStatus] = useState('offline');
   const [processingAction, setProcessingAction] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     const fetchServer = async () => {
@@ -95,10 +98,24 @@ export default function ServerLayout() {
     <div className="h-screen bg-[#0a0a0a] text-zinc-300 font-sans flex flex-col overflow-hidden">
       <Navbar />
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* Mobile Sidebar Overlay */}
+        {isSidebarOpen && (
+          <div 
+            className="md:hidden absolute inset-0 bg-black/60 z-30"
+            onClick={() => setIsSidebarOpen(false)}
+          ></div>
+        )}
+
         {/* Left Sidebar */}
-        <aside className="w-64 border-r border-zinc-800/60 bg-[#0a0a0a] flex flex-col overflow-y-auto shrink-0">
-          <div className="p-4">
+        <aside className={`absolute md:relative z-40 w-64 h-full border-r border-zinc-800/60 bg-[#0a0a0a] flex flex-col overflow-y-auto shrink-0 transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+          <div className="p-4 flex items-center justify-between md:hidden border-b border-zinc-800/60 mb-2">
+            <span className="font-bold text-white">Panel Server</span>
+            <button onClick={() => setIsSidebarOpen(false)} className="text-zinc-400 hover:text-white">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="p-4 pt-2 md:pt-4">
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -155,16 +172,16 @@ export default function ServerLayout() {
           <nav className="flex-1 px-3 py-4 space-y-0.5">
             <div className="px-3 pb-2 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Navigasi</div>
             
-            <NavLink to={`/server/${port}`} end className={({isActive}) => `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition ${isActive ? 'bg-primary/10 text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+            <NavLink onClick={() => setIsSidebarOpen(false)} to={`/server/${port}`} end className={({isActive}) => `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition ${isActive ? 'bg-primary/10 text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
               <LayoutDashboard className="w-4 h-4" /> Dasbor
             </NavLink>
-            <NavLink to={`/server/${port}/console`} className={({isActive}) => `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition ${isActive ? 'bg-primary/10 text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+            <NavLink onClick={() => setIsSidebarOpen(false)} to={`/server/${port}/console`} className={({isActive}) => `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition ${isActive ? 'bg-primary/10 text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
               <TerminalSquare className="w-4 h-4" /> Konsol Server
             </NavLink>
-            <NavLink to={`/server/${port}/files`} className={({isActive}) => `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition ${isActive ? 'bg-primary/10 text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+            <NavLink onClick={() => setIsSidebarOpen(false)} to={`/server/${port}/files`} className={({isActive}) => `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition ${isActive ? 'bg-primary/10 text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
               <Folder className="w-4 h-4" /> Pengelola File
             </NavLink>
-            <NavLink to={`/server/${port}/players`} className={({isActive}) => `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition ${isActive ? 'bg-primary/10 text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+            <NavLink onClick={() => setIsSidebarOpen(false)} to={`/server/${port}/players`} className={({isActive}) => `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition ${isActive ? 'bg-primary/10 text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
               <Users className="w-4 h-4" /> Pemain
             </NavLink>
             <div className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-zinc-500 cursor-not-allowed">
@@ -179,7 +196,7 @@ export default function ServerLayout() {
             <div className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-zinc-500 cursor-not-allowed">
               <Download className="w-4 h-4" /> Pengimpor Server
             </div>
-            <NavLink to={`/server/${port}/settings`} className={({isActive}) => `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition ${isActive ? 'bg-primary/10 text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+            <NavLink onClick={() => setIsSidebarOpen(false)} to={`/server/${port}/settings`} className={({isActive}) => `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition ${isActive ? 'bg-primary/10 text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
               <Settings className="w-4 h-4" /> Pengaturan Server
             </NavLink>
 
@@ -203,8 +220,19 @@ export default function ServerLayout() {
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto bg-[#0a0a0a]">
-          <Outlet context={{ serverInfo, status, setStatus }} />
+        <main className="flex-1 overflow-y-auto bg-[#0a0a0a] flex flex-col">
+          <div className="md:hidden p-4 border-b border-zinc-800/60 flex items-center justify-between bg-[#101010] shrink-0">
+            <div className="flex items-center gap-2">
+              <Server className="w-4 h-4 text-primary" />
+              <span className="font-bold text-white text-sm">{serverInfo.name}</span>
+            </div>
+            <button onClick={() => setIsSidebarOpen(true)} className="p-1.5 bg-zinc-900 border border-zinc-800 rounded text-zinc-400 hover:text-white">
+              <PanelLeft className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="flex-1 flex flex-col">
+            <Outlet context={{ serverInfo, status, setStatus }} />
+          </div>
           <Footer />
         </main>
       </div>

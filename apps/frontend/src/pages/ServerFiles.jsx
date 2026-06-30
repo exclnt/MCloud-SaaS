@@ -137,8 +137,8 @@ export default function ServerFiles() {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6 animate-fade-in h-full flex flex-col relative">
-      <div className="flex items-center justify-between">
+    <div className="w-full px-4 sm:px-8 py-4 sm:py-8 max-w-7xl mx-auto space-y-6 animate-fade-in h-full flex flex-col relative">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
             <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
@@ -149,7 +149,7 @@ export default function ServerFiles() {
           <p className="text-zinc-500">Jelajahi dan kelola file server</p>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <input 
             type="file" 
             ref={fileInputRef} 

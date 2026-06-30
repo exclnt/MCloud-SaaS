@@ -89,7 +89,7 @@ export default function Dashboard() {
       <Navbar />
 
       {/* Main Content */}
-      <main className="flex-1 p-8 max-w-5xl mx-auto w-full">
+      <main className="flex-1 w-full px-6 md:px-10 py-6 md:py-10 max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">Server Anda</h1>
@@ -127,7 +127,7 @@ export default function Dashboard() {
               <div 
                 key={server.id} 
                 onClick={() => navigate(`/server/${server.port}`)}
-                className="group flex items-center justify-between bg-[#101010] border border-zinc-800/60 p-4 rounded-xl hover:border-zinc-700 hover:bg-zinc-900/50 transition cursor-pointer relative overflow-hidden"
+                className="group flex flex-col sm:flex-row items-start sm:items-center justify-between bg-[#101010] border border-zinc-800/60 p-4 rounded-xl hover:border-zinc-700 hover:bg-zinc-900/50 transition cursor-pointer relative overflow-hidden gap-4 sm:gap-0"
               >
                 {/* Active indicator bar */}
                 <div className={`absolute left-0 top-0 bottom-0 w-1 ${server.status === 'running' ? 'bg-primary shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]'}`}></div>
@@ -138,7 +138,7 @@ export default function Dashboard() {
                     <ServerIcon className="w-6 h-6 text-zinc-500 absolute" style={{ zIndex: -1 }} />
                   </div>
                   <div>
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
                       <h3 className="font-bold text-zinc-100 group-hover:text-white">{server.name}</h3>
                       <span className="text-[10px] bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded uppercase font-bold">Paket {server.plan ? server.plan : getPlanName(server.memoryLimit)}</span>
                       {getRemainingDays(server.expiresAt) > 0 ? (
@@ -151,7 +151,7 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-6">
+                <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto pl-2 sm:pl-0">
                   <div className={`text-xs font-bold px-2 py-1 rounded-md border ${server.status === 'running' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-red-950/30 text-red-500 border-red-900/50'}`}>
                     {server.status}
                   </div>

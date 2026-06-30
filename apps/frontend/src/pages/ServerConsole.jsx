@@ -54,8 +54,8 @@ export default function ServerConsole() {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6 animate-fade-in h-full flex flex-col">
-      <div className="flex items-center justify-between">
+    <div className="w-full px-4 sm:px-8 py-4 sm:py-8 max-w-7xl mx-auto space-y-6 animate-fade-in h-full flex flex-col">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
             <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
@@ -136,7 +136,7 @@ export default function ServerConsole() {
           </button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <button onClick={() => insertCommand('list')} className="text-left bg-black border border-zinc-800/60 p-4 rounded-xl hover:border-primary/50 hover:bg-zinc-900 transition group">
             <div className="font-mono text-primary text-sm font-bold group-hover:text-primary mb-1">list</div>
             <div className="text-xs text-zinc-500">Daftar pemain</div>

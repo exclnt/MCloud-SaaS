@@ -23,7 +23,7 @@ export default function Pricing() {
             <p className="text-lg text-zinc-500">Harga transparan tanpa biaya tersembunyi. Bebas ganti paket kapan saja.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-sm md:max-w-none mx-auto">
             {pricingPlans.map((plan, i) => (
               <div key={i} className={`relative bg-[#101010] border ${plan.recommended ? 'border-primary shadow-[0_0_30px_rgba(16,185,129,0.15)]' : 'border-zinc-800/60'} p-8 rounded-xl flex flex-col hover:border-primary/50 transition duration-300`}>
                 {plan.recommended && (
