@@ -27,9 +27,10 @@ const authMiddleware = (req, res) => {
 };
 
 // Internal communication function to call provisioning-service
-const triggerProvisioning = (userId, username, transactionId) => {
+const triggerProvisioning = (userId, username, transactionId, configString) => {
   const token = generateToken({ id: userId, username });
-  const payload = JSON.stringify({ name: `Bedrock_trx_${transactionId}` });
+  const baseConfig = configString ? JSON.parse(configString) : {};
+  const payload = JSON.stringify({ name: `Bedrock_trx_${transactionId}`, ...baseConfig });
   
   const options = {
     hostname: 'localhost',
@@ -71,10 +72,12 @@ const server = http.createServer(async (req, res) => {
     try {
       const body = await parseJSON(req);
       const amount = body.amount || 50000;
+      const config = body.config ? JSON.stringify(body.config) : null;
 
       const trx = db.insert(transactions).values({
         userId: user.id,
         amount,
+        config,
         status: 'pending'
       }).returning().get();
 
@@ -134,7 +137,7 @@ const server = http.createServer(async (req, res) => {
         
         const userRecord = db.select().from(users).where(eq(users.id, trxRecord.userId)).get();
         if (userRecord) {
-          triggerProvisioning(userRecord.id, userRecord.username, trxId);
+          triggerProvisioning(userRecord.id, userRecord.username, trxId, trxRecord.config);
         }
         
       } else if (transactionStatus === 'cancel' || transactionStatus === 'expire' || transactionStatus === 'deny') {
