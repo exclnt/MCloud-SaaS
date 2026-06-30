@@ -16,16 +16,16 @@ export default function ServerSettings() {
     setSavingDisplay(true);
     try {
       await api.updateServerConfig(serverInfo.port, { name: displayName, motd: motd });
-      alert("Server Display Settings Saved Successfully!");
+      alert("Pengaturan Tampilan Server Berhasil Disimpan!");
     } catch (e) {
-      alert("Failed to save Display Settings: " + e.message);
+      alert("Gagal menyimpan Pengaturan Tampilan: " + e.message);
     }
     setSavingDisplay(false);
   };
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-    alert('Copied to clipboard!');
+    alert('Tersalin ke papan klip!');
   };
 
   const toggleVisibility = async () => {
@@ -34,7 +34,7 @@ export default function ServerSettings() {
     try {
       await api.updateServerConfig(serverInfo.port, { visibility: newVisibility });
     } catch (e) {
-      alert("Failed to save visibility: " + e.message);
+      alert("Gagal menyimpan visibilitas: " + e.message);
       setIsVisible(isVisible); // revert
     }
   };
@@ -43,7 +43,7 @@ export default function ServerSettings() {
     if (e.key === 'Enter' && tagInput.trim() !== '') {
       e.preventDefault();
       if (tags.length >= 5) {
-        alert("Maximum 5 tags allowed.");
+        alert("Maksimal 5 tag diizinkan.");
         return;
       }
       const newTags = [...tags, tagInput.trim()];
@@ -52,7 +52,7 @@ export default function ServerSettings() {
       try {
         await api.updateServerConfig(serverInfo.port, { tags: newTags.join(',') });
       } catch (err) {
-        alert("Failed to save tags: " + err.message);
+        alert("Gagal menyimpan tag: " + err.message);
         setTags(tags); // revert
       }
     }
@@ -64,7 +64,7 @@ export default function ServerSettings() {
     try {
       await api.updateServerConfig(serverInfo.port, { tags: newTags.join(',') });
     } catch (err) {
-      alert("Failed to remove tag: " + err.message);
+      alert("Gagal menghapus tag: " + err.message);
       setTags(tags); // revert
     }
   };
@@ -76,9 +76,9 @@ export default function ServerSettings() {
           <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
             <Settings className="w-5 h-5 text-primary" />
           </div>
-          Server Settings
+          Pengaturan Server
         </h1>
-        <p className="text-zinc-500">Manage your server's address, display name, and public listing</p>
+        <p className="text-zinc-500">Kelola alamat server Anda, nama tampilan, dan daftar publik</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -89,17 +89,17 @@ export default function ServerSettings() {
           <div className="bg-[#101010] border border-zinc-800/60 rounded-xl p-6 relative">
             <div className="flex items-start justify-between mb-6">
               <div>
-                <h3 className="text-base font-bold text-white mb-1">Server Display</h3>
-                <p className="text-sm text-zinc-500">Customize your server's MOTD</p>
+                <h3 className="text-base font-bold text-white mb-1">Tampilan Server</h3>
+                <p className="text-sm text-zinc-500">Sesuaikan MOTD server Anda</p>
               </div>
-              <button onClick={handleSaveDisplay} disabled={savingDisplay} className="flex items-center gap-2 px-6 py-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 font-semibold text-sm rounded-lg transition disabled:opacity-50">
-                <Save className="w-4 h-4" /> {savingDisplay ? 'Saving...' : 'Save'}
+              <button onClick={handleSaveDisplay} disabled={savingDisplay} className="flex items-center gap-2 px-6 py-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 font-semibold text-sm rounded-md transition disabled:opacity-50">
+                <Save className="w-4 h-4" /> {savingDisplay ? 'Menyimpan...' : 'Simpan'}
               </button>
             </div>
             
             <div className="space-y-6">
               <div>
-                <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">MESSAGE OF THE DAY</label>
+                <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">PESAN HARI INI (MOTD)</label>
                 <input 
                   type="text" 
                   value={displayName}
@@ -120,17 +120,17 @@ export default function ServerSettings() {
             </div>
             
             <p className="text-xs text-zinc-500 mt-6 pt-4 border-t border-zinc-800/50">
-              Use \u00A7[code] for colors. Example: \u00A7aGreen \u00A7bAqua \u00A7cRed
+              Gunakan \u00A7[kode] untuk warna. Contoh: \u00A7aHijau \u00A7bBiru Muda \u00A7cMerah
             </p>
           </div>
 
           {/* Visibility */}
           <div className="bg-[#101010] border border-zinc-800/60 rounded-xl p-6 flex items-center justify-between">
             <div>
-              <h3 className="text-base font-bold text-white mb-1">Visibility</h3>
-              <p className="text-xs text-zinc-500 mb-2">Your server is visible to everyone browsing the server list</p>
+              <h3 className="text-base font-bold text-white mb-1">Visibilitas</h3>
+              <p className="text-xs text-zinc-500 mb-2">Server Anda dapat dilihat oleh siapa saja yang menelusuri daftar server</p>
               <div className={`flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-md inline-flex border ${isVisible ? 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20' : 'text-zinc-400 bg-zinc-800/50 border-zinc-700/50'}`}>
-                <Eye className="w-3.5 h-3.5" /> {isVisible ? 'Visible on Server List' : 'Hidden from Server List'}
+                <Eye className="w-3.5 h-3.5" /> {isVisible ? 'Terlihat di Daftar Server' : 'Tersembunyi dari Daftar Server'}
               </div>
             </div>
             <div 
@@ -146,11 +146,11 @@ export default function ServerSettings() {
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-3">
                 <Tag className="w-5 h-5 text-zinc-400" />
-                <h3 className="text-base font-bold text-white">Server Tags</h3>
+                <h3 className="text-base font-bold text-white">Tag Server</h3>
               </div>
               <span className="text-xs text-zinc-500">{tags.length}/5</span>
             </div>
-            <p className="text-xs text-zinc-500 mb-4 ml-8">Add tags to help players find your server by game mode or style</p>
+            <p className="text-xs text-zinc-500 mb-4 ml-8">Tambahkan tag untuk membantu pemain menemukan server Anda berdasarkan mode atau gaya permainan</p>
             <div className="ml-8">
               <div className="flex flex-wrap gap-2 mb-3">
                 {tags.map((tag, index) => (
@@ -166,7 +166,7 @@ export default function ServerSettings() {
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={handleAddTag}
                 disabled={tags.length >= 5}
-                placeholder={tags.length >= 5 ? "Maximum tags reached" : "Type and press Enter to add..."}
+                placeholder={tags.length >= 5 ? "Tag maksimal tercapai" : "Ketik dan tekan Enter untuk menambahkan..."}
                 className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm text-zinc-400 focus:outline-none focus:border-primary transition disabled:opacity-50"
               />
             </div>
@@ -181,13 +181,13 @@ export default function ServerSettings() {
             
             <div className="flex items-center gap-3 mb-1">
               <Network className="w-5 h-5 text-primary" />
-              <h3 className="text-base font-bold text-white">Server Connection Details</h3>
+              <h3 className="text-base font-bold text-white">Detail Koneksi Server</h3>
             </div>
-            <p className="text-sm text-zinc-400 mb-6 ml-8">Use this IP and Port to connect to your server from the Minecraft client.</p>
+            <p className="text-sm text-zinc-400 mb-6 ml-8">Gunakan IP dan Port ini untuk terhubung ke server Anda dari klien Minecraft.</p>
             
             <div className="ml-8 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">IP Address</label>
+                <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Alamat IP</label>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg p-3 font-mono text-lg text-white">
                     {serverInfo.ip}
@@ -195,7 +195,7 @@ export default function ServerSettings() {
                   <button 
                     onClick={() => copyToClipboard(serverInfo.ip)}
                     className="p-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg text-zinc-400 hover:text-white transition"
-                    title="Copy IP"
+                    title="Salin IP"
                   >
                     <Copy className="w-5 h-5" />
                   </button>
@@ -211,7 +211,7 @@ export default function ServerSettings() {
                   <button 
                     onClick={() => copyToClipboard(serverInfo.port.toString())}
                     className="p-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg text-zinc-400 hover:text-white transition"
-                    title="Copy Port"
+                    title="Salin Port"
                   >
                     <Copy className="w-5 h-5" />
                   </button>
@@ -220,7 +220,7 @@ export default function ServerSettings() {
               
               <div className="pt-4 border-t border-zinc-800/60 mt-6">
                 <p className="text-xs text-zinc-500">
-                  <span className="text-primary font-semibold">How to join:</span> Open Minecraft, go to Servers, scroll to the bottom, click "Add Server", and enter the IP and Port above.
+                  <span className="text-primary font-semibold">Cara bergabung:</span> Buka Minecraft, buka Server, gulir ke bawah, klik "Tambah Server", dan masukkan IP dan Port di atas.
                 </p>
               </div>
             </div>

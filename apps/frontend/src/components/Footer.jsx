@@ -11,31 +11,31 @@ export default function Footer() {
           <span className="font-bold text-white">MCloud</span>
         </div>
         <p className="text-zinc-500 text-xs leading-relaxed">
-          Premium Minecraft server hosting with exceptional performance, reliability, and 24/7 support.
+          Hosting server Minecraft premium dengan performa luar biasa, keandalan, dan dukungan 24/7.
         </p>
       </div>
       
       <div className="grid grid-cols-3 gap-12 flex-1">
         <div>
-          <h4 className="font-bold text-xs text-white uppercase mb-4 tracking-wider">Services</h4>
+          <h4 className="font-bold text-xs text-white uppercase mb-4 tracking-wider">Layanan</h4>
           <ul className="space-y-3 text-xs text-zinc-500">
-            <li className="hover:text-white cursor-pointer transition">Minecraft Hosting</li>
-            <li className="hover:text-white cursor-pointer transition">Free Minecraft Hosting</li>
-            <li className="hover:text-white cursor-pointer transition">Dedicated Servers</li>
+            <li className="hover:text-white cursor-pointer transition">Hosting Minecraft</li>
+            <li className="hover:text-white cursor-pointer transition">Hosting Minecraft Gratis</li>
+            <li className="hover:text-white cursor-pointer transition">Server Dedicated</li>
           </ul>
         </div>
         <div>
-          <h4 className="font-bold text-xs text-white uppercase mb-4 tracking-wider">Community</h4>
+          <h4 className="font-bold text-xs text-white uppercase mb-4 tracking-wider">Komunitas</h4>
           <ul className="space-y-3 text-xs text-zinc-500">
-            <li className="hover:text-white cursor-pointer transition">Community Forums</li>
-            <li className="hover:text-white cursor-pointer transition">Minecraft Server List</li>
+            <li className="hover:text-white cursor-pointer transition">Forum Komunitas</li>
+            <li className="hover:text-white cursor-pointer transition">Daftar Server Minecraft</li>
           </ul>
         </div>
         <div>
-          <h4 className="font-bold text-xs text-white uppercase mb-4 tracking-wider">Resources</h4>
+          <h4 className="font-bold text-xs text-white uppercase mb-4 tracking-wider">Sumber Daya</h4>
           <ul className="space-y-3 text-xs text-zinc-500">
-            <li className="hover:text-white cursor-pointer transition">Terms of Service</li>
-            <li className="hover:text-white cursor-pointer transition">Privacy Policy</li>
+            <li className="hover:text-white cursor-pointer transition">Syarat & Ketentuan</li>
+            <li className="hover:text-white cursor-pointer transition">Kebijakan Privasi</li>
           </ul>
         </div>
       </div>

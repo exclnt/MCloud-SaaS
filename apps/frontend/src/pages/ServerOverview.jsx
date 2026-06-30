@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
-import { Cpu, MemoryStick, HardDrive, Clock, AlertTriangle, Save, RotateCcw, Trash2 } from 'lucide-react';
+import { Cpu, MemoryStick, HardDrive, Clock, AlertTriangle, Save, RotateCcw, Trash2, CalendarDays } from 'lucide-react';
 import { api } from '../services/api';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function ServerOverview() {
   const { serverInfo, status, setStatus } = useOutletContext();
@@ -11,6 +12,28 @@ export default function ServerOverview() {
   const [displayName, setDisplayName] = useState(serverInfo.name);
   const [motd, setMotd] = useState(serverInfo.motd || '');
   const [savingDisplay, setSavingDisplay] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const getRemainingDays = (expiresAt) => {
+    if (!expiresAt) return 0;
+    const diff = new Date(expiresAt).getTime() - Date.now();
+    if (diff <= 0) return 0;
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  };
+
+  const handleRenew = () => {
+    // Determine plan
+    let plan = serverInfo.plan;
+    if (!plan) {
+      const maxMemForUi = serverInfo.memoryLimit.match(/(\d+)m/i) ? parseInt(serverInfo.memoryLimit.match(/(\d+)m/i)[1]) : 500;
+      if (maxMemForUi === 1024) plan = 'spider';
+      else if (maxMemForUi === 2048) plan = 'slime';
+      else if (maxMemForUi === 4096) plan = 'wither';
+      else plan = 'villager';
+    }
+    
+    navigate(`/checkout?renew=true&serverId=${serverInfo.id}&port=${serverInfo.port}&plan=${plan}&serverName=${encodeURIComponent(serverInfo.name)}`);
+  };
 
   useEffect(() => {
     let interval;
@@ -33,14 +56,16 @@ export default function ServerOverview() {
     return () => clearInterval(interval);
   }, [status, serverInfo.port]);
 
-  const handleDelete = async () => {
-    if (window.confirm("Are you sure you want to PERMANENTLY DELETE this server? This cannot be undone.")) {
-      try {
-        await api.deleteServer(serverInfo.port);
-        navigate('/dashboard');
-      } catch (e) {
-        alert("Failed to delete: " + e.message);
-      }
+  const handleDelete = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await api.deleteServer(serverInfo.port);
+      navigate('/dashboard');
+    } catch (e) {
+      alert("Gagal menghapus: " + e.message);
     }
   };
 
@@ -48,9 +73,9 @@ export default function ServerOverview() {
     setSavingDisplay(true);
     try {
       await api.updateServerConfig(serverInfo.port, { name: displayName, motd: motd });
-      alert("Server Display Settings Saved Successfully!");
+      alert("Pengaturan Tampilan Server Berhasil Disimpan!");
     } catch (e) {
-      alert("Failed to save Display Settings: " + e.message);
+      alert("Gagal menyimpan Pengaturan Tampilan: " + e.message);
     }
     setSavingDisplay(false);
   };
@@ -62,6 +87,21 @@ export default function ServerOverview() {
   };
 
   const maxMemForUi = serverInfo.memoryLimit.match(/(\d+)m/i) ? parseInt(serverInfo.memoryLimit.match(/(\d+)m/i)[1]) : 500;
+
+  const getPlanIcon = () => {
+    if (serverInfo.plan === 'spider' || maxMemForUi === 1024) return 'MHF_Spider';
+    if (serverInfo.plan === 'slime' || maxMemForUi === 2048) return 'MHF_Slime';
+    if (serverInfo.plan === 'wither' || maxMemForUi === 4096) return 'MHF_Wither';
+    return 'MHF_Villager';
+  };
+  
+  const getPlanName = () => {
+    if (serverInfo.plan) return serverInfo.plan.toUpperCase();
+    if (maxMemForUi === 1024) return 'SPIDER';
+    if (maxMemForUi === 2048) return 'SLIME';
+    if (maxMemForUi === 4096) return 'WITHER';
+    return 'VILLAGER';
+  };
 
   const getDiskPercentage = () => {
     // Assume 10GB disk limit
@@ -76,9 +116,9 @@ export default function ServerOverview() {
           <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
             <ServerIcon />
           </div>
-          Dashboard
+          Dasbor
         </h1>
-        <p className="text-zinc-500">Overview of your server</p>
+        <p className="text-zinc-500">Gambaran umum server Anda</p>
       </div>
 
       {/* Stats Grid */}
@@ -92,19 +132,19 @@ export default function ServerOverview() {
           <div className="w-full bg-zinc-900 rounded-full h-1.5 mb-2 overflow-hidden">
             <div className="bg-primary h-1.5 rounded-full transition-all duration-500" style={{ width: `${Math.min(100, stats.cpu || 0)}%` }}></div>
           </div>
-          <div className="text-xs text-zinc-500">of 100% max</div>
+          <div className="text-xs text-zinc-500">dari maksimal 100%</div>
         </div>
 
         {/* Memory */}
         <div className="bg-[#101010] border border-zinc-800/60 rounded-xl p-5">
           <div className="flex items-center gap-2 text-zinc-400 mb-4 text-xs font-bold uppercase tracking-wider">
-            <MemoryStick className="w-4 h-4 text-emerald-400" /> Memory
+            <MemoryStick className="w-4 h-4 text-emerald-400" /> Memori
           </div>
           <div className="text-2xl font-bold text-white mb-2">{stats.memory ? stats.memory.toFixed(1) : '0'} MB</div>
           <div className="w-full bg-zinc-900 rounded-full h-1.5 mb-2 overflow-hidden">
             <div className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" style={{ width: `${getMemoryPercentage()}%` }}></div>
           </div>
-          <div className="text-xs text-zinc-500">of {maxMemForUi} MB ({getMemoryPercentage().toFixed(1)}%)</div>
+          <div className="text-xs text-zinc-500">dari {maxMemForUi} MB ({getMemoryPercentage().toFixed(1)}%)</div>
         </div>
 
         {/* Disk */}
@@ -116,19 +156,19 @@ export default function ServerOverview() {
           <div className="w-full bg-zinc-900 rounded-full h-1.5 mb-2 overflow-hidden">
             <div className="bg-orange-500 h-1.5 rounded-full transition-all duration-500" style={{ width: `${getDiskPercentage()}%` }}></div>
           </div>
-          <div className="text-xs text-zinc-500">of 10 GB ({getDiskPercentage().toFixed(1)}%)</div>
+          <div className="text-xs text-zinc-500">dari 10 GB ({getDiskPercentage().toFixed(1)}%)</div>
         </div>
 
         {/* Uptime */}
         <div className="bg-[#101010] border border-zinc-800/60 rounded-xl p-5">
           <div className="flex items-center gap-2 text-zinc-400 mb-4 text-xs font-bold uppercase tracking-wider">
-            <Clock className="w-4 h-4 text-blue-400" /> Uptime
+            <Clock className="w-4 h-4 text-blue-400" /> Waktu Aktif
           </div>
           <div className="text-2xl font-bold text-white mb-2">{status === 'running' ? 'Online' : 'Offline'}</div>
           <div className="w-full bg-zinc-900 rounded-full h-1.5 mb-2 overflow-hidden">
             <div className={`h-1.5 rounded-full transition-all ${status === 'running' ? 'bg-blue-500 w-full' : 'w-0'}`}></div>
           </div>
-          <div className="text-xs text-zinc-500">{status === 'running' ? 'Server is running' : 'Not currently running'}</div>
+          <div className="text-xs text-zinc-500">{status === 'running' ? 'Server sedang berjalan' : 'Saat ini tidak berjalan'}</div>
         </div>
       </div>
 
@@ -136,73 +176,78 @@ export default function ServerOverview() {
         {/* Left Column */}
         <div className="space-y-8">
           <div className="bg-[#101010] border border-zinc-800/60 rounded-xl p-6">
-            <h2 className="text-lg font-bold text-white mb-1">Server Plan</h2>
-            <p className="text-sm text-zinc-500 mb-6">Adjust your server resources</p>
+            <h2 className="text-lg font-bold text-white mb-1">Paket Server</h2>
+            <p className="text-sm text-zinc-500 mb-6">Sesuaikan sumber daya server Anda</p>
             
             <div className="flex items-center justify-center p-8 bg-zinc-900/30 rounded-xl border border-zinc-800/50 mb-8 relative overflow-hidden group hover:border-primary/50 transition cursor-pointer">
               <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition"></div>
               <div className="flex items-center gap-6 relative z-10">
-                <div className="w-20 h-20 bg-zinc-800 rounded-2xl flex items-center justify-center text-4xl shadow-inner border border-zinc-700/50 group-hover:scale-105 transition transform">
-                  📦
+                <div className="shrink-0">
+                  <img 
+                    src={`https://mc-heads.net/avatar/${getPlanIcon()}/64`} 
+                    alt="Plan Icon" 
+                    className="w-16 h-16 rounded-xl bg-zinc-900 border border-zinc-800 p-1 group-hover:scale-105 transition transform"
+                  />
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.5)]">
                       <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                     </div>
-                    <span className="text-xl font-bold text-white uppercase">{maxMemForUi === 500 ? 'STANDARD' : 'PREMIUM'}</span>
-                    <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded-md border border-zinc-700">Paid Plan</span>
+                    <span className="text-xl font-bold text-white uppercase">{getPlanName()}</span>
+                    <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded-md border border-zinc-700">Paket Berbayar</span>
                   </div>
                   <div className="space-y-1 text-sm text-zinc-400">
                     <div className="flex items-center gap-2"><MemoryStick className="w-4 h-4 text-primary" /> {maxMemForUi} MB RAM</div>
-                    <div className="flex items-center gap-2"><HardDrive className="w-4 h-4 text-primary" /> 10GB Storage</div>
+                    <div className="flex items-center gap-2"><HardDrive className="w-4 h-4 text-primary" /> 10GB Penyimpanan</div>
                     <div className="flex items-center gap-2"><Cpu className="w-4 h-4 text-primary" /> 100% CPU</div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <p className="text-xs text-zinc-500 text-center mb-4">Drag the slider to select a different plan (Coming Soon)</p>
-            <div className="relative h-2 bg-zinc-800 rounded-full mb-8 opacity-50 cursor-not-allowed">
-              <div className="absolute left-0 top-0 h-full w-[15%] bg-primary rounded-l-full shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
-              <div className="absolute left-[15%] top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full shadow-lg border-2 border-primary"></div>
-            </div>
-            
-            <div className="flex justify-between text-[10px] font-bold text-zinc-600 uppercase opacity-50">
-              <span className="text-primary">Free</span>
-              <span>Zombie</span>
-              <span>Spider</span>
-              <span>Creeper</span>
-              <span>Slime</span>
-              <span>Blaze</span>
-              <span>Wither</span>
+            <div className="flex items-center justify-between p-4 bg-zinc-900/30 rounded-xl border border-zinc-800/50">
+              <div>
+                <h4 className="text-sm font-bold text-zinc-200 flex items-center gap-2"><CalendarDays className="w-4 h-4 text-blue-400"/> Masa Aktif</h4>
+                <p className="text-xs text-zinc-500 mt-1">
+                  {getRemainingDays(serverInfo.expiresAt) > 0 
+                    ? `${getRemainingDays(serverInfo.expiresAt)} Hari Tersisa` 
+                    : 'Telah Kedaluwarsa'}
+                </p>
+              </div>
+              <button 
+                onClick={handleRenew} 
+                className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-black text-sm font-bold rounded-md transition shadow-[0_0_10px_rgba(16,185,129,0.3)] hover:shadow-[0_0_20px_rgba(16,185,129,0.5)]"
+              >
+                Perpanjang Sewa
+              </button>
             </div>
           </div>
           
           <div className="bg-[#101010] border border-red-900/30 rounded-xl p-6">
             <div className="flex items-center gap-2 text-red-500 font-bold mb-1">
-              <AlertTriangle className="w-5 h-5" /> Danger Zone
+              <AlertTriangle className="w-5 h-5" /> Zona Bahaya
             </div>
-            <p className="text-sm text-zinc-500 mb-6">Irreversible and destructive actions.</p>
+            <p className="text-sm text-zinc-500 mb-6">Tindakan merusak dan tidak dapat diubah.</p>
             
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-red-950/10 border border-red-900/20 rounded-xl">
                 <div>
-                  <h4 className="text-sm font-bold text-zinc-200">Reset Server</h4>
-                  <p className="text-xs text-zinc-500 mt-1">Delete all files and reinstall the server from scratch.</p>
+                  <h4 className="text-sm font-bold text-zinc-200">Setel Ulang Server</h4>
+                  <p className="text-xs text-zinc-500 mt-1">Hapus semua file dan instal ulang server dari awal.</p>
                 </div>
-                <button className="flex items-center gap-2 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 border border-red-900/50 text-red-400 text-sm font-semibold rounded-lg transition">
-                  <RotateCcw className="w-4 h-4" /> Reset Server
+                <button className="flex items-center gap-2 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 border border-red-900/50 text-red-400 text-sm font-semibold rounded-md transition">
+                  <RotateCcw className="w-4 h-4" /> Setel Ulang
                 </button>
               </div>
               
               <div className="flex items-center justify-between p-4 bg-red-950/10 border border-red-900/20 rounded-xl">
                 <div>
-                  <h4 className="text-sm font-bold text-zinc-200">Delete Server</h4>
-                  <p className="text-xs text-zinc-500 mt-1">Once you delete a server, there is no going back. This will permanently destroy the server and all its data.</p>
+                  <h4 className="text-sm font-bold text-zinc-200">Hapus Server</h4>
+                  <p className="text-xs text-zinc-500 mt-1">Setelah Anda menghapus server, tidak ada jalan kembali. Ini akan secara permanen menghancurkan server dan semua datanya.</p>
                 </div>
-                <button onClick={handleDelete} className="flex items-center gap-2 px-4 py-2 bg-red-950 hover:bg-red-900 border border-red-800 text-red-400 hover:text-white text-sm font-semibold rounded-lg transition">
-                  <Trash2 className="w-4 h-4" /> Delete Server
+                <button onClick={handleDelete} className="flex items-center gap-2 px-4 py-2 bg-red-950 hover:bg-red-900 border border-red-800 text-red-400 hover:text-white text-sm font-semibold rounded-md transition">
+                  <Trash2 className="w-4 h-4" /> Hapus Server
                 </button>
               </div>
             </div>
@@ -214,17 +259,17 @@ export default function ServerOverview() {
           <div className="bg-[#101010] border border-zinc-800/60 rounded-xl p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-lg font-bold text-white mb-1">Server Display</h2>
-                <p className="text-sm text-zinc-500">Customize your server's MOTD</p>
+                <h2 className="text-lg font-bold text-white mb-1">Tampilan Server</h2>
+                <p className="text-sm text-zinc-500">Sesuaikan MOTD server Anda</p>
               </div>
-              <button onClick={handleSaveDisplay} disabled={savingDisplay} className="flex items-center gap-2 px-6 py-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 font-semibold text-sm rounded-lg transition disabled:opacity-50">
-                <Save className="w-4 h-4" /> {savingDisplay ? 'Saving...' : 'Save'}
+              <button onClick={handleSaveDisplay} disabled={savingDisplay} className="flex items-center gap-2 px-6 py-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 font-semibold text-sm rounded-md transition disabled:opacity-50">
+                <Save className="w-4 h-4" /> {savingDisplay ? 'Menyimpan...' : 'Simpan'}
               </button>
             </div>
             
             <div className="space-y-6">
               <div>
-                <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Message of the Day</label>
+                <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Pesan Hari Ini (MOTD)</label>
                 <input 
                   type="text" 
                   value={displayName}
@@ -243,11 +288,22 @@ export default function ServerOverview() {
               </div>
             </div>
             <p className="text-xs text-zinc-500 mt-6 pt-4 border-t border-zinc-800/50">
-              Use \u00A7[code] for colors. Example: \u00A7aGreen \u00A7bAqua \u00A7cRed
+              Gunakan \u00A7[kode] untuk warna. Contoh: \u00A7aHijau \u00A7bBiru Muda \u00A7cMerah
             </p>
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Hapus Server"
+        message="Apakah Anda yakin ingin MENGHAPUS server ini secara PERMANEN? Tindakan ini tidak dapat dibatalkan dan akan menghancurkan semua data yang ada di server."
+        confirmText="Hapus Permanen"
+        cancelText="Batal"
+        isDanger={true}
+      />
     </div>
   );
 }

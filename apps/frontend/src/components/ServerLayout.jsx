@@ -60,7 +60,7 @@ export default function ServerLayout() {
       await api.startServer(port);
       setStatus('running');
     } catch (e) {
-      alert('Failed to start server');
+      alert('Gagal memulai server');
     }
     setProcessingAction(null);
   };
@@ -72,7 +72,7 @@ export default function ServerLayout() {
       await api.stopServer(port);
       setStatus('stopped');
     } catch (e) {
-      alert('Failed to stop server');
+      alert('Gagal menghentikan server');
     }
     setProcessingAction(null);
   };
@@ -84,7 +84,7 @@ export default function ServerLayout() {
       await api.restartServer(port);
       setStatus('running');
     } catch (e) {
-      alert('Failed to restart server');
+      alert('Gagal merestart server');
     }
     setProcessingAction(null);
   };
@@ -108,7 +108,14 @@ export default function ServerLayout() {
                   <div>
                     <h2 className="font-semibold text-zinc-100">{serverInfo.name}</h2>
                     <div className="flex items-center gap-1.5 text-xs">
-                      <span className="text-primary font-medium">Free Server</span>
+                      <span className="text-primary font-medium">Paket {
+                        serverInfo.plan 
+                          ? serverInfo.plan.charAt(0).toUpperCase() + serverInfo.plan.slice(1) 
+                          : (serverInfo.memoryLimit.includes('1024') ? 'Spider' 
+                            : serverInfo.memoryLimit.includes('2048') ? 'Slime' 
+                            : serverInfo.memoryLimit.includes('4096') ? 'Wither' 
+                            : 'Villager')
+                      }</span>
                     </div>
                   </div>
                 </div>
@@ -118,79 +125,79 @@ export default function ServerLayout() {
                   <button 
                     onClick={handleStop}
                     disabled={processingAction !== null}
-                    className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold border border-red-900/30 text-red-500 hover:bg-red-500/10 bg-red-500/5 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-xs font-semibold border border-red-900/30 text-red-500 hover:bg-red-500/10 bg-red-500/5 transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {processingAction === 'stop' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Square className="w-3.5 h-3.5 fill-current" />} 
-                    {processingAction === 'stop' ? 'Stopping...' : 'Stop'}
+                    {processingAction === 'stop' ? 'Menghentikan...' : 'Berhenti'}
                   </button>
                 ) : (
                   <button 
                     onClick={handleStart}
                     disabled={processingAction !== null}
-                    className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold border border-primary/30 text-primary hover:bg-primary/10 bg-primary/5 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-xs font-semibold border border-primary/30 text-primary hover:bg-primary/10 bg-primary/5 transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {processingAction === 'start' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 fill-current" />} 
-                    {processingAction === 'start' ? 'Starting...' : 'Start'}
+                    {processingAction === 'start' ? 'Memulai...' : 'Mulai'}
                   </button>
                 )}
                 <button 
                   onClick={handleRestart}
                   disabled={processingAction !== null || status !== 'running'}
-                  className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold border border-zinc-800 text-zinc-300 hover:bg-zinc-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-xs font-semibold border border-zinc-800 text-zinc-300 hover:bg-zinc-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {processingAction === 'restart' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCw className="w-3.5 h-3.5" />} 
-                  {processingAction === 'restart' ? 'Restarting...' : 'Restart'}
+                  {processingAction === 'restart' ? 'Merestart...' : 'Restart'}
                 </button>
               </div>
             </div>
           </div>
 
           <nav className="flex-1 px-3 py-4 space-y-0.5">
-            <div className="px-3 pb-2 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Navigation</div>
+            <div className="px-3 pb-2 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Navigasi</div>
             
-            <NavLink to={`/server/${port}`} end className={({isActive}) => `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition ${isActive ? 'bg-primary/10 text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
-              <LayoutDashboard className="w-4 h-4" /> Dashboard
+            <NavLink to={`/server/${port}`} end className={({isActive}) => `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition ${isActive ? 'bg-primary/10 text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+              <LayoutDashboard className="w-4 h-4" /> Dasbor
             </NavLink>
-            <NavLink to={`/server/${port}/console`} className={({isActive}) => `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition ${isActive ? 'bg-primary/10 text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
-              <TerminalSquare className="w-4 h-4" /> Console Viewer
+            <NavLink to={`/server/${port}/console`} className={({isActive}) => `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition ${isActive ? 'bg-primary/10 text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+              <TerminalSquare className="w-4 h-4" /> Konsol Server
             </NavLink>
-            <NavLink to={`/server/${port}/files`} className={({isActive}) => `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition ${isActive ? 'bg-primary/10 text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
-              <Folder className="w-4 h-4" /> File Manager
+            <NavLink to={`/server/${port}/files`} className={({isActive}) => `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition ${isActive ? 'bg-primary/10 text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+              <Folder className="w-4 h-4" /> Pengelola File
             </NavLink>
-            <div className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-zinc-500 cursor-not-allowed">
-              <Users className="w-4 h-4" /> Subusers
-            </div>
-            <div className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-zinc-500 cursor-not-allowed">
+            <NavLink to={`/server/${port}/players`} className={({isActive}) => `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition ${isActive ? 'bg-primary/10 text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+              <Users className="w-4 h-4" /> Pemain
+            </NavLink>
+            <div className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-zinc-500 cursor-not-allowed">
               <Database className="w-4 h-4" /> Databases
             </div>
-            <div className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-zinc-500 cursor-not-allowed">
-              <Network className="w-4 h-4" /> Network Settings
+            <div className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-zinc-500 cursor-not-allowed">
+              <Network className="w-4 h-4" /> Pengaturan Jaringan
             </div>
-            <div className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-zinc-500 cursor-not-allowed">
-              <Calendar className="w-4 h-4" /> Schedules
+            <div className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-zinc-500 cursor-not-allowed">
+              <Calendar className="w-4 h-4" /> Jadwal
             </div>
-            <div className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-zinc-500 cursor-not-allowed">
-              <Download className="w-4 h-4" /> Server Importer
+            <div className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-zinc-500 cursor-not-allowed">
+              <Download className="w-4 h-4" /> Pengimpor Server
             </div>
-            <NavLink to={`/server/${port}/settings`} className={({isActive}) => `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition ${isActive ? 'bg-primary/10 text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
-              <Settings className="w-4 h-4" /> Server Settings
+            <NavLink to={`/server/${port}/settings`} className={({isActive}) => `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition ${isActive ? 'bg-primary/10 text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+              <Settings className="w-4 h-4" /> Pengaturan Server
             </NavLink>
 
-            <div className="px-3 pt-6 pb-2 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Software</div>
-            <div className="flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-zinc-400 cursor-default">
+            <div className="px-3 pt-6 pb-2 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Perangkat Lunak</div>
+            <div className="flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium text-zinc-400 cursor-default">
               <div className="flex items-center gap-3">
                 <span className="w-4 h-4 flex items-center justify-center font-bold text-xs">M</span> Minecraft
               </div>
               <ChevronDown className="w-3.5 h-3.5" />
             </div>
-            <div className="flex items-center gap-3 px-3 py-2 pl-10 rounded-lg text-sm font-medium text-zinc-500 cursor-not-allowed">
-              {'<>'} Server Software
+            <div className="flex items-center gap-3 px-3 py-2 pl-10 rounded-md text-sm font-medium text-zinc-500 cursor-not-allowed">
+              {'<>'} Perangkat Lunak Server
             </div>
           </nav>
 
           <div className="p-4 border-t border-zinc-800/60">
             <button onClick={() => navigate('/dashboard')} className="flex items-center gap-2 text-xs font-medium text-zinc-500 hover:text-zinc-300 transition">
-              <LogOut className="w-3.5 h-3.5" /> Back to Servers
+              <LogOut className="w-3.5 h-3.5" /> Kembali ke Server
             </button>
           </div>
         </aside>

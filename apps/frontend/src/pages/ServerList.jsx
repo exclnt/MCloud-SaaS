@@ -46,7 +46,7 @@ export default function ServerList() {
   const copyToClipboard = (text, e) => {
     e.stopPropagation();
     navigator.clipboard.writeText(text);
-    alert('Copied IP to clipboard!');
+    alert('IP disalin ke papan klip!');
   };
 
   return (
@@ -59,14 +59,14 @@ export default function ServerList() {
         <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/50 via-[#0a0a0a]/80 to-[#0a0a0a]"></div>
         
         <div className="relative z-10 text-center space-y-4 mb-10">
-          <h1 className="text-4xl md:text-5xl font-bold text-white">Minecraft Server List</h1>
-          <p className="text-zinc-400 text-lg">Browse the best Minecraft servers to play on right now.</p>
+          <h1 className="text-4xl md:text-5xl font-bold text-white">Daftar Server Minecraft</h1>
+          <p className="text-zinc-400 text-lg">Jelajahi server Minecraft terbaik untuk dimainkan saat ini.</p>
         </div>
         
         <div className="relative z-10 flex items-center justify-center gap-12 md:gap-24 text-center">
           <div>
             <div className="text-3xl font-bold text-primary mb-1">{servers.length}</div>
-            <div className="text-xs text-zinc-500 uppercase tracking-wider font-bold">Servers</div>
+            <div className="text-xs text-zinc-500 uppercase tracking-wider font-bold">Server</div>
           </div>
           <div>
             <div className="text-3xl font-bold text-white mb-1">
@@ -78,7 +78,7 @@ export default function ServerList() {
             <div className="text-3xl font-bold text-white mb-1">
               {servers.reduce((acc, curr) => acc + (curr.status === 'running' ? 1 : 0), 0) * 12}
             </div>
-            <div className="text-xs text-zinc-500 uppercase tracking-wider font-bold">Users</div>
+            <div className="text-xs text-zinc-500 uppercase tracking-wider font-bold">Pengguna</div>
           </div>
         </div>
       </div>
@@ -92,17 +92,17 @@ export default function ServerList() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
               <input 
                 type="text" 
-                placeholder="Search servers..." 
+                placeholder="Cari server..." 
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-primary transition"
               />
             </div>
             <div className="flex gap-2">
-              <button className="flex items-center gap-2 px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-400 hover:text-white transition">
+              <button className="flex items-center gap-2 px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-md text-sm text-zinc-400 hover:text-white transition">
                 <Globe className="w-4 h-4" /> Java
               </button>
-              <button className="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-lg text-sm text-primary transition">
+              <button className="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-md text-sm text-primary transition">
                 <Globe className="w-4 h-4" /> Bedrock
               </button>
             </div>
@@ -113,7 +113,7 @@ export default function ServerList() {
               onClick={() => setSelectedTag('')}
               className={`px-3 py-1 rounded-md text-xs font-medium border transition ${selectedTag === '' ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'}`}
             >
-              All
+              Semua
             </button>
             {displayTags.map(tag => (
               <button 
@@ -131,7 +131,7 @@ export default function ServerList() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-12">
           {filteredServers.length === 0 ? (
             <div className="col-span-full py-12 text-center text-zinc-500">
-              No servers found matching your criteria.
+              Tidak ada server yang cocok dengan kriteria Anda.
             </div>
           ) : (
             filteredServers.map((server, idx) => (
@@ -157,7 +157,7 @@ export default function ServerList() {
 
                 <div className="flex-1 bg-zinc-950/50 rounded-lg p-3 mb-4 border border-zinc-900 overflow-hidden relative">
                   <div className="text-sm font-mono text-zinc-300 whitespace-pre-wrap">{server.motd || 'A Minecraft Server'}</div>
-                  {server.status === 'running' && <div className="text-xs font-mono text-primary mt-1">Status: Running smoothly</div>}
+                  {server.status === 'running' && <div className="text-xs font-mono text-primary mt-1">Status: Berjalan lancar</div>}
                 </div>
 
                 <div className="flex gap-2 mb-4 flex-wrap">
@@ -185,21 +185,21 @@ export default function ServerList() {
 
         {/* CTA Banner */}
         <div className="text-center py-12 border-t border-zinc-800/60">
-          <h2 className="text-2xl font-bold text-white mb-2">Host your own server for free</h2>
-          <p className="text-zinc-500 mb-6">Get listed automatically when your server goes online.</p>
-          <button onClick={() => navigate('/checkout')} className="bg-primary hover:bg-primary-hover text-black font-bold px-8 py-3 rounded-lg transition">
-            Create Free Server
+          <h2 className="text-2xl font-bold text-white mb-2">Host server Anda sendiri secara gratis</h2>
+          <p className="text-zinc-500 mb-6">Tampil di daftar secara otomatis saat server Anda online.</p>
+          <button onClick={() => navigate('/checkout')} className="bg-primary hover:bg-primary-hover text-black font-bold px-8 py-3 rounded-md transition">
+            Buat Server Gratis
           </button>
         </div>
 
         <div className="mt-12 mb-8">
-          <h3 className="text-xl font-bold text-white mb-4">Find the Best Minecraft Servers</h3>
+          <h3 className="text-xl font-bold text-white mb-4">Temukan Server Minecraft Terbaik</h3>
           <p className="text-sm text-zinc-500 leading-relaxed mb-6">
-            Our Minecraft server list features servers running Java Edition and Bedrock Edition with live player counts updated every 10 seconds. Browse survival, PvP, factions, skyblock, creative, and many more game modes. Every server listed is hosted on MCloud with high-performance hardware.
+            Daftar server Minecraft kami menampilkan server Java Edition dan Bedrock Edition dengan jumlah pemain langsung yang diperbarui setiap 10 detik. Jelajahi berbagai mode permainan seperti survival, PvP, factions, skyblock, creative, dan banyak lagi. Setiap server yang terdaftar di-host di MCloud dengan perangkat keras berkinerja tinggi.
           </p>
-          <h4 className="text-sm font-bold text-white mb-2">How to join a server</h4>
+          <h4 className="text-sm font-bold text-white mb-2">Cara bergabung dengan server</h4>
           <p className="text-sm text-zinc-500 leading-relaxed">
-            Click the server IP to copy it to your clipboard, then paste it into Minecraft's multiplayer menu. Bedrock Edition servers display their version clearly so you can join with the right client.
+            Klik IP server untuk menyalinnya ke papan klip Anda, lalu tempelkan ke menu multiplayer Minecraft. Server Bedrock Edition menampilkan versinya dengan jelas sehingga Anda dapat bergabung dengan klien yang tepat.
           </p>
         </div>
       </main>

@@ -41,17 +41,26 @@ export const createContainer = async (userId, config) => {
     status: 'error',
     ip: localIp,
     port,
-    memoryLimit: '500m',
+    memoryLimit: config.memoryLimit || '500m',
     version: config.version || 'latest',
     seed: config.seed || '',
     difficulty: config.difficulty || 'easy',
-    gamemode: config.gamemode || 'survival'
+    gamemode: config.gamemode || 'survival',
+    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
   }).returning().get();
   
-  const cmd = `docker run -d -e EULA=TRUE -e SERVER_ALLOW_LIST=false -e SERVER_WHITE_LIST=false -p ${port}:19132/udp -v mcloud_${userId}_${port}_data:/data -e VERSION="${newServer.version}" -e SERVER_NAME="${newServer.name}" -e LEVEL_SEED="${newServer.seed}" -e DIFFICULTY="${newServer.difficulty}" -e GAMEMODE="${newServer.gamemode}" --memory="500m" --name ${containerName} itzg/minecraft-bedrock-server`;
+  const memLimit = config.memoryLimit || '500m';
+  const cmd = `docker run -d -e EULA=TRUE -e SERVER_ALLOW_LIST=false -e SERVER_WHITE_LIST=false -p ${port}:19132/udp -v mcloud_${userId}_${port}_data:/data -e VERSION="${newServer.version}" -e SERVER_NAME="${newServer.name}" -e LEVEL_SEED="${newServer.seed}" -e DIFFICULTY="${newServer.difficulty}" -e GAMEMODE="${newServer.gamemode}" --memory="${memLimit}" --name ${containerName} itzg/minecraft-bedrock-server`;
   
   try {
     await execAsync(cmd);
+    
+    // Auto-setup UFW firewall rule for the port
+    try {
+      await execAsync(`sudo -n ufw allow ${port}/udp`);
+    } catch (fwErr) {
+      console.warn(`Failed to set ufw rule: ${fwErr.message}`);
+    }
     
     // Jika sukses, update status ke running
     db.update(servers).set({ status: 'running' }).where(eq(servers.id, newServer.id)).run();
@@ -122,6 +131,13 @@ export const deleteContainer = async (port) => {
     await execAsync(`docker rm -f ${containerName}`);
   } catch (e) {
     console.warn(`Docker rm failed: ${e.message}`);
+  }
+  
+  // Auto-remove UFW firewall rule for the port
+  try {
+    await execAsync(`sudo -n ufw delete allow ${port}/udp`);
+  } catch (fwErr) {
+    console.warn(`Failed to remove ufw rule: ${fwErr.message}`);
   }
   
   db.delete(servers).where(eq(servers.id, server.id)).run();
@@ -238,7 +254,7 @@ export const rebuildContainer = async (port, config) => {
     await execAsync(`docker rm -f ${containerName}`);
   } catch (e) {}
   
-  const cmd = `docker run -d -e EULA=TRUE -e SERVER_ALLOW_LIST=false -e SERVER_WHITE_LIST=false -p ${port}:19132/udp -v mcloud_${server.userId}_${port}_data:/data -e VERSION="${server.version}" -e SERVER_NAME="${updatedConfig.name}" -e LEVEL_SEED="${updatedConfig.seed}" -e DIFFICULTY="${updatedConfig.difficulty}" -e GAMEMODE="${updatedConfig.gamemode}" --memory="500m" --name ${containerName} itzg/minecraft-bedrock-server`;
+  const cmd = `docker run -d -e EULA=TRUE -e SERVER_ALLOW_LIST=false -e SERVER_WHITE_LIST=false -p ${port}:19132/udp -v mcloud_${server.userId}_${port}_data:/data -e VERSION="${server.version}" -e SERVER_NAME="${updatedConfig.name}" -e LEVEL_SEED="${updatedConfig.seed}" -e DIFFICULTY="${updatedConfig.difficulty}" -e GAMEMODE="${updatedConfig.gamemode}" --memory="${server.memoryLimit || '500m'}" --name ${containerName} itzg/minecraft-bedrock-server`;
   await execAsync(cmd);
   
   db.update(servers).set({ status: 'running' }).where(eq(servers.id, server.id)).run();
@@ -270,34 +286,50 @@ export const getOnlinePlayers = async (port) => {
 
   const containerName = `mcloud_${server.userId}_${port}`;
   try {
-    const { stdout, stderr } = await execAsync(`docker logs --tail 2000 ${containerName}`);
+    // Force a "list" command to the server so it outputs the current players to the log
+    await execAsync(`docker exec ${containerName} send-command "list"`).catch(() => {});
+    
+    // Wait for the server to process and print to logs
+    await new Promise(r => setTimeout(r, 500));
+    
+    const { stdout, stderr } = await execAsync(`docker logs --tail 50 ${containerName}`);
     const logs = stdout + stderr;
     const lines = logs.split('\n');
     
-    // We will parse lines like:
-    // [2026-06-27 12:00:00 INFO] Player connected: Steve, xuid: ...
-    // [2026-06-27 12:05:00 INFO] Player disconnected: Steve, xuid: ...
-    const activePlayers = new Set();
+    let onlinePlayers = [];
     
-    for (const line of lines) {
-      const connectMatch = line.match(/Player connected:\s*([^,]+)/);
-      if (connectMatch) {
-        activePlayers.add(connectMatch[1].trim());
-      }
-      const disconnectMatch = line.match(/Player disconnected:\s*([^,]+)/);
-      if (disconnectMatch) {
-        activePlayers.delete(disconnectMatch[1].trim());
+    // Look for the last occurrence of "players online:"
+    for (let i = lines.length - 1; i >= 0; i--) {
+      const line = lines[i];
+      const match = line.match(/players online:\s*(.*)/i);
+      if (match) {
+        const namesStr = match[1].trim();
+        if (namesStr) {
+          onlinePlayers = namesStr.split(',').map(n => n.trim()).filter(Boolean);
+        }
+        break;
       }
     }
     
-    return Array.from(activePlayers);
+    // Fallback to connection tracking if the list command output isn't found
+    if (onlinePlayers.length === 0 && !logs.includes('players online:')) {
+      const { stdout: allStdout, stderr: allStderr } = await execAsync(`docker logs --tail 2000 ${containerName}`);
+      const allLogs = allStdout + allStderr;
+      const allLines = allLogs.split('\n');
+      const activePlayers = new Set();
+      for (const line of allLines) {
+        const connectMatch = line.match(/Player connected:\s*([^,]+)/);
+        if (connectMatch) activePlayers.add(connectMatch[1].trim());
+        const disconnectMatch = line.match(/Player disconnected:\s*([^,]+)/);
+        if (disconnectMatch) activePlayers.delete(disconnectMatch[1].trim());
+      }
+      onlinePlayers = Array.from(activePlayers);
+    }
+    
+    return onlinePlayers;
   } catch (e) {
-    // Suppress massive stack traces if Docker is down
-    if (e.message.includes('Docker daemon is unreachable') || e.message.includes('500 Internal Server Error')) {
-      // Silently ignore unreachable daemon
-    } else {
-      console.warn(`Could not fetch players: ${e.message.split('\\n')[0]}`);
-    }
+    if (e.message.includes('Docker daemon is unreachable') || e.message.includes('500 Internal Server Error')) {} 
+    else console.warn(`Could not fetch players: ${e.message.split('\\n')[0]}`);
     return [];
   }
 };

@@ -13,6 +13,23 @@ import {
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
+const getRemainingDays = (expiresAt) => {
+  if (!expiresAt) return 0;
+  const diff = new Date(expiresAt).getTime() - Date.now();
+  if (diff <= 0) return 0;
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+};
+
+const getPlanName = (memoryLimit) => {
+  switch (memoryLimit) {
+    case '500m': return 'Villager';
+    case '1g': return 'Spider';
+    case '2g': return 'Slime';
+    case '4g': return 'Wither';
+    default: return 'Khusus';
+  }
+};
+
 export default function Dashboard() {
   const [servers, setServers] = useState([]);
   const [processing, setProcessing] = useState({});
@@ -40,7 +57,7 @@ export default function Dashboard() {
       await api.startServer(port);
       await fetchServers();
     } catch (e) {
-      alert("Failed to start: " + e.message);
+      alert("Gagal memulai: " + e.message);
     }
     setProcessing(prev => ({ ...prev, [port]: null }));
   };
@@ -51,7 +68,7 @@ export default function Dashboard() {
       await api.stopServer(port);
       await fetchServers();
     } catch (e) {
-      alert("Failed to stop: " + e.message);
+      alert("Gagal menghentikan: " + e.message);
     }
     setProcessing(prev => ({ ...prev, [port]: null }));
   };
@@ -62,7 +79,7 @@ export default function Dashboard() {
       await api.restartServer(port);
       await fetchServers();
     } catch (e) {
-      alert("Failed to restart: " + e.message);
+      alert("Gagal merestart: " + e.message);
     }
     setProcessing(prev => ({ ...prev, [port]: null }));
   };
@@ -75,24 +92,24 @@ export default function Dashboard() {
       <main className="flex-1 p-8 max-w-5xl mx-auto w-full">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Your Servers</h1>
-            <p className="text-sm text-zinc-500">Manage all your game servers in one place</p>
+            <h1 className="text-3xl font-bold text-white mb-2">Server Anda</h1>
+            <p className="text-sm text-zinc-500">Kelola semua server game Anda di satu tempat</p>
           </div>
           
           <button 
-            onClick={() => navigate('/checkout')}
-            className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-black font-bold rounded-xl transition shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+            onClick={() => navigate('/pricing')}
+            className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-black font-bold rounded-md transition shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)]"
           >
-            <Plus className="w-5 h-5" /> Create Server
+            <Plus className="w-5 h-5" /> Buat Server
           </button>
         </div>
 
         <div className="flex gap-4 mb-8">
-          <button className="flex items-center gap-2 px-4 py-2 bg-zinc-900 border border-zinc-700 text-white rounded-lg text-sm font-medium">
+          <button className="flex items-center gap-2 px-4 py-2 bg-zinc-900 border border-zinc-700 text-white rounded-md text-sm font-medium">
             <ServerIcon className="w-4 h-4" /> Minecraft <span className="bg-primary/20 text-primary px-1.5 py-0.5 rounded text-xs ml-1">{servers.length}</span>
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-transparent border border-zinc-800 text-zinc-400 hover:text-zinc-200 rounded-lg text-sm font-medium transition">
-            <Globe className="w-4 h-4" /> External
+          <button className="flex items-center gap-2 px-4 py-2 bg-transparent border border-zinc-800 text-zinc-400 hover:text-zinc-200 rounded-md text-sm font-medium transition">
+            <Globe className="w-4 h-4" /> Eksternal
           </button>
         </div>
 
@@ -102,8 +119,8 @@ export default function Dashboard() {
               <div className="w-16 h-16 bg-zinc-900 rounded-full flex items-center justify-center mb-4">
                 <ServerIcon className="w-8 h-8 text-zinc-600" />
               </div>
-              <h2 className="text-xl font-bold text-white mb-2">No servers found</h2>
-              <p className="text-zinc-500 max-w-sm">You haven't created any servers yet. Click the button above to deploy your first Minecraft server.</p>
+              <h2 className="text-xl font-bold text-white mb-2">Tidak ada server</h2>
+              <p className="text-zinc-500 max-w-sm">Anda belum membuat server apapun. Klik tombol di atas untuk menyebarkan server Minecraft pertama Anda.</p>
             </div>
           ) : (
             servers.map(server => (
@@ -123,7 +140,12 @@ export default function Dashboard() {
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-bold text-zinc-100 group-hover:text-white">{server.name}</h3>
-                      <span className="text-[10px] bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded uppercase font-bold">Free Server</span>
+                      <span className="text-[10px] bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded uppercase font-bold">Paket {server.plan ? server.plan : getPlanName(server.memoryLimit)}</span>
+                      {getRemainingDays(server.expiresAt) > 0 ? (
+                        <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded font-bold">Sisa {getRemainingDays(server.expiresAt)} Hari</span>
+                      ) : (
+                        <span className="text-[10px] bg-red-500/10 text-red-400 border border-red-500/20 px-1.5 py-0.5 rounded font-bold uppercase">Kedaluwarsa</span>
+                      )}
                     </div>
                     <p className="text-xs text-zinc-500 font-mono">{server.ip}:{server.port}</p>
                   </div>
@@ -138,21 +160,21 @@ export default function Dashboard() {
                     <button 
                       onClick={(e) => { e.stopPropagation(); handleStart(server.port); }}
                       disabled={server.status === 'running' || processing[server.port]}
-                      className={`p-2 rounded-lg transition ${server.status === 'running' || processing[server.port] ? 'text-zinc-600 cursor-not-allowed' : 'text-zinc-400 hover:text-primary hover:bg-zinc-800'}`}
+                      className={`p-2 rounded-md transition ${server.status === 'running' || processing[server.port] ? 'text-zinc-600 cursor-not-allowed' : 'text-zinc-400 hover:text-primary hover:bg-zinc-800'}`}
                     >
                       {processing[server.port] === 'start' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
                     </button>
                     <button 
                       onClick={(e) => { e.stopPropagation(); handleRestart(server.port); }}
                       disabled={server.status !== 'running' || processing[server.port]}
-                      className={`p-2 rounded-lg transition ${server.status !== 'running' || processing[server.port] ? 'text-zinc-600 cursor-not-allowed' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+                      className={`p-2 rounded-md transition ${server.status !== 'running' || processing[server.port] ? 'text-zinc-600 cursor-not-allowed' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
                     >
                       {processing[server.port] === 'restart' ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCw className="w-4 h-4" />}
                     </button>
                     <button 
                       onClick={(e) => { e.stopPropagation(); handleStop(server.port); }}
                       disabled={server.status !== 'running' || processing[server.port]}
-                      className={`p-2 rounded-lg transition ${server.status !== 'running' || processing[server.port] ? 'text-zinc-600 cursor-not-allowed' : 'text-zinc-400 hover:text-red-500 hover:bg-zinc-800'}`}
+                      className={`p-2 rounded-md transition ${server.status !== 'running' || processing[server.port] ? 'text-zinc-600 cursor-not-allowed' : 'text-zinc-400 hover:text-red-500 hover:bg-zinc-800'}`}
                     >
                       {processing[server.port] === 'stop' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Square className="w-4 h-4" />}
                     </button>

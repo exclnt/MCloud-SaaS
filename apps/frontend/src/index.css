@@ -13,15 +13,15 @@ body {
 }
 
 .input-field {
-  @apply w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300 placeholder:text-zinc-500;
+  @apply w-full bg-zinc-950 border border-zinc-800 rounded-md px-4 py-3 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300 placeholder:text-zinc-500;
 }
 
 .btn-primary {
-  @apply w-full bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl px-4 py-3 transition-all duration-300 shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)];
+  @apply w-full bg-primary hover:bg-primary-hover text-white font-semibold rounded-md px-4 py-3 transition-all duration-300 shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)];
 }
 
 .btn-secondary {
-  @apply w-full bg-zinc-800 hover:bg-zinc-700 text-white font-semibold rounded-xl px-4 py-3 transition-all duration-300 border border-zinc-700;
+  @apply w-full bg-zinc-800 hover:bg-zinc-700 text-white font-semibold rounded-md px-4 py-3 transition-all duration-300 border border-zinc-700;
 }
 
 /* Custom Scrollbar */
@@ -46,4 +46,57 @@ body {
 * {
   scrollbar-width: thin;
   scrollbar-color: #27272a transparent;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 40s linear infinite;
+}
+.animate-marquee-reverse {
+  animation: marquee 40s linear infinite reverse;
+}
+
+/* Scroll Animations */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+}
+
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Loading Animations */
+@keyframes logo-spin {
+  0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+  50% { transform: scale(1.1) rotate(5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+@keyframes text-reveal {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-logo {
+  animation: logo-spin 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-text-reveal {
+  animation: text-reveal 0.6s ease-out 0.4s forwards;
+  opacity: 0;
+}
+
+.loading-container {
+  transition: opacity 0.5s ease-in-out, visibility 0.5s;
+}
+
+.loading-container.hide {
+  opacity: 0;
+  visibility: hidden;
 }

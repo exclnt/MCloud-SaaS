@@ -2,7 +2,7 @@ import http from 'node:http';
 import { parseJSON } from './utils/parser.js';
 import { snap } from './config/midtrans.js';
 import { db } from '../../../database/db.js';
-import { transactions, users } from '../../../database/schema.js';
+import { transactions, users, servers } from '../../../database/schema.js';
 import { verifyToken, generateToken } from '../../auth-service/src/utils/jwt.js';
 import { eq } from 'drizzle-orm';
 
@@ -137,7 +137,26 @@ const server = http.createServer(async (req, res) => {
         
         const userRecord = db.select().from(users).where(eq(users.id, trxRecord.userId)).get();
         if (userRecord) {
-          triggerProvisioning(userRecord.id, userRecord.username, trxId, trxRecord.config);
+          const configData = trxRecord.config ? JSON.parse(trxRecord.config) : {};
+          if (configData.renew && configData.serverId) {
+            // Handle server renewal
+            const serverToRenew = db.select().from(servers).where(eq(servers.id, configData.serverId)).get();
+            if (serverToRenew) {
+              let currentExpiry = Date.now();
+              if (serverToRenew.expiresAt) {
+                const t = new Date(serverToRenew.expiresAt).getTime();
+                if (t > 1000000000000) currentExpiry = t; // Ensure it's a valid modern date
+              }
+              // Add days based on config, default 30
+              const daysToAdd = configData.days || 30;
+              const newExpiry = new Date(currentExpiry + (daysToAdd * 24 * 60 * 60 * 1000));
+              db.update(servers).set({ expiresAt: newExpiry }).where(eq(servers.id, serverToRenew.id)).run();
+              console.log(`Server ${serverToRenew.id} renewed for ${daysToAdd} days.`);
+            }
+          } else {
+            // New server provisioning
+            triggerProvisioning(userRecord.id, userRecord.username, trxId, trxRecord.config);
+          }
         }
         
       } else if (transactionStatus === 'cancel' || transactionStatus === 'expire' || transactionStatus === 'deny') {

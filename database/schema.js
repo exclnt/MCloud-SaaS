@@ -23,6 +23,7 @@ export const servers = sqliteTable("servers", {
   tags: text("tags").notNull().default(""),
   motd: text("motd").notNull().default("A Minecraft Server"),
   createdAt: integer("created_at", { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  expiresAt: integer("expires_at", { mode: 'timestamp' }),
 });
 
 export const transactions = sqliteTable("transactions", {

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { api } from '../services/api';
 import { Folder, File, Loader2, Upload, FilePlus, FolderPlus, RefreshCw, X, Save, Trash2, ArchiveRestore } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function ServerFiles() {
   const { serverInfo } = useOutletContext();
@@ -15,6 +16,7 @@ export default function ServerFiles() {
   const [fileContent, setFileContent] = useState('');
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState(null);
   const fileInputRef = useRef(null);
   const zipInputRef = useRef(null);
 
@@ -30,7 +32,7 @@ export default function ServerFiles() {
       setFiles(data);
       setCurrentPath(path);
     } catch (e) {
-      alert('Failed to load files: ' + e.message);
+      alert('Gagal memuat file: ' + e.message);
     } finally {
       setLoading(false);
     }
@@ -67,7 +69,7 @@ export default function ServerFiles() {
       setEditingFile(file);
       setFileContent(content);
     } catch (e) {
-      alert('Failed to read file: ' + e.message);
+      alert('Gagal membaca file: ' + e.message);
     } finally {
       setLoading(false);
     }
@@ -78,27 +80,32 @@ export default function ServerFiles() {
     setSaving(true);
     try {
       await api.writeFile(port, filePath, fileContent);
-      alert('File saved successfully!');
+      alert('File berhasil disimpan!');
       setEditingFile(null);
       setFileContent('');
     } catch (e) {
-      alert('Failed to save file: ' + e.message);
+      alert('Gagal menyimpan file: ' + e.message);
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDeleteFile = async (e, file) => {
+  const handleDeleteFileClick = (e, file) => {
     e.stopPropagation();
-    if (!window.confirm(`Are you sure you want to delete ${file.name}?`)) return;
+    setFileToDelete(file);
+  };
+
+  const confirmDeleteFile = async () => {
+    if (!fileToDelete) return;
     
-    const filePath = currentPath ? `${currentPath}/${file.name}` : file.name;
+    const filePath = currentPath ? `${currentPath}/${fileToDelete.name}` : fileToDelete.name;
     try {
       await api.deleteFile(port, filePath);
       await fetchFiles(currentPath);
     } catch (err) {
-      alert('Failed to delete: ' + err.message);
+      alert('Gagal menghapus: ' + err.message);
     }
+    setFileToDelete(null);
   };
 
   const handleFileUpload = async (e) => {
@@ -109,11 +116,11 @@ export default function ServerFiles() {
     try {
       await api.uploadFile(port, currentPath, file);
       alert(file.name.endsWith('.zip') || file.name.endsWith('.mcworld') 
-        ? 'World extracted successfully!' 
-        : 'File uploaded successfully!');
+        ? 'Dunia berhasil diekstrak!' 
+        : 'File berhasil diunggah!');
       await fetchFiles(currentPath);
     } catch (err) {
-      alert('Failed to upload: ' + err.message);
+      alert('Gagal mengunggah: ' + err.message);
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -137,9 +144,9 @@ export default function ServerFiles() {
             <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
               <Folder className="w-5 h-5 text-primary" />
             </div>
-            File Manager
+            Pengelola File
           </h1>
-          <p className="text-zinc-500">Browse and manage server files</p>
+          <p className="text-zinc-500">Jelajahi dan kelola file server</p>
         </div>
         
         <div className="flex items-center gap-2">
@@ -159,27 +166,27 @@ export default function ServerFiles() {
           <button 
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="flex items-center gap-2 px-4 py-2 border border-primary text-primary hover:bg-primary/10 transition rounded-lg text-sm font-semibold"
+            className="flex items-center gap-2 px-4 py-2 border border-primary text-primary hover:bg-primary/10 transition rounded-md text-sm font-semibold"
           >
             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />} 
-            Upload File
+            Unggah File
           </button>
           <button 
             onClick={() => zipInputRef.current?.click()}
             disabled={uploading}
-            className="flex items-center gap-2 px-4 py-2 border border-blue-500 text-blue-500 hover:bg-blue-500/10 transition rounded-lg text-sm font-semibold"
+            className="flex items-center gap-2 px-4 py-2 border border-blue-500 text-blue-500 hover:bg-blue-500/10 transition rounded-md text-sm font-semibold"
           >
             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArchiveRestore className="w-4 h-4" />} 
-            Upload & Extract Zip
+            Unggah & Ekstrak Zip
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition rounded-lg text-sm font-semibold">
-            <FilePlus className="w-4 h-4" /> New File
+          <button className="flex items-center gap-2 px-4 py-2 border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition rounded-md text-sm font-semibold">
+            <FilePlus className="w-4 h-4" /> File Baru
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 border border-primary text-primary hover:bg-primary/10 transition rounded-lg text-sm font-semibold">
-            <FolderPlus className="w-4 h-4" /> New Folder
+          <button className="flex items-center gap-2 px-4 py-2 border border-primary text-primary hover:bg-primary/10 transition rounded-md text-sm font-semibold">
+            <FolderPlus className="w-4 h-4" /> Folder Baru
           </button>
-          <button onClick={() => fetchFiles(currentPath)} className="flex items-center gap-2 px-4 py-2 border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition rounded-lg text-sm font-semibold">
-            <RefreshCw className="w-4 h-4" /> Refresh
+          <button onClick={() => fetchFiles(currentPath)} className="flex items-center gap-2 px-4 py-2 border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition rounded-md text-sm font-semibold">
+            <RefreshCw className="w-4 h-4" /> Muat Ulang
           </button>
         </div>
       </div>
@@ -210,7 +217,7 @@ export default function ServerFiles() {
         {/* File List Header */}
         <div className="flex items-center border-b border-zinc-800/60 p-3 text-xs font-bold text-zinc-500 uppercase tracking-wider bg-black/20">
           <div className="w-10 flex justify-center"><input type="checkbox" className="accent-primary" /></div>
-          <div className="flex-1">Select All</div>
+          <div className="flex-1">Pilih Semua</div>
         </div>
 
         {/* File List */}
@@ -256,18 +263,18 @@ export default function ServerFiles() {
                     <div>
                       <div className="text-sm text-zinc-300 group-hover:text-white transition font-mono">{file.name}</div>
                       {file.type === 'file' && (
-                        <div className="text-[10px] text-zinc-600 mt-0.5">{formatSize(file.size)} &bull; 3 days ago</div>
+                        <div className="text-[10px] text-zinc-600 mt-0.5">{formatSize(file.size)} &bull; 3 hari yang lalu</div>
                       )}
                       {file.type === 'directory' && (
-                        <div className="text-[10px] text-zinc-600 mt-0.5">3 days ago</div>
+                        <div className="text-[10px] text-zinc-600 mt-0.5">3 hari yang lalu</div>
                       )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button 
-                      onClick={(e) => handleDeleteFile(e, file)}
-                      className="p-2 text-zinc-600 hover:text-red-500 hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition"
-                      title="Delete"
+                      onClick={(e) => handleDeleteFileClick(e, file)}
+                      className="p-2 text-zinc-600 hover:text-red-500 hover:bg-red-500/10 rounded-md opacity-0 group-hover:opacity-100 transition"
+                      title="Hapus"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -280,7 +287,7 @@ export default function ServerFiles() {
               
               {files.length === 0 && (
                 <div className="p-8 text-center text-zinc-500">
-                  This directory is empty.
+                  Direktori ini kosong.
                 </div>
               )}
             </div>
@@ -300,12 +307,12 @@ export default function ServerFiles() {
               <button 
                 disabled={saving}
                 onClick={handleSaveFile}
-                className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-black font-bold rounded-lg transition"
+                className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-black font-bold rounded-md transition"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                Save Changes
+                Simpan Perubahan
               </button>
-              <button onClick={() => setEditingFile(null)} className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition">
+              <button onClick={() => setEditingFile(null)} className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-md transition">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -320,6 +327,17 @@ export default function ServerFiles() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={!!fileToDelete}
+        onClose={() => setFileToDelete(null)}
+        onConfirm={confirmDeleteFile}
+        title="Hapus File"
+        message={`Apakah Anda yakin ingin menghapus ${fileToDelete?.type === 'directory' ? 'folder' : 'file'} "${fileToDelete?.name}"? Tindakan ini tidak dapat dibatalkan.`}
+        confirmText="Hapus"
+        cancelText="Batal"
+        isDanger={true}
+      />
     </div>
   );
 }
