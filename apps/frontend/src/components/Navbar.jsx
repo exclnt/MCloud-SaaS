@@ -10,6 +10,7 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const isLanding = location.pathname === '/';
 
   const serversRef = useRef(null);
   const profileRef = useRef(null);
@@ -60,7 +61,7 @@ export default function Navbar() {
           </div>
           <span className="font-bold text-white tracking-wide">MCloud</span>
         </div>
-        {token && (
+        {!isLanding && token && (
           <nav className="hidden md:flex items-center gap-2 text-sm font-medium">
             <Link to="/dashboard" className={navLinkClass('/dashboard')}>Beranda</Link>
             <Link to="/pricing" className={navLinkClass('/pricing')}>Buat Server</Link>
@@ -68,9 +69,36 @@ export default function Navbar() {
           </nav>
         )}
       </div>
+
+      {isLanding && (
+        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-400 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <a href="#home" className="hover:text-white transition">Beranda</a>
+          <a href="#pricing" className="hover:text-white transition">Harga</a>
+          <a href="#faq" className="hover:text-white transition">FAQ</a>
+        </nav>
+      )}
       
       <div className="flex items-center gap-4 text-sm font-medium text-zinc-400">
-        {token ? (
+        {isLanding ? (
+          <>
+            <div className="hidden sm:flex items-center gap-4">
+              {token ? (
+                <Link to="/dashboard" className="bg-primary text-black px-4 py-2 rounded-lg font-bold hover:bg-primary-hover transition">Dasbor</Link>
+              ) : (
+                <>
+                  <Link to="/login" className="hover:text-white transition font-bold">Masuk</Link>
+                  <Link to="/register" className="bg-primary text-black px-4 py-2 rounded-lg font-bold hover:bg-primary-hover transition">Daftar</Link>
+                </>
+              )}
+            </div>
+            <button 
+              className="sm:hidden flex items-center justify-center w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </>
+        ) : token ? (
           <>
             <div className="hidden md:flex items-center gap-2 cursor-pointer hover:text-white transition">
               <Wallet className="w-4 h-4" /> Dompet
@@ -203,7 +231,24 @@ export default function Navbar() {
       {/* Mobile Menu Dropdown */}
       {isMobileMenuOpen && (
         <div ref={mobileMenuRef} className="absolute top-16 left-0 right-0 bg-[#0a0a0a] border-b border-zinc-800/60 p-4 md:hidden shadow-2xl flex flex-col gap-4 z-40 max-h-[calc(100vh-4rem)] overflow-y-auto">
-          {token ? (
+          {isLanding ? (
+            <div className="flex flex-col gap-4 px-2">
+              <a href="#home" onClick={() => setIsMobileMenuOpen(false)} className="py-2 text-zinc-300 hover:text-white text-sm font-medium transition">Beranda</a>
+              <a href="#pricing" onClick={() => setIsMobileMenuOpen(false)} className="py-2 text-zinc-300 hover:text-white text-sm font-medium transition">Harga</a>
+              <a href="#faq" onClick={() => setIsMobileMenuOpen(false)} className="py-2 text-zinc-300 hover:text-white text-sm font-medium transition">FAQ</a>
+              
+              <div className="pt-2 border-t border-zinc-800/60">
+                {token ? (
+                  <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="w-full block p-3 bg-primary text-black rounded-lg text-sm font-bold text-center hover:bg-primary-hover transition">Dasbor</Link>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="w-full p-3 bg-zinc-900 border border-zinc-800 text-white rounded-lg text-sm font-bold text-center hover:bg-zinc-800 transition">Masuk</Link>
+                    <Link to="/register" onClick={() => setIsMobileMenuOpen(false)} className="w-full p-3 bg-primary text-black rounded-lg text-sm font-bold text-center hover:bg-primary-hover transition">Daftar</Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : token ? (
             <>
               <div className="flex items-center gap-3 p-3 bg-zinc-900/50 border border-zinc-800 rounded-xl">
                 <div className="w-10 h-10 rounded-full bg-emerald-900 flex items-center justify-center shrink-0 border border-emerald-800">

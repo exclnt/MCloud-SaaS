@@ -57,7 +57,7 @@ export default function Landing() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <div className="relative pt-40 pb-32 lg:pt-52 lg:pb-40 overflow-hidden border-b border-zinc-800/60">
+        <div id="home" className="relative pt-40 pb-32 lg:pt-52 lg:pb-40 overflow-hidden border-b border-zinc-800/60">
           <video 
             autoPlay 
             muted 
@@ -132,7 +132,7 @@ export default function Landing() {
         </div>
 
         {/* Pricing */}
-        <div className="py-24 bg-[#101010] border-y border-zinc-800/60 relative">
+        <div id="pricing" className="py-24 bg-[#101010] border-y border-zinc-800/60 relative">
           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent"></div>
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16 reveal">
@@ -311,7 +311,7 @@ export default function Landing() {
           </div>
         </div>
         {/* FAQ Section */}
-        <div className="py-24 bg-[#0a0a0a]">
+        <div id="faq" className="py-24 bg-[#0a0a0a]">
           <div className="max-w-4xl mx-auto px-6">
             <div className="text-center mb-16 reveal">
               <h2 className="text-3xl font-bold text-white mb-4">Pertanyaan yang Sering Diajukan</h2>

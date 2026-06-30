@@ -14,6 +14,9 @@ import ServerLayout from './components/ServerLayout';
 import ServerOverview from './pages/ServerOverview';
 import ServerPlayers from './pages/ServerPlayers';
 import ClientArea from './pages/ClientArea';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
+import NotFound from './pages/NotFound';
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -86,6 +89,10 @@ export default function App() {
           <Route path="files" element={<ServerFiles />} />
           <Route path="settings" element={<ServerSettings />} />
         </Route>
+
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
     </>

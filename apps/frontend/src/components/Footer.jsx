@@ -34,8 +34,8 @@ export default function Footer() {
         <div>
           <h4 className="font-bold text-xs text-white uppercase mb-4 tracking-wider">Sumber Daya</h4>
           <ul className="space-y-3 text-xs text-zinc-500">
-            <li className="hover:text-white cursor-pointer transition">Syarat & Ketentuan</li>
-            <li className="hover:text-white cursor-pointer transition">Kebijakan Privasi</li>
+            <li><Link to="/terms" className="hover:text-white transition">Syarat & Ketentuan</Link></li>
+            <li><Link to="/privacy" className="hover:text-white transition">Kebijakan Privasi</Link></li>
           </ul>
         </div>
       </div>
