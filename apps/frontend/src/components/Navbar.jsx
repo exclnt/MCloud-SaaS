@@ -11,6 +11,8 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const isLanding = location.pathname === '/';
+  
+  const [currentUser, setCurrentUser] = useState({ username: 'Pengguna', email: '' });
 
   const serversRef = useRef(null);
   const profileRef = useRef(null);
@@ -26,6 +28,16 @@ export default function Navbar() {
       }
     };
     fetchServers();
+
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.username) {
+          setCurrentUser({ username: payload.username, email: payload.email || 'Tidak ada email' });
+        }
+      } catch (e) {}
+    }
 
     const handleClickOutside = (event) => {
       if (serversRef.current && !serversRef.current.contains(event.target)) {
@@ -53,12 +65,10 @@ export default function Navbar() {
   const token = localStorage.getItem('token');
 
   return (
-    <header className="h-16 border-b border-zinc-800/60 bg-[#0a0a0a] flex items-center justify-between px-6 shrink-0 z-50 sticky top-0">
+    <header className="h-16 border-b border-zinc-800/60 bg-[#0a0a0a]/80 backdrop-blur-md flex items-center justify-between px-6 shrink-0 z-50 sticky top-0">
       <div className="flex items-center gap-8">
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-          <div className="w-8 h-8 bg-zinc-800 rounded-xl flex items-center justify-center">
-            <span className="text-primary font-bold">M</span>
-          </div>
+          <img src="/creep.png" alt="MCloud" className="w-8 h-8 object-contain" />
           <span className="font-bold text-white tracking-wide">MCloud</span>
         </div>
         {!isLanding && token && (
@@ -75,6 +85,7 @@ export default function Navbar() {
           <a href="#home" className="hover:text-white transition">Beranda</a>
           <a href="#pricing" className="hover:text-white transition">Harga</a>
           <a href="#faq" className="hover:text-white transition">FAQ</a>
+          <Link to="/docs" className="hover:text-white transition">Docs</Link>
         </nav>
       )}
       
@@ -164,7 +175,7 @@ export default function Navbar() {
                 <div className="w-6 h-6 rounded-full bg-emerald-900 flex items-center justify-center">
                   <User className="w-3.5 h-3.5 text-emerald-500" />
                 </div>
-                <span className="hidden lg:inline">Eko Ramadani</span> <ChevronDown className={`w-4 h-4 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
+                <span className="hidden lg:inline">{currentUser.username}</span> <ChevronDown className={`w-4 h-4 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
               </div>
               
               {isProfileOpen && (
@@ -174,8 +185,8 @@ export default function Navbar() {
                       <User className="w-5 h-5 text-emerald-500" />
                     </div>
                     <div className="truncate">
-                      <div className="text-sm font-bold text-white">Eko Ramadani</div>
-                      <div className="text-xs text-zinc-500 truncate">ekoramadani777@gmail.com</div>
+                      <div className="text-sm font-bold text-white">{currentUser.username}</div>
+                      <div className="text-xs text-zinc-500 truncate">{currentUser.email}</div>
                     </div>
                   </div>
                   <div className="p-2">
@@ -236,14 +247,15 @@ export default function Navbar() {
               <a href="#home" onClick={() => setIsMobileMenuOpen(false)} className="py-2 text-zinc-300 hover:text-white text-sm font-medium transition">Beranda</a>
               <a href="#pricing" onClick={() => setIsMobileMenuOpen(false)} className="py-2 text-zinc-300 hover:text-white text-sm font-medium transition">Harga</a>
               <a href="#faq" onClick={() => setIsMobileMenuOpen(false)} className="py-2 text-zinc-300 hover:text-white text-sm font-medium transition">FAQ</a>
+              <Link to="/docs" onClick={() => setIsMobileMenuOpen(false)} className="py-2 text-zinc-300 hover:text-white text-sm font-medium transition">Docs</Link>
               
               <div className="pt-2 border-t border-zinc-800/60">
                 {token ? (
-                  <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="w-full block p-3 bg-primary text-black rounded-lg text-sm font-bold text-center hover:bg-primary-hover transition">Dasbor</Link>
+                  <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="w-full block p-2 sm:p-3 bg-primary text-black rounded-lg text-sm font-bold text-center hover:bg-primary-hover transition">Dasbor</Link>
                 ) : (
-                  <div className="flex flex-col gap-3">
-                    <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="w-full p-3 bg-zinc-900 border border-zinc-800 text-white rounded-lg text-sm font-bold text-center hover:bg-zinc-800 transition">Masuk</Link>
-                    <Link to="/register" onClick={() => setIsMobileMenuOpen(false)} className="w-full p-3 bg-primary text-black rounded-lg text-sm font-bold text-center hover:bg-primary-hover transition">Daftar</Link>
+                  <div className="flex flex-col gap-2 sm:gap-3">
+                    <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="w-full p-2 sm:p-3 bg-zinc-900 border border-zinc-800 text-white rounded-lg text-sm font-bold text-center hover:bg-zinc-800 transition">Masuk</Link>
+                    <Link to="/register" onClick={() => setIsMobileMenuOpen(false)} className="w-full p-2 sm:p-3 bg-primary text-black rounded-lg text-sm font-bold text-center hover:bg-primary-hover transition">Daftar</Link>
                   </div>
                 )}
               </div>
@@ -261,16 +273,16 @@ export default function Navbar() {
               </div>
 
               <div className="grid grid-cols-2 gap-2">
-                <button onClick={() => { navigate('/dashboard'); setIsMobileMenuOpen(false); }} className="p-3 bg-zinc-900/50 rounded-lg border border-zinc-800 text-sm font-medium text-white hover:bg-zinc-800 transition">
+                <button onClick={() => { navigate('/dashboard'); setIsMobileMenuOpen(false); }} className="p-2 sm:p-3 bg-zinc-900/50 rounded-lg border border-zinc-800 text-xs sm:text-sm font-medium text-white hover:bg-zinc-800 transition">
                   Beranda
                 </button>
-                <button onClick={() => { navigate('/pricing'); setIsMobileMenuOpen(false); }} className="p-3 bg-zinc-900/50 rounded-lg border border-zinc-800 text-sm font-medium text-white hover:bg-zinc-800 transition">
+                <button onClick={() => { navigate('/pricing'); setIsMobileMenuOpen(false); }} className="p-2 sm:p-3 bg-zinc-900/50 rounded-lg border border-zinc-800 text-xs sm:text-sm font-medium text-white hover:bg-zinc-800 transition">
                   Buat Server
                 </button>
-                <button onClick={() => { navigate('/server-list'); setIsMobileMenuOpen(false); }} className="p-3 bg-zinc-900/50 rounded-lg border border-zinc-800 text-sm font-medium text-white hover:bg-zinc-800 transition">
+                <button onClick={() => { navigate('/server-list'); setIsMobileMenuOpen(false); }} className="p-2 sm:p-3 bg-zinc-900/50 rounded-lg border border-zinc-800 text-xs sm:text-sm font-medium text-white hover:bg-zinc-800 transition">
                   Daftar Server
                 </button>
-                <button onClick={() => { navigate('/clientarea'); setIsMobileMenuOpen(false); }} className="p-3 bg-zinc-900/50 rounded-lg border border-zinc-800 text-sm font-medium text-white hover:bg-zinc-800 transition">
+                <button onClick={() => { navigate('/clientarea'); setIsMobileMenuOpen(false); }} className="p-2 sm:p-3 bg-zinc-900/50 rounded-lg border border-zinc-800 text-xs sm:text-sm font-medium text-white hover:bg-zinc-800 transition">
                   Area Klien
                 </button>
               </div>
@@ -300,15 +312,15 @@ export default function Navbar() {
 
               <button 
                 onClick={() => { localStorage.removeItem('token'); navigate('/login'); }} 
-                className="mt-2 p-3 bg-red-500/10 text-red-500 rounded-lg border border-red-500/20 text-sm font-medium text-center hover:bg-red-500/20 transition flex items-center justify-center gap-2"
+                className="mt-2 p-2 sm:p-3 bg-red-500/10 text-red-500 rounded-lg border border-red-500/20 text-xs sm:text-sm font-medium text-center hover:bg-red-500/20 transition flex items-center justify-center gap-2"
               >
                 <LogOut className="w-4 h-4" /> Keluar
               </button>
             </>
           ) : (
-            <div className="flex flex-col gap-3">
-              <Link to="/login" className="w-full p-3 bg-zinc-900 border border-zinc-800 text-white rounded-lg text-sm font-bold text-center hover:bg-zinc-800 transition">Masuk</Link>
-              <Link to="/register" className="w-full p-3 bg-primary text-black rounded-lg text-sm font-bold text-center hover:bg-primary-hover transition">Daftar</Link>
+            <div className="flex flex-col gap-2 sm:gap-3">
+              <Link to="/login" className="w-full p-2 sm:p-3 bg-zinc-900 border border-zinc-800 text-white rounded-lg text-sm font-bold text-center hover:bg-zinc-800 transition">Masuk</Link>
+              <Link to="/register" className="w-full p-2 sm:p-3 bg-primary text-black rounded-lg text-sm font-bold text-center hover:bg-primary-hover transition">Daftar</Link>
             </div>
           )}
         </div>

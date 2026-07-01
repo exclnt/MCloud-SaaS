@@ -11,7 +11,7 @@ import {
   User
 } from "lucide-react";
 
-const PLAN_DETAILS = {
+const DEFAULT_PLANS = {
   villager: { name: 'Villager', ram: '500MB', price: 30000, priceStr: '30.000', icon: 'MHF_Villager', desc: 'Cocok untuk server bertahan hidup (survival) pribadi dengan beberapa teman.' },
   spider: { name: 'Spider', ram: '1GB', price: 40000, priceStr: '40.000', icon: 'MHF_Spider', desc: 'Ideal untuk server skala menengah dengan tambahan plugin dasar.' },
   slime: { name: 'Slime', ram: '2GB', price: 50000, priceStr: '50.000', icon: 'MHF_Slime', desc: 'Sempurna untuk server komunitas dengan sistem ekonomi atau minigame.' },
@@ -25,7 +25,8 @@ export default function Checkout() {
   const [searchParams] = useSearchParams();
   
   const planKey = searchParams.get('plan') || 'slime';
-  const selectedPlan = PLAN_DETAILS[planKey] || PLAN_DETAILS['slime'];
+  const [selectedPlan, setSelectedPlan] = useState(DEFAULT_PLANS[planKey] || DEFAULT_PLANS['slime']);
+  const [isPlanLoading, setIsPlanLoading] = useState(true);
   
   const isRenew = searchParams.get('renew') === 'true';
   const renewServerId = searchParams.get('serverId');
@@ -43,6 +44,7 @@ export default function Checkout() {
   });
 
   useEffect(() => {
+    document.title = 'Sewa Server - MCloud';
     // Restore config if coming back from login
     const saved = sessionStorage.getItem('checkout_config');
     if (saved) {
@@ -56,6 +58,23 @@ export default function Checkout() {
     script.src = "https://app.sandbox.midtrans.com/snap/snap.js";
     script.setAttribute("data-client-key", "SB-Mid-client-YOUR_CLIENT_KEY");
     document.body.appendChild(script);
+    
+    api.getPlans().then(plans => {
+      const dbPlan = plans.find(p => p.name.toLowerCase() === planKey);
+      if (dbPlan) {
+        const defaultDetails = DEFAULT_PLANS[planKey] || DEFAULT_PLANS['slime'];
+        const finalPrice = dbPlan.price - (dbPlan.price * (dbPlan.discount || 0) / 100);
+        setSelectedPlan({
+          ...defaultDetails,
+          price: finalPrice,
+          priceStr: finalPrice.toLocaleString()
+        });
+      }
+      setIsPlanLoading(false);
+    }).catch(e => {
+      console.error(e);
+      setIsPlanLoading(false);
+    });
 
     return () => {
       document.body.removeChild(script);
@@ -123,9 +142,16 @@ export default function Checkout() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8 relative flex items-center justify-center">
+    <div className="min-h-screen bg-background p-4 md:p-8 relative flex items-center justify-center overflow-hidden">
+      
+      {/* Villager Decoration */}
+      <img 
+        src="/Meet_the_Wandering_Trader.png" 
+        alt="Villager" 
+        className="absolute bottom-0 -right-0 w-64 md:w-96 lg:w-[700px] object-contain pointer-events-none z-0 drop-shadow-[0_0_30px_rgba(16,185,129,0.15)]"
+      />
 
-      <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-8">
+      <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-8 relative z-10">
         
         {/* Left Form Column */}
         <div className="glass-panel p-5 md:p-6 rounded-xl bg-[#101010] animate-slide-up">
@@ -152,7 +178,7 @@ export default function Checkout() {
           ) : (
             <>
               <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <Settings2 className="w-6 h-6 text-primary" /> 1. Pengaturan Server
+                <Settings2 className="w-6 h-6 text-primary" /> Pengaturan Server
               </h2>
 
               <div className="space-y-5">
@@ -292,15 +318,15 @@ export default function Checkout() {
           ) : (
             <button
               onClick={handleCheckout}
-              disabled={loading || (!isRenew && !config.name)}
+              disabled={loading || isPlanLoading || (!isRenew && !config.name)}
               className="btn-primary !py-4 flex items-center justify-center gap-3 text-lg disabled:opacity-50"
             >
-              {loading ? (
+              {(loading || isPlanLoading) ? (
                 <Loader2 className="w-6 h-6 animate-spin" />
               ) : (
                 <CreditCard className="w-6 h-6" />
               )}
-              {loading ? "Memproses..." : `Bayar Rp ${selectedPlan.priceStr}`}
+              {loading || isPlanLoading ? "Memproses..." : `Bayar Rp ${selectedPlan.priceStr}`}
             </button>
           )}
         </div>

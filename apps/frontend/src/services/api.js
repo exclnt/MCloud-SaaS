@@ -19,15 +19,35 @@ export const api = {
     if (!res.ok) throw new Error(data.error);
     return data;
   },
-  register: async (username, password) => {
+  register: async (email, username, password) => {
     const res = await fetch(`${API_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
+      body: JSON.stringify({ email, username, password })
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
     return data;
+  },
+  updateProfile: async (data) => {
+    const res = await fetch(`${API_URL}/auth/update-profile`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error);
+    return result;
+  },
+  updatePassword: async (data) => {
+    const res = await fetch(`${API_URL}/auth/update-password`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error);
+    return result;
   },
   createServer: async (config) => {
     const res = await fetch(`${API_URL}/servers`, {
@@ -58,21 +78,27 @@ export const api = {
       method: 'POST',
       headers: getAuthHeaders()
     });
-    return res.json();
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    return data;
   },
   stopServer: async (port) => {
     const res = await fetch(`${API_URL}/servers/${port}/stop`, {
       method: 'POST',
       headers: getAuthHeaders()
     });
-    return res.json();
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    return data;
   },
   restartServer: async (port) => {
     const res = await fetch(`${API_URL}/servers/${port}/restart`, {
       method: 'POST',
       headers: getAuthHeaders()
     });
-    return res.json();
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    return data;
   },
   checkout: async (amount, config = {}) => {
     const res = await fetch(`${API_URL}/payments/checkout`, {
@@ -196,6 +222,55 @@ export const api = {
       method: 'POST',
       headers,
       body: formData
+    });
+      const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    return data;
+  },
+  // Admin Endpoints
+  getAdminStats: async () => {
+    const res = await fetch(`${API_URL}/admin/stats`, {
+      headers: getAuthHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    return data;
+  },
+  getAllUsers: async () => {
+    const res = await fetch(`${API_URL}/admin/users`, {
+      headers: getAuthHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    return data;
+  },
+  getAllServers: async () => {
+    const res = await fetch(`${API_URL}/admin/servers`, {
+      headers: getAuthHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    return data;
+  },
+  getActivityLogs: async () => {
+    const res = await fetch(`${API_URL}/admin/logs`, {
+      headers: getAuthHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    return data;
+  },
+  getPlans: async () => {
+    const res = await fetch(`${API_URL}/plans`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    return data;
+  },
+  updatePlan: async (planId, config) => {
+    const res = await fetch(`${API_URL}/admin/plans/${planId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(config)
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);

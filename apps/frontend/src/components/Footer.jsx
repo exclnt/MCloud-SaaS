@@ -5,9 +5,7 @@ export default function Footer() {
     <footer className="border-t border-zinc-800/60 bg-[#0a0a0a] p-8 flex flex-col md:flex-row gap-12 text-sm justify-center max-w-7xl mx-auto w-full mt-auto">
       <div className="flex-1 max-w-sm">
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-6 h-6 bg-zinc-800 rounded flex items-center justify-center">
-            <span className="text-primary font-bold text-xs">M</span>
-          </div>
+          <img src="/creep.png" alt="MCloud" className="w-6 h-6 object-contain" />
           <span className="font-bold text-white">MCloud</span>
         </div>
         <p className="text-zinc-500 text-xs leading-relaxed">
@@ -20,7 +18,7 @@ export default function Footer() {
           <h4 className="font-bold text-xs text-white uppercase mb-4 tracking-wider">Layanan</h4>
           <ul className="space-y-3 text-xs text-zinc-500">
             <li className="hover:text-white cursor-pointer transition">Hosting Minecraft</li>
-            <li className="hover:text-white cursor-pointer transition">Hosting Minecraft Gratis</li>
+            <li className="hover:text-white cursor-pointer transition">Hosting Minecraft Terjangkau</li>
             <li className="hover:text-white cursor-pointer transition">Server Dedicated</li>
           </ul>
         </div>

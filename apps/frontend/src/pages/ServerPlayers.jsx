@@ -67,12 +67,12 @@ export default function ServerPlayers() {
 
   if (status !== 'running') {
     return (
-      <div className="p-6 md:p-10 text-center animate-fade-in">
+      <div className="p-6 md:p-10 pt-32 md:pt-48 text-center animate-fade-in flex-1 flex flex-col items-center justify-start h-full">
         <div className="w-16 h-16 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
           <Users className="w-8 h-8 text-red-500" />
         </div>
         <h2 className="text-2xl font-bold text-white mb-2">Server Tidak Berjalan</h2>
-        <p className="text-zinc-400">Anda hanya dapat mengelola pemain saat server sedang aktif.</p>
+        <p className="text-zinc-400 max-w-sm mx-auto">Anda hanya dapat mengelola pemain saat server sedang aktif.</p>
       </div>
     );
   }

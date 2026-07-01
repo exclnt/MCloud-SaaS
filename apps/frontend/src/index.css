@@ -58,6 +58,9 @@ body {
 .animate-marquee-reverse {
   animation: marquee 40s linear infinite reverse;
 }
+.animate-marquee:hover, .animate-marquee-reverse:hover {
+  animation-play-state: paused;
+}
 
 /* Scroll Animations */
 .reveal {
@@ -69,6 +72,28 @@ body {
 .reveal.active {
   opacity: 1;
   transform: translateY(0);
+}
+
+.reveal-left {
+  opacity: 0;
+  transform: translateX(150px);
+  transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+}
+
+.reveal-left.active {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.reveal-right {
+  opacity: 0;
+  transform: translateX(-150px);
+  transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+}
+
+.reveal-right.active {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 /* Loading Animations */
@@ -99,4 +124,41 @@ body {
 .loading-container.hide {
   opacity: 0;
   visibility: hidden;
+}
+
+/* Docs Markdown Styles */
+.docs-content h1 {
+  @apply text-3xl font-extrabold text-white mb-6 mt-8;
+}
+
+.docs-content h2 {
+  @apply text-2xl font-bold text-white mb-4 mt-8 pb-2 border-b border-zinc-800/60;
+}
+
+.docs-content h3 {
+  @apply text-xl font-bold text-zinc-100 mb-3 mt-6;
+}
+
+.docs-content p {
+  @apply mb-4 leading-relaxed;
+}
+
+.docs-content ul {
+  @apply list-disc list-outside pl-5 mb-4 space-y-2;
+}
+
+.docs-content ol {
+  @apply list-decimal list-outside pl-5 mb-4 space-y-2;
+}
+
+.docs-content li {
+  @apply text-zinc-300;
+}
+
+.docs-content code {
+  @apply bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded text-primary text-sm font-mono;
+}
+
+.docs-content strong {
+  @apply text-white font-bold;
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import { api } from '../services/api';
 import { 
   Play, 
@@ -33,6 +34,8 @@ const getPlanName = (memoryLimit) => {
 export default function Dashboard() {
   const [servers, setServers] = useState([]);
   const [processing, setProcessing] = useState({});
+  const [currentUser, setCurrentUser] = useState({ username: '' });
+  const [role, setRole] = useState('');
   const navigate = useNavigate();
 
   const fetchServers = async () => {
@@ -45,7 +48,18 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    document.title = 'Dasbor - MCloud';
     fetchServers();
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.username) {
+          setCurrentUser({ username: payload.username });
+        }
+      } catch (e) {}
+    }
+    setRole(localStorage.getItem('role') || '');
     const interval = setInterval(fetchServers, 5000);
     return () => clearInterval(interval);
     // eslint-disable-next-line
@@ -56,8 +70,9 @@ export default function Dashboard() {
     try {
       await api.startServer(port);
       await fetchServers();
+      toast.success('Server berhasil dimulai');
     } catch (e) {
-      alert("Gagal memulai: " + e.message);
+      toast.error("Gagal memulai: " + e.message);
     }
     setProcessing(prev => ({ ...prev, [port]: null }));
   };
@@ -67,8 +82,9 @@ export default function Dashboard() {
     try {
       await api.stopServer(port);
       await fetchServers();
+      toast.success('Server berhasil dihentikan');
     } catch (e) {
-      alert("Gagal menghentikan: " + e.message);
+      toast.error("Gagal menghentikan: " + e.message);
     }
     setProcessing(prev => ({ ...prev, [port]: null }));
   };
@@ -78,8 +94,9 @@ export default function Dashboard() {
     try {
       await api.restartServer(port);
       await fetchServers();
+      toast.success('Server berhasil direstart');
     } catch (e) {
-      alert("Gagal merestart: " + e.message);
+      toast.error("Gagal merestart: " + e.message);
     }
     setProcessing(prev => ({ ...prev, [port]: null }));
   };
@@ -89,26 +106,37 @@ export default function Dashboard() {
       <Navbar />
 
       {/* Main Content */}
-      <main className="flex-1 w-full px-6 md:px-10 py-6 md:py-10 max-w-7xl mx-auto">
+      <main className="flex-1 w-full min-h-[calc(100dvh-12rem)] md:min-h-0 px-6 md:px-10 py-6 md:py-10 max-w-7xl mx-auto shrink-0 flex flex-col">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Server Anda</h1>
+            <h1 className="text-3xl font-bold text-white mb-2">
+              {currentUser.username ? `Halo, ${currentUser.username}` : 'Server Anda'}
+            </h1>
             <p className="text-sm text-zinc-500">Kelola semua server game Anda di satu tempat</p>
           </div>
-          
-          <button 
-            onClick={() => navigate('/pricing')}
-            className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-black font-bold rounded-md transition shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)]"
-          >
-            <Plus className="w-5 h-5" /> Buat Server
-          </button>
+          <div className="flex gap-2">
+            {role === 'admin' && (
+              <button 
+                onClick={() => navigate('/admin')}
+                className="flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 text-sm sm:text-base bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-md transition border border-zinc-700"
+              >
+                Admin Panel
+              </button>
+            )}
+            <button 
+              onClick={() => navigate('/pricing')}
+              className="flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 text-sm sm:text-base bg-primary hover:bg-primary-hover text-black font-bold rounded-md transition shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)]"
+            >
+              <Plus className="w-5 h-5" /> Buat Server
+            </button>
+          </div>
         </div>
 
-        <div className="flex gap-4 mb-8">
-          <button className="flex items-center gap-2 px-4 py-2 bg-zinc-900 border border-zinc-700 text-white rounded-md text-sm font-medium">
-            <ServerIcon className="w-4 h-4" /> Minecraft <span className="bg-primary/20 text-primary px-1.5 py-0.5 rounded text-xs ml-1">{servers.length}</span>
+        <div className="flex gap-3 sm:gap-4 mb-8">
+          <button className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-zinc-900 border border-zinc-700 text-white rounded-md text-xs sm:text-sm font-medium">
+            <ServerIcon className="w-4 h-4" /> Minecraft <span className="bg-primary/20 text-primary px-1.5 py-0.5 rounded text-[10px] sm:text-xs ml-1">{servers.length}</span>
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-transparent border border-zinc-800 text-zinc-400 hover:text-zinc-200 rounded-md text-sm font-medium transition">
+          <button className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-transparent border border-zinc-800 text-zinc-400 hover:text-zinc-200 rounded-md text-xs sm:text-sm font-medium transition">
             <Globe className="w-4 h-4" /> Eksternal
           </button>
         </div>

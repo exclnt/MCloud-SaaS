@@ -71,7 +71,7 @@ export default function ServerConsole() {
         </div>
       </div>
 
-      <div className="flex-1 min-h-[500px] flex flex-col bg-[#0a0a0a] border border-zinc-800/60 rounded-xl overflow-hidden shadow-2xl">
+      <div className="h-[60vh] min-h-[400px] max-h-[600px] flex flex-col bg-[#0a0a0a] border border-zinc-800/60 rounded-xl overflow-hidden shadow-2xl">
         <div className="bg-[#101010] border-b border-zinc-800/60 p-3 flex items-center justify-between">
           <div className="flex items-center gap-2 text-zinc-400 text-xs font-bold">
             <TerminalIcon className="w-4 h-4" /> Output Konsol

@@ -3,8 +3,20 @@ import { parseJSON } from './utils/parser.js';
 import { verifyToken } from '../../auth-service/src/utils/jwt.js';
 import { createContainer, startContainer, stopContainer, restartContainer, deleteContainer, syncServerStatuses, getServerLogs, getServerStats, rebuildContainer } from './services/dockerService.js';
 import { db } from '../../../database/db.js';
-import { servers } from '../../../database/schema.js';
-import { eq } from 'drizzle-orm';
+import { servers, users, activity_logs } from '../../../database/schema.js';
+import { eq, desc } from 'drizzle-orm';
+
+function logActivity(userId, action, details = null) {
+  try {
+    db.insert(activity_logs).values({
+      userId,
+      action,
+      details: details ? JSON.stringify(details) : null
+    }).run();
+  } catch (err) {
+    console.error('Activity log error:', err.message);
+  }
+}
 import multer from 'multer';
 import fs from 'node:fs';
 
@@ -51,6 +63,55 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  if (req.method === 'GET' && url === '/admin/servers') {
+    const user = authMiddleware(req, res);
+    if (!user || user.role !== 'admin') {
+      res.statusCode = 403;
+      return res.end(JSON.stringify({ error: 'Forbidden' }));
+    }
+    try {
+      const allServers = db.select({
+        id: servers.id,
+        name: servers.name,
+        status: servers.status,
+        ip: servers.ip,
+        port: servers.port,
+        memoryLimit: servers.memoryLimit,
+        owner: users.username
+      }).from(servers).leftJoin(users, eq(servers.userId, users.id)).all();
+      
+      const syncedServers = await syncServerStatuses(allServers);
+      res.statusCode = 200;
+      return res.end(JSON.stringify(syncedServers));
+    } catch (e) {
+      res.statusCode = 500;
+      return res.end(JSON.stringify({ error: e.message }));
+    }
+  }
+
+  if (req.method === 'GET' && url === '/admin/logs') {
+    const user = authMiddleware(req, res);
+    if (!user || user.role !== 'admin') {
+      res.statusCode = 403;
+      return res.end(JSON.stringify({ error: 'Forbidden' }));
+    }
+    try {
+      const logs = db.select({
+        id: activity_logs.id,
+        action: activity_logs.action,
+        details: activity_logs.details,
+        createdAt: activity_logs.createdAt,
+        username: users.username
+      }).from(activity_logs).leftJoin(users, eq(activity_logs.userId, users.id)).orderBy(desc(activity_logs.createdAt)).limit(100).all();
+      
+      res.statusCode = 200;
+      return res.end(JSON.stringify({ logs }));
+    } catch (e) {
+      res.statusCode = 500;
+      return res.end(JSON.stringify({ error: e.message }));
+    }
+  }
+
   if (req.method === 'GET' && url === '/public') {
     try {
       const publicServersList = db.select().from(servers).where(eq(servers.visibility, 'public')).all();
@@ -75,6 +136,7 @@ const server = http.createServer(async (req, res) => {
       }
       
       const newServer = await createContainer(user.id, body);
+      logActivity(user.id, 'create_server', { serverId: newServer.id, name: body.name });
       res.statusCode = 201;
       return res.end(JSON.stringify(newServer));
     } catch (e) {
@@ -92,6 +154,7 @@ const server = http.createServer(async (req, res) => {
     
     try {
       const result = await startContainer(port);
+      logActivity(user.id, 'start_server', { port });
       res.statusCode = 200;
       return res.end(JSON.stringify(result));
     } catch (e) {
@@ -109,6 +172,7 @@ const server = http.createServer(async (req, res) => {
     
     try {
       const result = await stopContainer(port);
+      logActivity(user.id, 'stop_server', { port });
       res.statusCode = 200;
       return res.end(JSON.stringify(result));
     } catch (e) {
@@ -126,6 +190,7 @@ const server = http.createServer(async (req, res) => {
     
     try {
       const result = await restartContainer(port);
+      logActivity(user.id, 'restart_server', { port });
       res.statusCode = 200;
       return res.end(JSON.stringify(result));
     } catch (e) {
@@ -143,6 +208,7 @@ const server = http.createServer(async (req, res) => {
     
     try {
       const result = await deleteContainer(port);
+      logActivity(user.id, 'delete_server', { port });
       res.statusCode = 200;
       return res.end(JSON.stringify(result));
     } catch (e) {

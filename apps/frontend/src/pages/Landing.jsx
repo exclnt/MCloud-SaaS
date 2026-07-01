@@ -1,13 +1,22 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Server, Shield, Zap, Clock, Star, ArrowRight, CheckCircle2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { api } from '../services/api';
 
 export default function Landing() {
   const navigate = useNavigate();
 
+  const [pricingPlans, setPricingPlans] = useState([
+    { name: 'Villager', sub: '24/7 Always Online', ram: '500MB RAM', price: 30000, discount: 0, recommended: false, icon: 'MHF_Villager' },
+    { name: 'Spider', sub: '24/7 Always Online', ram: '1GB RAM', price: 40000, discount: 0, recommended: false, icon: 'MHF_Spider' },
+    { name: 'Slime', sub: '24/7 Always Online', ram: '2GB RAM', price: 50000, discount: 0, recommended: true, icon: 'MHF_Slime' },
+    { name: 'Wither', sub: '24/7 Always Online', ram: '4GB RAM', price: 60000, discount: 0, recommended: false, icon: 'MHF_Wither' },
+  ]);
+
   useEffect(() => {
+    document.title = 'MCloud - Game Server Hosting';
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
@@ -16,33 +25,35 @@ export default function Landing() {
       });
     }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
 
-    const hiddenElements = document.querySelectorAll('.reveal');
+    const hiddenElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
     hiddenElements.forEach((el) => observer.observe(el));
+
+    api.getPlans().then(data => {
+        const withAvatars = data.map(p => ({
+          ...p,
+          icon: `MHF_${p.name}`,
+          recommended: p.name.toLowerCase() === 'slime'
+        }));
+        setPricingPlans(withAvatars);
+    }).catch(err => console.error("Failed to fetch plans", err));
 
     return () => {
       hiddenElements.forEach((el) => observer.unobserve(el));
     };
   }, []);
 
-  const pricingPlans = [
-    { name: 'Villager', sub: '24/7 Always Online', ram: '500MB RAM', price: '30.000', recommended: false, icon: 'MHF_Villager' },
-    { name: 'Spider', sub: '24/7 Always Online', ram: '1GB RAM', price: '40.000', recommended: false, icon: 'MHF_Spider' },
-    { name: 'Slime', sub: '24/7 Always Online', ram: '2GB RAM', price: '50.000', recommended: true, icon: 'MHF_Slime' },
-    { name: 'Wither', sub: '24/7 Always Online', ram: '4GB RAM', price: '60.000', recommended: false, icon: 'MHF_Wither' },
-  ];
-
   const testimonialsRow1 = [
-    { name: 'Ryan Patel', country: 'India', text: 'Dukungan di Discord benar-benar responsif. Saya membuka tiket tentang konflik plugin dan mendapat penjelasan yang tepat, bukan balasan copas. Server telah stabil selama sekitar 2 bulan sekarang.', rating: 5 },
-    { name: 'Daniel Morris', country: 'Amerika Serikat', text: 'Saya sudah mencoba beberapa host Minecraft gratis selama bertahun-tahun dan kebanyakan memiliki antrean atau lag terus-menerus. MCServerHost secara mengejutkan stabil. Paket gratis 4GB lebih dari cukup untuk SMP kecil saya.', rating: 5 },
-    { name: 'emily.roberts', country: 'Inggris', text: 'Saya terutama menggunakannya untuk dunia survival pribadi dengan teman-teman. Performa konsisten dan fitur mulai otomatis membuatnya nyaman karena kami tidak bermain 24/7. Saya juga suka karena pencadangan sudah termasuk.', rating: 5 },
-    { name: 'Logan Martin', country: 'Kanada', text: 'Panel kontrol sangat mudah dipahami, bahkan untuk orang yang belum pernah meng-host server sebelumnya. Menginstal plugin hanya dengan beberapa klik tanpa mengganti versi atau melakukan pengaturan rumit.', rating: 5 },
+    { name: 'Rian Pratama', country: 'Jakarta', text: 'Dukungan di Discord benar-benar responsif. Saya membuka tiket tentang konflik plugin dan mendapat penjelasan yang tepat, bukan balasan copas. Server telah stabil selama sekitar 2 bulan sekarang.', rating: 5 },
+    { name: 'Budi Santoso', country: 'Surabaya', text: 'Saya sudah mencoba beberapa host Minecraft selama bertahun-tahun dan kebanyakan memiliki masalah atau lag terus-menerus. MCloud secara mengejutkan stabil. Paket Slime lebih dari cukup untuk SMP kecil saya.', rating: 5 },
+    { name: 'dinda.putri', country: 'Bandung', text: 'Saya terutama menggunakannya untuk dunia survival pribadi dengan teman-teman. Performa konsisten dan fitur mulai otomatis membuatnya nyaman karena kami tidak bermain 24/7. Saya juga suka karena pencadangan sudah termasuk.', rating: 5 },
+    { name: 'Reza Aditya', country: 'Medan', text: 'Panel kontrol sangat mudah dipahami, bahkan untuk orang yang belum pernah meng-host server sebelumnya. Menginstal plugin hanya dengan beberapa klik tanpa mengganti versi atau melakukan pengaturan rumit.', rating: 5 },
   ];
   
   const testimonialsRow2 = [
-    { name: 'Lucas Ferreira', country: 'Brasil', text: 'Pindah dari host populer lainnya karena lonjakan lag yang konstan. Di sini pengalamannya jauh lebih mulus. Bahkan selama acara dengan 15+ pemain, server bertahan dengan baik. Harga pada paket berbayar wajar.', rating: 5 },
-    { name: 'NetherNico', country: 'Belanda', text: 'Saya mulai dengan paket gratis hanya untuk mencobanya dan tidak berharap banyak. Setelah beberapa minggu, saya masih di sini. Pengaturan mudah, waktu aktif stabil, dan komunitas ramah di Discord. Pilihan solid, baik gratis maupun berbayar.', rating: 5 },
-    { name: 'CraftedByMia', country: 'Australia', text: 'Saya menggunakan paket gratis untuk menguji bangunan dan datapack sebelum mengunggahnya ke server komunitas yang lebih besar. Pengelola file dan akses konsol memudahkan untuk mengubah sesuatu dengan cepat. Cukup andal untuk pengujian.', rating: 5 },
-    { name: 'Jonas Weber', country: 'Jerman', text: 'Nilai yang tak tertandingi untuk harganya. Dukungan cepat dan sangat membantu. Saya menjalankan server modded dan jaminan waktu aktif 24/7 memang benar. Pasti merekomendasikan kepada siapa pun yang mencari host.', rating: 5 },
+    { name: 'Lukman Hakim', country: 'Yogyakarta', text: 'Pindah dari host populer lainnya karena lonjakan lag yang konstan. Di sini pengalamannya jauh lebih mulus. Bahkan selama acara dengan 15+ pemain, server bertahan dengan baik. Harga pada paket berbayar wajar.', rating: 5 },
+    { name: 'Nico_MC', country: 'Bali', text: 'Saya mulai dengan paket awal hanya untuk mencobanya dan tidak berharap banyak. Setelah beberapa minggu, saya masih di sini. Pengaturan mudah, waktu aktif stabil, dan komunitas ramah di Discord. Pilihan solid dan sangat terjangkau.', rating: 5 },
+    { name: 'MiaCrafts', country: 'Semarang', text: 'Saya menggunakan paket starter untuk menguji bangunan dan datapack sebelum mengunggahnya ke server komunitas yang lebih besar. Pengelola file dan akses konsol memudahkan untuk mengubah sesuatu dengan cepat. Cukup andal untuk apa pun.', rating: 5 },
+    { name: 'Johan Wijaya', country: 'Makassar', text: 'Nilai yang tak tertandingi untuk harganya. Dukungan cepat dan sangat membantu. Saya menjalankan server modded dan jaminan waktu aktif 24/7 memang benar. Pasti merekomendasikan kepada siapa pun yang mencari host.', rating: 5 },
   ];
 
   const featuredServers = [
@@ -75,7 +86,7 @@ export default function Landing() {
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 mb-6">
               <span className="w-2 h-2 rounded-full bg-[#10b981] shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
               <span className="text-xs">
-                <span className="font-bold text-white tracking-wide">1,801</span> <span className="text-zinc-300">Server Online</span>
+                <span className="font-bold text-white tracking-wide">MCloud</span> <span className="text-zinc-300">Server Online</span>
               </span>
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white mb-6 tracking-tight leading-tight">
@@ -90,13 +101,13 @@ export default function Landing() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <button 
                 onClick={() => navigate('/register')}
-                className="px-8 py-4 bg-primary hover:bg-primary-hover text-black font-bold rounded-md transition shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] flex items-center gap-2 w-full sm:w-auto justify-center"
+                className="px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base bg-primary hover:bg-primary-hover text-black font-bold rounded-md transition shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] flex items-center gap-2 w-full sm:w-auto justify-center"
               >
                 Mulai Sekarang <ArrowRight className="w-5 h-5" />
               </button>
               <button 
                 onClick={() => navigate('/server-list')}
-                className="px-8 py-4 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-white font-bold rounded-md transition flex items-center gap-2 w-full sm:w-auto justify-center"
+                className="px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-white font-bold rounded-md transition flex items-center gap-2 w-full sm:w-auto justify-center"
               >
                 Jelajahi Server
               </button>
@@ -132,17 +143,24 @@ export default function Landing() {
         </div>
 
         {/* Pricing */}
-        <div id="pricing" className="py-24 bg-[#101010] border-y border-zinc-800/60 relative">
-          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent"></div>
-          <div className="max-w-7xl mx-auto px-6">
+        <div id="pricing" className="py-24 border-y border-zinc-800/60 relative overflow-hidden">
+          <div 
+            className="absolute inset-0 bg-[url('/price.jpg')] bg-cover bg-center bg-fixed opacity-30"
+          ></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a] via-black/80 to-[#0a0a0a]"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.15)_0%,transparent_70%)] pointer-events-none"></div>
+          
+          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent z-10"></div>
+          
+          <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="text-center mb-16 reveal">
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Pilih Paket Server Anda</h2>
-              <p className="text-zinc-500">Harga transparan tanpa biaya tersembunyi. Bebas ganti paket kapan saja.</p>
+              <p className="text-zinc-400">Harga transparan tanpa biaya tersembunyi. Bebas ganti paket kapan saja.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-sm md:max-w-none mx-auto">
               {pricingPlans.map((plan, i) => (
-                <div key={i} className={`relative bg-[#0a0a0a] border ${plan.recommended ? 'border-primary shadow-[0_0_30px_rgba(16,185,129,0.15)]' : 'border-zinc-800'} p-8 rounded-xl flex flex-col reveal`} style={{ transitionDelay: `${i * 150}ms` }}>
+                <div key={i} className={`relative bg-black/50 backdrop-blur-md border ${plan.recommended ? 'border-primary shadow-[0_0_30px_rgba(16,185,129,0.2)]' : 'border-zinc-800/80'} p-8 rounded-xl flex flex-col reveal`} style={{ transitionDelay: `${i * 150}ms` }}>
                   {plan.recommended && (
                     <div className="absolute -top-4 inset-x-0 flex justify-center">
                       <span className="bg-primary text-black text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
@@ -167,8 +185,11 @@ export default function Landing() {
 
                   <div className="flex items-baseline gap-1 mb-6 border-b border-zinc-800/60 pb-6">
                     <span className="text-zinc-400 font-semibold">Rp</span>
-                    <span className="text-4xl font-extrabold text-white">{plan.price}</span>
+                    <span className="text-4xl font-extrabold text-white">{(plan.price - (plan.price * (plan.discount || 0) / 100)).toLocaleString()}</span>
                     <span className="text-zinc-500">/bln</span>
+                    {plan.discount > 0 && (
+                      <span className="ml-2 text-xs text-red-400 line-through">Rp {plan.price.toLocaleString()}</span>
+                    )}
                   </div>
                   
                   <ul className="space-y-4 mb-8 flex-1">
@@ -259,14 +280,14 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="relative overflow-hidden w-full max-w-[90%] mx-auto reveal" style={{ transitionDelay: '200ms' }}>
+          <div className="relative overflow-hidden w-full max-w-[90%] mx-auto py-4 reveal" style={{ transitionDelay: '200ms' }}>
             <div className="absolute inset-y-0 left-0 w-24 md:w-40 bg-gradient-to-r from-[#0a0a0a] to-transparent z-10 pointer-events-none"></div>
             <div className="absolute inset-y-0 right-0 w-24 md:w-40 bg-gradient-to-l from-[#0a0a0a] to-transparent z-10 pointer-events-none"></div>
 
             <div className="flex flex-col gap-6 relative z-0">
               <div className="flex gap-6 animate-marquee w-max">
                 {[...testimonialsRow1, ...testimonialsRow1].map((testi, i) => (
-                  <div key={`row1-${i}`} className="w-[400px] shrink-0 bg-[#101010] border border-zinc-800/60 p-6 rounded-xl relative flex flex-col gap-4">
+                  <div key={`row1-${i}`} className="w-[400px] shrink-0 bg-[#101010] border border-zinc-800/60 p-6 rounded-xl relative flex flex-col gap-4 hover:-translate-y-2 hover:border-primary/50 hover:shadow-[0_10px_30px_rgba(16,185,129,0.1)] transition-all duration-300">
                     <div className="flex gap-1">
                       {[...Array(testi.rating)].map((_, j) => (
                         <Star key={j} className="w-4 h-4 fill-primary text-primary" />
@@ -288,7 +309,7 @@ export default function Landing() {
               
               <div className="flex gap-6 animate-marquee-reverse w-max -ml-[200px]">
                 {[...testimonialsRow2, ...testimonialsRow2].map((testi, i) => (
-                  <div key={`row2-${i}`} className="w-[400px] shrink-0 bg-[#101010] border border-zinc-800/60 p-6 rounded-xl relative flex flex-col gap-4">
+                  <div key={`row2-${i}`} className="w-[400px] shrink-0 bg-[#101010] border border-zinc-800/60 p-6 rounded-xl relative flex flex-col gap-4 hover:-translate-y-2 hover:border-primary/50 hover:shadow-[0_10px_30px_rgba(16,185,129,0.1)] transition-all duration-300">
                     <div className="flex gap-1">
                       {[...Array(testi.rating)].map((_, j) => (
                         <Star key={j} className="w-4 h-4 fill-primary text-primary" />
@@ -322,7 +343,7 @@ export default function Landing() {
               {[
                 { q: "Apakah saya bisa menginstal mod atau plugin?", a: "Tentu! Server kami mendukung berbagai macam platform. Anda memiliki akses penuh ke File Manager untuk mengunggah mod, plugin, maupun custom world." },
                 { q: "Berapa lama server aktif setelah pembayaran?", a: "Sistem kami melakukan instalasi otomatis secara instan. Server Anda akan online dan siap dimainkan dalam hitungan detik setelah pembayaran dikonfirmasi." },
-                { q: "Apakah saya bisa upgrade paket RAM nantinya?", a: "Ya, Anda bisa melakukan upgrade (atau downgrade) paket kapan saja melalui Dashboard tanpa kehilangan data atau map server Anda." },
+                { q: "Apakah saya bisa upgrade paket RAM nantinya?", a: "Untuk saat ini, fitur upgrade atau downgrade paket (scaling RAM) belum tersedia. Kami menyarankan Anda untuk memilih paket yang sesuai dengan kebutuhan Anda sejak awal." },
                 { q: "Di mana lokasi server MCloud?", a: "Server kami berlokasi di Jakarta, Indonesia, memastikan latensi (ping) yang sangat rendah untuk pengalaman bermain tanpa lag bagi pemain lokal." }
               ].map((faq, i) => (
                 <details key={i} className="group bg-[#101010] border border-zinc-800/60 rounded-xl overflow-hidden reveal" style={{ transitionDelay: `${i * 100}ms` }}>
@@ -344,14 +365,25 @@ export default function Landing() {
         {/* Ready to Start (CTA) */}
         <div className="py-24 bg-[#101010] border-t border-zinc-800/60 relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(16,185,129,0.15)_0%,transparent_70%)] pointer-events-none"></div>
-          <div className="max-w-4xl mx-auto px-6 text-center relative z-10 reveal">
+          
+          {/* Gambar Kiri (Mob) - Ganti src gambar dengan yang Anda inginkan */}
+          <div className="hidden md:block absolute left-[5%] lg:left-[20%] bottom-0 z-10 pointer-events-none reveal-left">
+            <img src="/steve.png" alt="Mob Kiri" className="h-32 lg:h-56 w-auto object-contain opacity-80 drop-shadow-[0_0_15px_rgba(16,185,129,0.2)] transform hover:-translate-y-4 transition-transform duration-500 pointer-events-auto" />
+          </div>
+          
+          {/* Gambar Kanan (Steve) - Ganti src gambar dengan yang Anda inginkan */}
+          <div className="hidden md:block absolute right-[5%] lg:right-[20%] bottom-0 z-10 pointer-events-none reveal-right">
+            <img src="/creep.png" alt="Steve Kanan" className="h-32 lg:h-56 w-auto object-contain opacity-80 drop-shadow-[0_0_15px_rgba(16,185,129,0.2)] transform scale-x-[-1] hover:-translate-y-4 transition-transform duration-500 pointer-events-auto" />
+          </div>
+
+          <div className="max-w-3xl mx-auto px-6 text-center relative z-20 reveal">
             <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6">Siap Memulai Petualangan?</h2>
             <p className="text-lg text-zinc-400 mb-10">
               Bergabunglah dengan ribuan pemain lain yang telah merasakan performa maksimal dari MCloud. Buat server Anda sekarang dan undang teman-teman Anda!
             </p>
             <button 
               onClick={() => navigate('/register')}
-              className="px-10 py-5 bg-primary hover:bg-primary-hover text-black font-bold rounded-md transition shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] flex items-center gap-2 mx-auto"
+              className="px-6 py-3 sm:px-10 sm:py-5 text-sm sm:text-base w-full sm:w-auto justify-center bg-primary hover:bg-primary-hover text-black font-bold rounded-md transition shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] flex items-center gap-2 mx-auto pointer-events-auto"
             >
               Daftar Sekarang <ArrowRight className="w-5 h-5" />
             </button>

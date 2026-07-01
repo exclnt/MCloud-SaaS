@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useParams, Link } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import { api } from '../services/api';
 import { 
   LayoutDashboard, 
@@ -25,6 +26,7 @@ import {
 } from 'lucide-react';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import TutorialModal from './TutorialModal';
 
 export default function ServerLayout() {
   const { port } = useParams();
@@ -42,6 +44,7 @@ export default function ServerLayout() {
         if (current) {
           setServerInfo(current);
           setStatus(current.status);
+          document.title = `Server ${current.name} - MCloud`;
         } else {
           navigate('/dashboard');
         }
@@ -62,8 +65,9 @@ export default function ServerLayout() {
     try {
       await api.startServer(port);
       setStatus('running');
+      toast.success('Server berhasil dimulai');
     } catch (e) {
-      alert('Gagal memulai server');
+      toast.error('Gagal memulai server');
     }
     setProcessingAction(null);
   };
@@ -74,8 +78,9 @@ export default function ServerLayout() {
     try {
       await api.stopServer(port);
       setStatus('stopped');
+      toast.success('Server berhasil dihentikan');
     } catch (e) {
-      alert('Gagal menghentikan server');
+      toast.error('Gagal menghentikan server');
     }
     setProcessingAction(null);
   };
@@ -86,8 +91,9 @@ export default function ServerLayout() {
     try {
       await api.restartServer(port);
       setStatus('running');
+      toast.success('Server berhasil direstart');
     } catch (e) {
-      alert('Gagal merestart server');
+      toast.error('Gagal merestart server');
     }
     setProcessingAction(null);
   };
@@ -95,7 +101,8 @@ export default function ServerLayout() {
   if (!serverInfo) return <div className="min-h-screen bg-[#0a0a0a]" />;
 
   return (
-    <div className="h-screen bg-[#0a0a0a] text-zinc-300 font-sans flex flex-col overflow-hidden">
+    <div className="h-[100dvh] bg-[#0a0a0a] text-zinc-300 font-sans flex flex-col overflow-hidden">
+      <TutorialModal />
       <Navbar />
 
       <div className="flex flex-1 overflow-hidden relative">
@@ -142,7 +149,7 @@ export default function ServerLayout() {
                   <button 
                     onClick={handleStop}
                     disabled={processingAction !== null}
-                    className="flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-xs font-semibold border border-red-900/30 text-red-500 hover:bg-red-500/10 bg-red-500/5 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 flex items-center justify-center gap-1 sm:gap-2 py-1.5 sm:py-2 rounded-md text-[10px] sm:text-xs font-semibold border border-red-900/30 text-red-500 hover:bg-red-500/10 bg-red-500/5 transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {processingAction === 'stop' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Square className="w-3.5 h-3.5 fill-current" />} 
                     {processingAction === 'stop' ? 'Menghentikan...' : 'Berhenti'}
@@ -151,7 +158,7 @@ export default function ServerLayout() {
                   <button 
                     onClick={handleStart}
                     disabled={processingAction !== null}
-                    className="flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-xs font-semibold border border-primary/30 text-primary hover:bg-primary/10 bg-primary/5 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 flex items-center justify-center gap-1 sm:gap-2 py-1.5 sm:py-2 rounded-md text-[10px] sm:text-xs font-semibold border border-primary/30 text-primary hover:bg-primary/10 bg-primary/5 transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {processingAction === 'start' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 fill-current" />} 
                     {processingAction === 'start' ? 'Memulai...' : 'Mulai'}
@@ -160,7 +167,7 @@ export default function ServerLayout() {
                 <button 
                   onClick={handleRestart}
                   disabled={processingAction !== null || status !== 'running'}
-                  className="flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-xs font-semibold border border-zinc-800 text-zinc-300 hover:bg-zinc-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 flex items-center justify-center gap-1 sm:gap-2 py-1.5 sm:py-2 rounded-md text-[10px] sm:text-xs font-semibold border border-zinc-800 text-zinc-300 hover:bg-zinc-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {processingAction === 'restart' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCw className="w-3.5 h-3.5" />} 
                   {processingAction === 'restart' ? 'Merestart...' : 'Restart'}
@@ -203,7 +210,7 @@ export default function ServerLayout() {
             <div className="px-3 pt-6 pb-2 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Perangkat Lunak</div>
             <div className="flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium text-zinc-400 cursor-default">
               <div className="flex items-center gap-3">
-                <span className="w-4 h-4 flex items-center justify-center font-bold text-xs">M</span> Minecraft
+                <img src="/creep.png" alt="MCloud" className="w-4 h-4 object-contain" /> Minecraft
               </div>
               <ChevronDown className="w-3.5 h-3.5" />
             </div>
@@ -230,7 +237,7 @@ export default function ServerLayout() {
               <PanelLeft className="w-4 h-4" />
             </button>
           </div>
-          <div className="flex-1 flex flex-col">
+          <div className="w-full flex-none min-h-[100dvh] md:min-h-0 flex flex-col">
             <Outlet context={{ serverInfo, status, setStatus }} />
           </div>
           <Footer />

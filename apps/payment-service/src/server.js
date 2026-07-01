@@ -2,9 +2,21 @@ import http from 'node:http';
 import { parseJSON } from './utils/parser.js';
 import { snap } from './config/midtrans.js';
 import { db } from '../../../database/db.js';
-import { transactions, users, servers } from '../../../database/schema.js';
+import { transactions, users, servers, plans, activity_logs } from '../../../database/schema.js';
 import { verifyToken, generateToken } from '../../auth-service/src/utils/jwt.js';
 import { eq } from 'drizzle-orm';
+
+function logActivity(userId, action, details = null) {
+  try {
+    db.insert(activity_logs).values({
+      userId,
+      action,
+      details: details ? JSON.stringify(details) : null
+    }).run();
+  } catch (err) {
+    console.error('Activity log error:', err.message);
+  }
+}
 
 const PORT = 3002;
 
@@ -167,6 +179,43 @@ const server = http.createServer(async (req, res) => {
       return res.end(JSON.stringify({ message: 'Webhook received' }));
     } catch (e) {
       console.error(e);
+      res.statusCode = 500;
+      return res.end(JSON.stringify({ error: e.message }));
+    }
+  }
+
+  if (req.method === 'GET' && url === '/plans') {
+    try {
+      const allPlans = db.select().from(plans).all();
+      res.statusCode = 200;
+      return res.end(JSON.stringify(allPlans));
+    } catch (e) {
+      res.statusCode = 500;
+      return res.end(JSON.stringify({ error: e.message }));
+    }
+  }
+
+  if (req.method === 'PUT' && url.match(/^\/admin\/plans\/(\d+)$/)) {
+    const user = authMiddleware(req, res);
+    if (!user || user.role !== 'admin') {
+      res.statusCode = 403;
+      return res.end(JSON.stringify({ error: 'Forbidden' }));
+    }
+    const match = url.match(/^\/admin\/plans\/(\d+)$/);
+    const planId = parseInt(match[1]);
+    
+    try {
+      const body = await parseJSON(req);
+      db.update(plans).set({
+        price: body.price,
+        discount: body.discount
+      }).where(eq(plans.id, planId)).run();
+      
+      logActivity(user.id, 'update_plan', { planId, price: body.price, discount: body.discount });
+      
+      res.statusCode = 200;
+      return res.end(JSON.stringify({ message: 'Plan updated' }));
+    } catch (e) {
       res.statusCode = 500;
       return res.end(JSON.stringify({ error: e.message }));
     }

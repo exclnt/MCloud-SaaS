@@ -6,6 +6,11 @@ const routes = {
   '/api/auth': { targetHost: 'localhost', targetPort: 3001, stripPrefix: '/api/auth' },
   '/api/servers': { targetHost: 'localhost', targetPort: 3003, stripPrefix: '/api/servers' },
   '/api/payments': { targetHost: 'localhost', targetPort: 3002, stripPrefix: '/api/payments' },
+  '/api/plans': { targetHost: 'localhost', targetPort: 3002, stripPrefix: '/api' },
+  '/api/admin/users': { targetHost: 'localhost', targetPort: 3001, stripPrefix: '/api' },
+  '/api/admin/servers': { targetHost: 'localhost', targetPort: 3003, stripPrefix: '/api' },
+  '/api/admin/logs': { targetHost: 'localhost', targetPort: 3003, stripPrefix: '/api' },
+  '/api/admin/plans': { targetHost: 'localhost', targetPort: 3002, stripPrefix: '/api' }
 };
 
 const server = http.createServer((req, res) => {
@@ -31,7 +36,11 @@ const server = http.createServer((req, res) => {
   }
 
   if (matchedRoute) {
-    const targetPath = req.url.substring(matchedRoute.length) || '/';
+    let targetPath = req.url;
+    if (targetConfig.stripPrefix) {
+      targetPath = targetPath.replace(targetConfig.stripPrefix, '');
+    }
+    if (!targetPath) targetPath = '/';
     
     const proxyOptions = {
       hostname: targetConfig.targetHost,

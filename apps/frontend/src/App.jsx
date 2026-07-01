@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import Landing from './pages/Landing';
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
+import AdminDashboard from './pages/AdminDashboard';
 import Checkout from './pages/Checkout';
 import ServerConsole from './pages/ServerConsole';
 import ServerFiles from './pages/ServerFiles';
@@ -17,10 +19,20 @@ import ClientArea from './pages/ClientArea';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import NotFound from './pages/NotFound';
+import DocsLayout from './components/DocsLayout';
+import DocsHome from './pages/DocsHome';
+import DocsArticle from './pages/DocsArticle';
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   if (!token) return <Navigate to="/login" />;
+  return children;
+};
+
+const AdminRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role');
+  if (!token || role !== 'admin') return <Navigate to="/dashboard" />;
   return children;
 };
 
@@ -39,8 +51,8 @@ function LoadingScreen({ onComplete }) {
   return (
     <div className={`fixed inset-0 z-[9999] bg-[#0a0a0a] flex flex-col items-center justify-center loading-container ${isHiding ? 'hide' : ''}`}>
       <div className="flex flex-col items-center gap-4">
-        <div className="w-20 h-20 bg-zinc-800 rounded-2xl flex items-center justify-center animate-logo border border-zinc-700 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
-          <span className="text-primary font-bold text-4xl">M</span>
+        <div className="w-20 h-20 flex items-center justify-center animate-logo">
+          <img src="/creep.png" alt="MCloud" className="w-full h-full object-contain drop-shadow-[0_0_30px_rgba(16,185,129,0.2)]" />
         </div>
         <span className="font-bold text-white text-2xl tracking-widest animate-text-reveal">MCLOUD</span>
       </div>
@@ -50,9 +62,20 @@ function LoadingScreen({ onComplete }) {
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <>
+      <Toaster 
+        position={isMobile ? "top-center" : "bottom-right"} 
+        toastOptions={{ style: { background: '#18181b', color: '#fff', border: '1px solid #27272a' } }} 
+      />
       {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
       <BrowserRouter>
       <Routes>
@@ -64,6 +87,12 @@ export default function App() {
           <ProtectedRoute>
             <Dashboard />
           </ProtectedRoute>
+        } />
+        
+        <Route path="/admin" element={
+          <AdminRoute>
+            <AdminDashboard />
+          </AdminRoute>
         } />
         
         <Route path="/clientarea" element={
@@ -88,6 +117,11 @@ export default function App() {
           <Route path="players" element={<ServerPlayers />} />
           <Route path="files" element={<ServerFiles />} />
           <Route path="settings" element={<ServerSettings />} />
+        </Route>
+
+        <Route path="/docs" element={<DocsLayout />}>
+          <Route index element={<DocsHome />} />
+          <Route path=":category/:slug" element={<DocsArticle />} />
         </Route>
 
         <Route path="/terms" element={<Terms />} />

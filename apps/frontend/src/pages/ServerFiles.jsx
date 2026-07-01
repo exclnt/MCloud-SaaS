@@ -191,7 +191,7 @@ export default function ServerFiles() {
         </div>
       </div>
 
-      <div className="flex-1 bg-[#101010] border border-zinc-800/60 rounded-xl overflow-hidden shadow-2xl flex flex-col">
+      <div className="h-[60vh] min-h-[400px] max-h-[600px] bg-[#101010] border border-zinc-800/60 rounded-xl overflow-hidden shadow-2xl flex flex-col">
         {/* Breadcrumb / Toolbar */}
         <div className="bg-[#0a0a0a] border-b border-zinc-800/60 px-4 py-3 flex items-center gap-2 text-sm">
           <button 

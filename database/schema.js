@@ -2,8 +2,10 @@ import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 
 export const users = sqliteTable("users", {
   id: integer("id").primaryKey({ autoIncrement: true }),
+  email: text("email"),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  role: text("role").notNull().default("user"), // 'user' or 'admin'
   createdAt: integer("created_at", { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
 
@@ -43,3 +45,21 @@ export const banned_players = sqliteTable("banned_players", {
   reason: text("reason"),
   createdAt: integer("created_at", { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
+
+export const plans = sqliteTable("plans", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull().unique(),
+  ram: text("ram").notNull(), // e.g. '500m', '1g'
+  price: integer("price").notNull(),
+  discount: integer("discount").notNull().default(0), // percentage 0-100
+  createdAt: integer("created_at", { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
+export const activity_logs = sqliteTable("activity_logs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id").references(() => users.id),
+  action: text("action").notNull(),
+  details: text("details"),
+  createdAt: integer("created_at", { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+

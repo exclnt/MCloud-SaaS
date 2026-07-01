@@ -1,25 +1,74 @@
-import { useState } from 'react';
-import { User, Lock, Mail, Save, Shield } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { User, Lock, Mail, Save, Shield, Loader2 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { api } from '../services/api';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 export default function ClientArea() {
   const [activeTab, setActiveTab] = useState('profile');
   
-  // Using static user data for now as seen in Navbar
   const [profileData, setProfileData] = useState({
-    name: 'Eko Ramadani',
-    email: 'ekoramadani777@gmail.com',
+    username: '',
+    email: '',
+  });
+  
+  const [passData, setPassData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
   });
 
-  const handleSaveProfile = (e) => {
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    document.title = 'Client Area - MCloud';
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setProfileData({
+          username: payload.username || '',
+          email: payload.email || ''
+        });
+      } catch(e) {}
+    }
+  }, []);
+
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
-    alert('Profil berhasil diperbarui!');
+    setLoading(true);
+    try {
+      const data = await api.updateProfile(profileData);
+      localStorage.setItem('token', data.token); // update token with new data
+      toast.success('Profil berhasil diperbarui!');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (err) {
+      toast.error('Gagal memperbarui profil: ' + err.message);
+    }
+    setLoading(false);
   };
 
-  const handleSavePassword = (e) => {
+  const handleSavePassword = async (e) => {
     e.preventDefault();
-    alert('Kata sandi berhasil diubah!');
+    if (passData.newPassword !== passData.confirmPassword) {
+      toast.error('Kata sandi baru tidak cocok!');
+      return;
+    }
+    setLoading(true);
+    try {
+      await api.updatePassword({ 
+        currentPassword: passData.currentPassword, 
+        newPassword: passData.newPassword 
+      });
+      toast.success('Kata sandi berhasil diubah!');
+      setPassData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (err) {
+      toast.error('Gagal mengubah sandi: ' + err.message);
+    }
+    setLoading(false);
   };
 
   return (
@@ -64,13 +113,13 @@ export default function ClientArea() {
                 <form onSubmit={handleSaveProfile} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Nama Lengkap</label>
+                      <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Username</label>
                       <div className="relative">
                         <User className="w-5 h-5 text-zinc-500 absolute left-4 top-1/2 -translate-y-1/2" />
                         <input 
                           type="text" 
-                          value={profileData.name}
-                          onChange={(e) => setProfileData({...profileData, name: e.target.value})}
+                          value={profileData.username}
+                          onChange={(e) => setProfileData({...profileData, username: e.target.value})}
                           className="w-full bg-zinc-950 border border-zinc-800 rounded-md py-3 pl-12 pr-4 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition"
                           required
                         />
@@ -92,8 +141,8 @@ export default function ClientArea() {
                   </div>
 
                   <div className="flex justify-end pt-4 border-t border-zinc-800/60">
-                    <button type="submit" className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-black font-bold rounded-md transition shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-                      <Save className="w-4 h-4" /> Simpan Perubahan
+                    <button type="submit" disabled={loading} className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-black font-bold rounded-md transition shadow-[0_0_15px_rgba(16,185,129,0.3)] disabled:opacity-50">
+                      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Simpan Perubahan
                     </button>
                   </div>
                 </form>
@@ -115,6 +164,8 @@ export default function ClientArea() {
                         <Lock className="w-5 h-5 text-zinc-500 absolute left-4 top-1/2 -translate-y-1/2" />
                         <input 
                           type="password" 
+                          value={passData.currentPassword}
+                          onChange={(e) => setPassData({...passData, currentPassword: e.target.value})}
                           className="w-full bg-zinc-950 border border-zinc-800 rounded-md py-3 pl-12 pr-4 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition"
                           required
                         />
@@ -126,6 +177,8 @@ export default function ClientArea() {
                         <Lock className="w-5 h-5 text-zinc-500 absolute left-4 top-1/2 -translate-y-1/2" />
                         <input 
                           type="password" 
+                          value={passData.newPassword}
+                          onChange={(e) => setPassData({...passData, newPassword: e.target.value})}
                           className="w-full bg-zinc-950 border border-zinc-800 rounded-md py-3 pl-12 pr-4 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition"
                           required
                         />
@@ -137,7 +190,9 @@ export default function ClientArea() {
                         <Lock className="w-5 h-5 text-zinc-500 absolute left-4 top-1/2 -translate-y-1/2" />
                         <input 
                           type="password" 
-                          className="w-full bg-zinc-950 border border-zinc-800 rounded-md py-3 pl-12 pr-4 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition"
+                          value={passData.confirmPassword}
+                          onChange={(e) => setPassData({...passData, confirmPassword: e.target.value})}
+                          className={`w-full bg-zinc-950 border ${passData.confirmPassword && passData.newPassword !== passData.confirmPassword ? 'border-red-500 focus:ring-red-500' : 'border-zinc-800 focus:ring-primary/50'} rounded-md py-3 pl-12 pr-4 text-zinc-100 focus:outline-none focus:ring-2 focus:border-primary transition`}
                           required
                         />
                       </div>
@@ -145,8 +200,8 @@ export default function ClientArea() {
                   </div>
 
                   <div className="flex justify-start pt-4 border-t border-zinc-800/60">
-                    <button type="submit" className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-black font-bold rounded-md transition shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-                      <Save className="w-4 h-4" /> Perbarui Sandi
+                    <button type="submit" disabled={loading} className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-black font-bold rounded-md transition shadow-[0_0_15px_rgba(16,185,129,0.3)] disabled:opacity-50">
+                      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Perbarui Sandi
                     </button>
                   </div>
                 </form>

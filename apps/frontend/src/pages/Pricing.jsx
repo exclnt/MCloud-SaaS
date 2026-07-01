@@ -1,16 +1,36 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, CheckCircle2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { api } from '../services/api';
+import toast from 'react-hot-toast';
 
 export default function Pricing() {
   const navigate = useNavigate();
-  const pricingPlans = [
-    { name: 'Villager', sub: '24/7 Always Online', ram: '500MB RAM', price: '30.000', recommended: false, icon: 'MHF_Villager' },
-    { name: 'Spider', sub: '24/7 Always Online', ram: '1GB RAM', price: '40.000', recommended: false, icon: 'MHF_Spider' },
-    { name: 'Slime', sub: '24/7 Always Online', ram: '2GB RAM', price: '50.000', recommended: true, icon: 'MHF_Slime' },
-    { name: 'Wither', sub: '24/7 Always Online', ram: '4GB RAM', price: '60.000', recommended: false, icon: 'MHF_Wither' },
-  ];
+  const [pricingPlans, setPricingPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    document.title = 'Harga Server - MCloud';
+    const fetchPlans = async () => {
+      try {
+        const data = await api.getPlans();
+        // Fallback avatars based on name
+        const withAvatars = data.map(p => ({
+          ...p,
+          icon: `MHF_${p.name}`,
+          recommended: p.name.toLowerCase() === 'slime'
+        }));
+        setPricingPlans(withAvatars);
+      } catch (err) {
+        toast.error('Gagal memuat paket harga');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPlans();
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-zinc-300 font-sans flex flex-col">
@@ -50,8 +70,11 @@ export default function Pricing() {
 
                 <div className="flex items-baseline gap-1 mb-6 border-b border-zinc-800/60 pb-6">
                   <span className="text-zinc-400 font-semibold">Rp</span>
-                  <span className="text-4xl font-extrabold text-white">{plan.price}</span>
+                  <span className="text-4xl font-extrabold text-white">{(plan.price - (plan.price * (plan.discount || 0) / 100)).toLocaleString()}</span>
                   <span className="text-zinc-500">/bln</span>
+                  {plan.discount > 0 && (
+                    <span className="ml-2 text-xs text-red-400 line-through">Rp {plan.price.toLocaleString()}</span>
+                  )}
                 </div>
                 
                 <ul className="space-y-4 mb-8 flex-1">

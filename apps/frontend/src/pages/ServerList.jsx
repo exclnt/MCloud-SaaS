@@ -25,6 +25,7 @@ export default function ServerList() {
   };
 
   useEffect(() => {
+    document.title = 'Daftar Server - MCloud';
     fetchServers();
     const interval = setInterval(fetchServers, 10000); // 10s as per screenshot text
     return () => clearInterval(interval);
@@ -55,7 +56,7 @@ export default function ServerList() {
 
       {/* Hero Section */}
       <div className="relative py-20 flex flex-col items-center justify-center border-b border-zinc-800/60 overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://www.minecraft.net/content/dam/games/minecraft/screenshots/1-20-update-village.jpg')] bg-cover bg-center opacity-10"></div>
+        <div className="absolute inset-0 bg-[url('/server-list.jpg')] bg-cover bg-center opacity-20"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/50 via-[#0a0a0a]/80 to-[#0a0a0a]"></div>
         
         <div className="relative z-10 text-center space-y-4 mb-10">
@@ -185,10 +186,13 @@ export default function ServerList() {
 
         {/* CTA Banner */}
         <div className="text-center py-12 border-t border-zinc-800/60">
-          <h2 className="text-2xl font-bold text-white mb-2">Host server Anda sendiri secara gratis</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">Host server Anda sendiri sekarang juga</h2>
           <p className="text-zinc-500 mb-6">Tampil di daftar secara otomatis saat server Anda online.</p>
-          <button onClick={() => navigate('/checkout')} className="bg-primary hover:bg-primary-hover text-black font-bold px-8 py-3 rounded-md transition">
-            Buat Server Gratis
+          <button 
+            onClick={() => navigate('/pricing')} 
+            className="bg-primary hover:bg-primary-hover text-black font-bold px-8 py-3 rounded-md transition"
+          >
+            Buat Server
           </button>
         </div>
 
