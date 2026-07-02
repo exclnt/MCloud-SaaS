@@ -10,6 +10,8 @@ import {
   Settings2,
   User
 } from "lucide-react";
+import toast from "react-hot-toast";
+import ConfirmModal from "../components/ConfirmModal";
 
 const DEFAULT_PLANS = {
   villager: { name: 'Villager', ram: '500MB', price: 30000, priceStr: '30.000', icon: 'MHF_Villager', desc: 'Cocok untuk server bertahan hidup (survival) pribadi dengan beberapa teman.' },
@@ -19,6 +21,7 @@ const DEFAULT_PLANS = {
 };
 
 export default function Checkout() {
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {}, isDanger: false, confirmText: 'Konfirmasi' });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
@@ -86,12 +89,25 @@ export default function Checkout() {
     navigate(`/login?redirect=checkout&plan=${planKey}`);
   };
 
-  const handleCheckout = async () => {
+  const handleCheckoutClick = () => {
     if (!isRenew && !config.name) {
-      alert("Harap masukkan nama server!");
+      toast.error("Harap masukkan nama server!");
       return;
     }
-    
+    const msg = isRenew ? `Apakah Anda yakin ingin memperpanjang masa aktif server ini?` : `Apakah Anda yakin ingin memesan dan mendeploy server Minecraft (${selectedPlan.name}) seharga Rp ${selectedPlan.priceStr}?`;
+    setConfirmConfig({
+      isOpen: true,
+      title: isRenew ? 'Konfirmasi Perpanjangan' : 'Konfirmasi Pesanan Server',
+      message: msg,
+      isDanger: false,
+      confirmText: 'Ya, Lanjutkan Pembayaran',
+      onConfirm: () => {
+        executeCheckout();
+      }
+    });
+  };
+
+  const executeCheckout = async () => {
     setLoading(true);
     try {
       const memStr = selectedPlan.ram.toLowerCase().replace('mb', 'm').replace('gb', 'g');
@@ -104,7 +120,7 @@ export default function Checkout() {
       window.snap.pay(data.token, {
         onSuccess: function (result) {
           setSuccess(true);
-          // Wait 4 seconds to give webhook time to update DB before fetching on new page
+          toast.success("Pesanan berhasil! Server sedang disiapkan...");
           setTimeout(() => navigate(isRenew && renewServerPort ? `/server/${renewServerPort}` : "/dashboard"), 4000);
         },
         onPending: function (result) {
@@ -112,6 +128,7 @@ export default function Checkout() {
         },
         onError: function (result) {
           console.error("error", result);
+          toast.error("Pembayaran gagal atau dibatalkan");
           setLoading(false);
         },
         onClose: function () {
@@ -120,7 +137,7 @@ export default function Checkout() {
       });
     } catch (e) {
       console.error(e);
-      alert(e.message);
+      toast.error(e.message);
       setLoading(false);
     }
   };
@@ -317,7 +334,7 @@ export default function Checkout() {
             </button>
           ) : (
             <button
-              onClick={handleCheckout}
+              onClick={handleCheckoutClick}
               disabled={loading || isPlanLoading || (!isRenew && !config.name)}
               className="btn-primary !py-4 flex items-center justify-center gap-3 text-lg disabled:opacity-50"
             >
@@ -332,6 +349,15 @@ export default function Checkout() {
         </div>
 
       </div>
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        onClose={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
+        onConfirm={confirmConfig.onConfirm}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        confirmText={confirmConfig.confirmText}
+        isDanger={confirmConfig.isDanger}
+      />
     </div>
   );
 }

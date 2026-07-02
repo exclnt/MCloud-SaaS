@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { api } from '../services/api';
 import { Folder, File, Loader2, Upload, FilePlus, FolderPlus, RefreshCw, X, Save, Trash2, ArchiveRestore } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
+import toast from 'react-hot-toast';
 
 export default function ServerFiles() {
   const { serverInfo } = useOutletContext();
@@ -32,7 +33,7 @@ export default function ServerFiles() {
       setFiles(data);
       setCurrentPath(path);
     } catch (e) {
-      alert('Gagal memuat file: ' + e.message);
+      toast.error('Gagal memuat file: ' + e.message);
     } finally {
       setLoading(false);
     }
@@ -69,7 +70,7 @@ export default function ServerFiles() {
       setEditingFile(file);
       setFileContent(content);
     } catch (e) {
-      alert('Gagal membaca file: ' + e.message);
+      toast.error('Gagal membaca file: ' + e.message);
     } finally {
       setLoading(false);
     }
@@ -80,11 +81,11 @@ export default function ServerFiles() {
     setSaving(true);
     try {
       await api.writeFile(port, filePath, fileContent);
-      alert('File berhasil disimpan!');
+      toast.success('File berhasil disimpan!');
       setEditingFile(null);
       setFileContent('');
     } catch (e) {
-      alert('Gagal menyimpan file: ' + e.message);
+      toast.error('Gagal menyimpan file: ' + e.message);
     } finally {
       setSaving(false);
     }
@@ -101,9 +102,10 @@ export default function ServerFiles() {
     const filePath = currentPath ? `${currentPath}/${fileToDelete.name}` : fileToDelete.name;
     try {
       await api.deleteFile(port, filePath);
+      toast.success('File berhasil dihapus!');
       await fetchFiles(currentPath);
     } catch (err) {
-      alert('Gagal menghapus: ' + err.message);
+      toast.error('Gagal menghapus: ' + err.message);
     }
     setFileToDelete(null);
   };
@@ -115,12 +117,12 @@ export default function ServerFiles() {
     setUploading(true);
     try {
       await api.uploadFile(port, currentPath, file);
-      alert(file.name.endsWith('.zip') || file.name.endsWith('.mcworld') 
+      toast.success(file.name.endsWith('.zip') || file.name.endsWith('.mcworld') 
         ? 'Dunia berhasil diekstrak!' 
         : 'File berhasil diunggah!');
       await fetchFiles(currentPath);
     } catch (err) {
-      alert('Gagal mengunggah: ' + err.message);
+      toast.error('Gagal mengunggah: ' + err.message);
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';

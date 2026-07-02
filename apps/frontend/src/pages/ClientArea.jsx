@@ -4,8 +4,10 @@ import { toast } from 'react-hot-toast';
 import { api } from '../services/api';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function ClientArea() {
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {}, isDanger: false, confirmText: 'Konfirmasi' });
   const [activeTab, setActiveTab] = useState('profile');
   
   const [profileData, setProfileData] = useState({
@@ -35,40 +37,58 @@ export default function ClientArea() {
     }
   }, []);
 
-  const handleSaveProfile = async (e) => {
+  const handleSaveProfile = (e) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      const data = await api.updateProfile(profileData);
-      localStorage.setItem('token', data.token); // update token with new data
-      toast.success('Profil berhasil diperbarui!');
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-    } catch (err) {
-      toast.error('Gagal memperbarui profil: ' + err.message);
-    }
-    setLoading(false);
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Perbarui Profil',
+      message: 'Apakah Anda yakin ingin memperbarui informasi profil akun Anda?',
+      isDanger: false,
+      confirmText: 'Simpan Perubahan',
+      onConfirm: async () => {
+        setLoading(true);
+        try {
+          const data = await api.updateProfile(profileData);
+          localStorage.setItem('token', data.token); // update token with new data
+          toast.success('Profil berhasil diperbarui!');
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        } catch (err) {
+          toast.error('Gagal memperbarui profil: ' + err.message);
+        }
+        setLoading(false);
+      }
+    });
   };
 
-  const handleSavePassword = async (e) => {
+  const handleSavePassword = (e) => {
     e.preventDefault();
     if (passData.newPassword !== passData.confirmPassword) {
       toast.error('Kata sandi baru tidak cocok!');
       return;
     }
-    setLoading(true);
-    try {
-      await api.updatePassword({ 
-        currentPassword: passData.currentPassword, 
-        newPassword: passData.newPassword 
-      });
-      toast.success('Kata sandi berhasil diubah!');
-      setPassData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    } catch (err) {
-      toast.error('Gagal mengubah sandi: ' + err.message);
-    }
-    setLoading(false);
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Ubah Kata Sandi',
+      message: 'Apakah Anda yakin ingin mengubah kata sandi akun Anda?',
+      isDanger: true,
+      confirmText: 'Ubah Kata Sandi',
+      onConfirm: async () => {
+        setLoading(true);
+        try {
+          await api.updatePassword({ 
+            currentPassword: passData.currentPassword, 
+            newPassword: passData.newPassword 
+          });
+          toast.success('Kata sandi berhasil diubah!');
+          setPassData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        } catch (err) {
+          toast.error('Gagal mengubah sandi: ' + err.message);
+        }
+        setLoading(false);
+      }
+    });
   };
 
   return (
@@ -212,6 +232,15 @@ export default function ClientArea() {
         </div>
       </main>
 
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        onClose={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
+        onConfirm={confirmConfig.onConfirm}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        confirmText={confirmConfig.confirmText}
+        isDanger={confirmConfig.isDanger}
+      />
       <Footer />
     </div>
   );

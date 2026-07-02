@@ -2,7 +2,7 @@ import http from 'node:http';
 import bcrypt from 'bcrypt';
 import { eq } from 'drizzle-orm';
 import { db } from '../../../database/db.js';
-import { users, activity_logs } from '../../../database/schema.js';
+import { users, activity_logs, transactions, servers } from '../../../database/schema.js';
 import { parseJSON } from './utils/parser.js';
 import { generateToken, verifyToken } from './utils/jwt.js';
 
@@ -163,6 +163,133 @@ const server = http.createServer(async (req, res) => {
     } catch (err) {
       res.statusCode = 500;
       return res.end(JSON.stringify({ error: 'Internal Server Error' }));
+    }
+  }
+
+  if (req.method === 'POST' && req.url === '/admin/users') {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      res.statusCode = 401;
+      return res.end(JSON.stringify({ error: 'Unauthorized' }));
+    }
+    const token = authHeader.split(' ')[1];
+    const decoded = verifyToken(token);
+    if (!decoded || decoded.role !== 'admin') {
+      res.statusCode = 403;
+      return res.end(JSON.stringify({ error: 'Forbidden' }));
+    }
+    try {
+      const body = await parseJSON(req);
+      const { email, username, password, role = 'user' } = body;
+      if (!email || !username || !password) {
+        res.statusCode = 400;
+        return res.end(JSON.stringify({ error: 'Email, username, and password are required' }));
+      }
+      const existingUser = db.select().from(users).where(eq(users.username, username)).get();
+      if (existingUser) {
+        res.statusCode = 409;
+        return res.end(JSON.stringify({ error: 'Username already exists' }));
+      }
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const newUser = db.insert(users).values({
+        email,
+        username,
+        password: hashedPassword,
+        role: username === 'admin' ? 'admin' : role
+      }).returning().get();
+      logActivity(decoded.id, 'admin_create_user', { createdUserId: newUser.id, username });
+      res.statusCode = 201;
+      return res.end(JSON.stringify({ message: 'User created successfully', user: { id: newUser.id, username: newUser.username, email: newUser.email, role: newUser.role, createdAt: newUser.createdAt } }));
+    } catch (err) {
+      res.statusCode = 500;
+      return res.end(JSON.stringify({ error: err.message }));
+    }
+  }
+
+  if (req.method === 'PUT' && req.url.startsWith('/admin/users/')) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      res.statusCode = 401;
+      return res.end(JSON.stringify({ error: 'Unauthorized' }));
+    }
+    const token = authHeader.split(' ')[1];
+    const decoded = verifyToken(token);
+    if (!decoded || decoded.role !== 'admin') {
+      res.statusCode = 403;
+      return res.end(JSON.stringify({ error: 'Forbidden' }));
+    }
+    const targetId = parseInt(req.url.split('/admin/users/')[1]);
+    if (isNaN(targetId)) {
+      res.statusCode = 400;
+      return res.end(JSON.stringify({ error: 'Invalid user ID' }));
+    }
+    try {
+      const body = await parseJSON(req);
+      const { email, username, role, password } = body;
+      const targetUser = db.select().from(users).where(eq(users.id, targetId)).get();
+      if (!targetUser) {
+        res.statusCode = 404;
+        return res.end(JSON.stringify({ error: 'User not found' }));
+      }
+      const updateData = {};
+      if (email !== undefined) updateData.email = email;
+      if (username !== undefined) updateData.username = username;
+      if (role !== undefined) updateData.role = role;
+      if (password && password.trim() !== '') {
+        updateData.password = await bcrypt.hash(password, 10);
+      }
+      db.update(users).set(updateData).where(eq(users.id, targetId)).run();
+      logActivity(decoded.id, 'admin_update_user', { targetUserId: targetId, updates: { email, username, role, passwordChanged: !!password } });
+      const updatedUser = db.select({ id: users.id, username: users.username, email: users.email, role: users.role, createdAt: users.createdAt }).from(users).where(eq(users.id, targetId)).get();
+      res.statusCode = 200;
+      return res.end(JSON.stringify({ message: 'User updated successfully', user: updatedUser }));
+    } catch (err) {
+      res.statusCode = 500;
+      return res.end(JSON.stringify({ error: err.message }));
+    }
+  }
+
+  if (req.method === 'DELETE' && req.url.startsWith('/admin/users/')) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      res.statusCode = 401;
+      return res.end(JSON.stringify({ error: 'Unauthorized' }));
+    }
+    const token = authHeader.split(' ')[1];
+    const decoded = verifyToken(token);
+    if (!decoded || decoded.role !== 'admin') {
+      res.statusCode = 403;
+      return res.end(JSON.stringify({ error: 'Forbidden' }));
+    }
+    const targetId = parseInt(req.url.split('/admin/users/')[1]);
+    if (isNaN(targetId)) {
+      res.statusCode = 400;
+      return res.end(JSON.stringify({ error: 'Invalid user ID' }));
+    }
+    if (targetId === decoded.id) {
+      res.statusCode = 400;
+      return res.end(JSON.stringify({ error: 'Cannot delete your own admin account' }));
+    }
+    try {
+      try {
+        await fetch(`http://localhost:3003/admin/users/${targetId}/cleanup`, {
+          method: 'POST',
+          headers: { Authorization: authHeader }
+        });
+      } catch (cleanErr) {
+        console.error("Failed to cleanup docker servers for user:", cleanErr.message);
+      }
+      
+      db.delete(activity_logs).where(eq(activity_logs.userId, targetId)).run();
+      db.delete(transactions).where(eq(transactions.userId, targetId)).run();
+      db.delete(users).where(eq(users.id, targetId)).run();
+      
+      logActivity(decoded.id, 'admin_delete_user', { targetUserId: targetId });
+      res.statusCode = 200;
+      return res.end(JSON.stringify({ message: 'User deleted successfully' }));
+    } catch (err) {
+      res.statusCode = 500;
+      return res.end(JSON.stringify({ error: err.message }));
     }
   }
 

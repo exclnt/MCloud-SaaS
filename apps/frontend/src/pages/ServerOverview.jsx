@@ -64,9 +64,10 @@ export default function ServerOverview() {
   const confirmDelete = async () => {
     try {
       await api.deleteServer(serverInfo.port);
+      toast.success('Server berhasil dihapus');
       navigate('/dashboard');
     } catch (e) {
-      alert("Gagal menghapus: " + e.message);
+      toast.error("Gagal menghapus: " + e.message);
     }
   };
 
@@ -74,9 +75,9 @@ export default function ServerOverview() {
     setSavingDisplay(true);
     try {
       await api.updateServerConfig(serverInfo.port, { name: displayName, motd: motd });
-      alert("Pengaturan Tampilan Server Berhasil Disimpan!");
+      toast.success("Pengaturan Tampilan Server Berhasil Disimpan!");
     } catch (e) {
-      alert("Gagal menyimpan Pengaturan Tampilan: " + e.message);
+      toast.error("Gagal menyimpan Pengaturan Tampilan: " + e.message);
     }
     setSavingDisplay(false);
   };

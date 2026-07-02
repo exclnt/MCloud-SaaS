@@ -5,8 +5,10 @@ import { api } from '../services/api';
 import toast from 'react-hot-toast';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function AdminDashboard() {
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {}, isDanger: false, confirmText: 'Konfirmasi' });
   const [activeTab, setActiveTab] = useState('overview');
   const [stats, setStats] = useState(null);
   const [servers, setServers] = useState([]);
@@ -22,9 +24,21 @@ export default function AdminDashboard() {
   const [editPrice, setEditPrice] = useState(0);
   const [editDiscount, setEditDiscount] = useState(0);
 
+  // Admin User & Server Management States
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
+  const [newUserData, setNewUserData] = useState({ username: '', email: '', password: '', role: 'user' });
+  const [showEditUserModal, setShowEditUserModal] = useState(false);
+  const [editUserData, setEditUserData] = useState({ id: null, username: '', email: '', role: 'user', password: '' });
+  const [showUserDetailModal, setShowUserDetailModal] = useState(null);
+  const [showCreateServerModal, setShowCreateServerModal] = useState(null);
+  const [newServerData, setNewServerData] = useState({ name: '', memoryLimit: '1g', version: 'latest', difficulty: 'easy', gamemode: 'survival', days: 30 });
+
   const fetchData = async () => {
     setIsLoading(true);
     try {
+      const plansRes = await api.getPlans().catch(() => []);
+      if (plansRes && plansRes.length > 0) setPlans(plansRes);
+
       if (activeTab === 'overview') {
         const [srvs, resUsers] = await Promise.all([api.getAllServers(), api.getAllUsers()]);
         setServers(srvs);
@@ -57,29 +71,160 @@ export default function AdminDashboard() {
     fetchData();
   }, [activeTab]);
 
-  const handleServerAction = async (port, action) => {
-    try {
-      if (action === 'stop') await api.stopServer(port);
-      if (action === 'delete') {
-        if (!confirm('Are you sure you want to delete this server?')) return;
-        await api.deleteServer(port);
-      }
-      toast.success(`Server ${action} successful`);
-      fetchData();
-    } catch (e) {
-      toast.error(`Failed to ${action} server: ` + e.message);
+  const handleServerAction = (port, action) => {
+    if (action === 'stop') {
+      setConfirmConfig({
+        isOpen: true,
+        title: 'Matikan Server',
+        message: `Apakah Anda yakin ingin mematikan server port ${port}? Pemain yang aktif akan terputus.`,
+        isDanger: true,
+        confirmText: 'Matikan Server',
+        onConfirm: async () => {
+          try {
+            await api.stopServer(port);
+            toast.success('Server stop successful');
+            fetchData();
+          } catch (e) {
+            toast.error('Failed to stop server: ' + e.message);
+          }
+        }
+      });
+      return;
+    }
+    if (action === 'delete') {
+      setConfirmConfig({
+        isOpen: true,
+        title: 'Hapus Server',
+        message: `Apakah Anda yakin ingin menghapus server port ${port}? Semua data akan hilang secara permanen.`,
+        isDanger: true,
+        confirmText: 'Hapus Server',
+        onConfirm: async () => {
+          try {
+            await api.deleteServer(port);
+            toast.success('Server delete successful');
+            fetchData();
+          } catch (e) {
+            toast.error('Failed to delete server: ' + e.message);
+          }
+        }
+      });
+      return;
     }
   };
 
-  const handleSavePlan = async (planId) => {
+  const handleSavePlan = (planId) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Perbarui Harga Paket',
+      message: `Apakah Anda yakin ingin memperbarui harga paket ini menjadi Rp ${parseInt(editPrice || 0).toLocaleString('id-ID')} dengan diskon ${editDiscount || 0}%?`,
+      isDanger: false,
+      confirmText: 'Simpan Perubahan',
+      onConfirm: async () => {
+        try {
+          await api.updatePlan(planId, { price: parseInt(editPrice), discount: parseInt(editDiscount) });
+          toast.success('Plan updated successfully');
+          setEditingPlan(null);
+          fetchData();
+        } catch (e) {
+          toast.error('Failed to update plan: ' + e.message);
+        }
+      }
+    });
+  };
+
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
     try {
-      await api.updatePlan(planId, { price: parseInt(editPrice), discount: parseInt(editDiscount) });
-      toast.success('Plan updated successfully');
-      setEditingPlan(null);
+      await api.createAdminUser(newUserData);
+      toast.success('Pengguna berhasil dibuat');
+      setShowCreateUserModal(false);
+      setNewUserData({ username: '', email: '', password: '', role: 'user' });
       fetchData();
-    } catch (e) {
-      toast.error('Failed to update plan: ' + e.message);
+    } catch (err) {
+      toast.error('Gagal membuat pengguna: ' + err.message);
     }
+  };
+
+  const handleUpdateUser = async (e) => {
+    e.preventDefault();
+    try {
+      await api.updateAdminUser(editUserData.id, editUserData);
+      toast.success('Pengguna berhasil diperbarui');
+      setShowEditUserModal(false);
+      fetchData();
+    } catch (err) {
+      toast.error('Gagal memperbarui pengguna: ' + err.message);
+    }
+  };
+
+  const handleDeleteUser = (userId, username) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Hapus Pengguna',
+      message: `Apakah Anda yakin ingin menghapus pengguna "${username}"? Semua server dan log miliknya juga akan otomatis dimatikan dan dihapus (Cascade Delete).`,
+      isDanger: true,
+      confirmText: 'Hapus Pengguna',
+      onConfirm: async () => {
+        try {
+          await api.deleteAdminUser(userId);
+          toast.success('Pengguna dan seluruh server miliknya berhasil dihapus');
+          if (showUserDetailModal && showUserDetailModal.id === userId) {
+            setShowUserDetailModal(null);
+          }
+          fetchData();
+        } catch (err) {
+          toast.error('Gagal menghapus pengguna: ' + err.message);
+        }
+      }
+    });
+  };
+
+  const handleCreateServerForUser = async (e) => {
+    e.preventDefault();
+    if (!showCreateServerModal) return;
+    try {
+      const memVal = newServerData.memoryLimit.toLowerCase().replace('mb', 'm').replace('gb', 'g');
+      await api.createAdminServer({
+        ...newServerData,
+        memoryLimit: memVal,
+        userId: showCreateServerModal.id
+      });
+      toast.success('Server berhasil dibuat untuk user');
+      setShowCreateServerModal(null);
+      setNewServerData({ name: '', memoryLimit: '1g', version: 'latest', difficulty: 'easy', gamemode: 'survival', days: 30 });
+      fetchData();
+    } catch (err) {
+      toast.error('Gagal membuat server: ' + err.message);
+    }
+  };
+
+  const handleExtendServer = (serverId, days) => {
+    const text = days === 'permanent' ? 'mengubah server ini menjadi Permanen (tanpa batas waktu)' : `memperpanjang masa aktif server ini sebanyak ${days} hari`;
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Perpanjang Masa Aktif Server',
+      message: `Apakah Anda yakin ingin ${text}?`,
+      isDanger: false,
+      confirmText: 'Ya, Lanjutkan',
+      onConfirm: async () => {
+        try {
+          await api.extendAdminServer(serverId, days);
+          toast.success(days === 'permanent' ? 'Server dijadikan permanen!' : `Masa aktif diperpanjang ${days} hari!`);
+          fetchData();
+        } catch (err) {
+          toast.error('Gagal memperpanjang server: ' + err.message);
+        }
+      }
+    });
+  };
+
+  const formatRemainingDays = (expiresAt) => {
+    if (!expiresAt) return <span className="px-2 py-0.5 rounded text-xs bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold">Permanen</span>;
+    const diff = new Date(expiresAt) - new Date();
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    if (days <= 0) return <span className="px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-400 border border-red-500/30 font-bold">Kedaluwarsa</span>;
+    if (days <= 3) return <span className="px-2 py-0.5 rounded text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold">{days} Hari Lagi</span>;
+    return <span className="px-2 py-0.5 rounded text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">{days} Hari</span>;
   };
 
   const tabs = [
@@ -146,9 +291,17 @@ export default function AdminDashboard() {
             ))}
           </nav>
 
-          <div className="p-4 border-t border-zinc-800/60">
-            <button onClick={() => navigate('/dashboard')} className="flex items-center gap-2 text-xs font-medium text-zinc-500 hover:text-zinc-300 transition">
-              <LogOut className="w-3.5 h-3.5" /> Kembali ke Dasbor
+          <div className="p-4 border-t border-zinc-800/60 space-y-2">
+            <button onClick={() => navigate('/dashboard')} className="w-full flex items-center gap-2 text-xs font-medium text-zinc-400 hover:text-white px-2 py-1.5 rounded hover:bg-zinc-800/50 transition">
+              <Server className="w-3.5 h-3.5 text-emerald-500" /> Kembali ke Dasbor
+            </button>
+            <button onClick={() => {
+              localStorage.removeItem('token');
+              localStorage.removeItem('role');
+              localStorage.removeItem('username');
+              navigate('/login');
+            }} className="w-full flex items-center gap-2 text-xs font-medium text-red-400 hover:text-red-300 px-2 py-1.5 rounded hover:bg-red-500/10 transition">
+              <LogOut className="w-3.5 h-3.5" /> Keluar
             </button>
           </div>
         </aside>
@@ -216,44 +369,52 @@ export default function AdminDashboard() {
               )}
 
               {activeTab === 'servers' && (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto bg-[#101010] border border-zinc-800 rounded-xl">
                   <table className="w-full text-left text-sm text-zinc-400">
-                    <thead className="text-xs uppercase bg-zinc-800/50 text-zinc-300">
+                    <thead className="text-xs uppercase bg-zinc-800/50 text-zinc-300 border-b border-zinc-800">
                       <tr>
                         <th className="px-4 py-3">ID</th>
                         <th className="px-4 py-3">Name</th>
                         <th className="px-4 py-3">Owner</th>
                         <th className="px-4 py-3">Status</th>
                         <th className="px-4 py-3">Port</th>
+                        <th className="px-4 py-3">Masa Aktif</th>
                         <th className="px-4 py-3">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {servers.map(s => (
-                        <tr key={s.id} className="border-b border-zinc-800 hover:bg-zinc-800/20">
-                          <td className="px-4 py-3">{s.id}</td>
+                        <tr key={s.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30">
+                          <td className="px-4 py-3 font-mono">#{s.id}</td>
                           <td className="px-4 py-3 font-medium text-white">{s.name}</td>
                           <td className="px-4 py-3">{s.owner}</td>
                           <td className="px-4 py-3">
-                            <span className={`px-2 py-1 rounded-full text-xs ${s.status === 'running' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${s.status === 'running' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
                               {s.status}
                             </span>
                           </td>
-                          <td className="px-4 py-3">{s.port}</td>
-                          <td className="px-4 py-3 flex gap-2">
+                          <td className="px-4 py-3 font-mono text-zinc-300">{s.port}</td>
+                          <td className="px-4 py-3">{formatRemainingDays(s.expiresAt)}</td>
+                          <td className="px-4 py-3 flex flex-wrap items-center gap-1.5">
                             {s.status === 'running' && (
-                              <button onClick={() => handleServerAction(s.port, 'stop')} className="p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-amber-400/10 rounded" title="Stop">
+                              <button onClick={() => handleServerAction(s.port, 'stop')} className="p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-amber-400/10 rounded border border-transparent hover:border-amber-400/30 transition-colors" title="Stop">
                                 <StopCircle className="w-4 h-4" />
                               </button>
                             )}
-                            <button onClick={() => handleServerAction(s.port, 'delete')} className="p-1.5 text-zinc-400 hover:text-red-400 hover:bg-red-400/10 rounded" title="Delete">
+                            <button onClick={() => handleServerAction(s.port, 'delete')} className="p-1.5 text-zinc-400 hover:text-red-400 hover:bg-red-400/10 rounded border border-transparent hover:border-red-400/30 transition-colors" title="Delete">
                               <Trash2 className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => handleExtendServer(s.id, 30)} className="px-2 py-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs rounded border border-blue-500/20 transition-colors" title="Perpanjang 30 Hari">
+                              +30 Hari
+                            </button>
+                            <button onClick={() => handleExtendServer(s.id, 'permanent')} className="px-2 py-1 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-xs rounded border border-purple-500/20 transition-colors" title="Jadikan Permanen">
+                              Permanen
                             </button>
                           </td>
                         </tr>
                       ))}
                       {servers.length === 0 && (
-                        <tr><td colSpan="6" className="text-center py-8 text-zinc-500">No servers found</td></tr>
+                        <tr><td colSpan="7" className="text-center py-8 text-zinc-500">No servers found</td></tr>
                       )}
                     </tbody>
                   </table>
@@ -261,33 +422,84 @@ export default function AdminDashboard() {
               )}
 
               {activeTab === 'users' && (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm text-zinc-400">
-                    <thead className="text-xs uppercase bg-zinc-800/50 text-zinc-300">
-                      <tr>
-                        <th className="px-4 py-3">ID</th>
-                        <th className="px-4 py-3">Username</th>
-                        <th className="px-4 py-3">Email</th>
-                        <th className="px-4 py-3">Role</th>
-                        <th className="px-4 py-3">Joined</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {users.map(u => (
-                        <tr key={u.id} className="border-b border-zinc-800 hover:bg-zinc-800/20">
-                          <td className="px-4 py-3">{u.id}</td>
-                          <td className="px-4 py-3 font-medium text-white">{u.username}</td>
-                          <td className="px-4 py-3">{u.email}</td>
-                          <td className="px-4 py-3">
-                            <span className={`px-2 py-1 rounded text-xs ${u.role === 'admin' ? 'bg-purple-500/20 text-purple-400' : 'bg-zinc-800'}`}>
-                              {u.role}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">{new Date(u.createdAt).toLocaleDateString()}</td>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center bg-zinc-900/50 p-4 rounded-xl border border-zinc-800">
+                    <div>
+                      <h3 className="text-lg font-bold text-white">Manajemen Pengguna</h3>
+                      <p className="text-xs text-zinc-400">Kelola daftar akun pengguna dan server milik mereka</p>
+                    </div>
+                    <button 
+                      onClick={() => setShowCreateUserModal(true)}
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 shadow-lg shadow-emerald-600/20"
+                    >
+                      + Buat User Baru
+                    </button>
+                  </div>
+                  <div className="overflow-x-auto bg-[#101010] border border-zinc-800 rounded-xl">
+                    <table className="w-full text-left text-sm text-zinc-400">
+                      <thead className="text-xs uppercase bg-zinc-800/50 text-zinc-300 border-b border-zinc-800">
+                        <tr>
+                          <th className="px-4 py-3">ID</th>
+                          <th className="px-4 py-3">Username</th>
+                          <th className="px-4 py-3">Email</th>
+                          <th className="px-4 py-3">Role</th>
+                          <th className="px-4 py-3">Server</th>
+                          <th className="px-4 py-3">Joined</th>
+                          <th className="px-4 py-3">Actions</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {users.map(u => {
+                          const userServersCount = servers.filter(s => s.userId === u.id || s.owner === u.username).length;
+                          return (
+                            <tr key={u.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
+                              <td className="px-4 py-3 font-mono">#{u.id}</td>
+                              <td className="px-4 py-3 font-medium text-white">{u.username}</td>
+                              <td className="px-4 py-3">{u.email}</td>
+                              <td className="px-4 py-3">
+                                <span className={`px-2 py-0.5 rounded text-xs font-bold border ${u.role === 'admin' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-zinc-800 text-zinc-300 border-zinc-700'}`}>
+                                  {u.role}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                  {userServersCount} Server
+                                </span>
+                              </td>
+                              <td className="px-4 py-3">{new Date(u.createdAt).toLocaleDateString()}</td>
+                              <td className="px-4 py-3 flex gap-2">
+                                <button 
+                                  onClick={() => setShowUserDetailModal(u)} 
+                                  className="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white rounded text-xs border border-zinc-700 transition-colors"
+                                >
+                                  Detail & Server
+                                </button>
+                                <button 
+                                  onClick={() => {
+                                    setEditUserData({ id: u.id, username: u.username, email: u.email, role: u.role, password: '' });
+                                    setShowEditUserModal(true);
+                                  }} 
+                                  className="p-1.5 bg-zinc-800/80 hover:bg-zinc-700 text-amber-400 rounded border border-zinc-700 transition-colors"
+                                  title="Edit User"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+                                {u.username !== 'admin' && (
+                                  <button 
+                                    onClick={() => handleDeleteUser(u.id, u.username)} 
+                                    className="p-1.5 bg-zinc-800/80 hover:bg-red-500/20 text-red-400 rounded border border-zinc-700 hover:border-red-500/30 transition-colors"
+                                    title="Hapus User"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
 
@@ -394,6 +606,376 @@ export default function AdminDashboard() {
           )}
             </div>
           </div>
+
+          {/* Modal Buat User Baru */}
+          {showCreateUserModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+              <div className="bg-[#121212] border border-zinc-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <Users className="w-5 h-5 text-emerald-400" /> Buat Pengguna Baru
+                  </h3>
+                  <button onClick={() => setShowCreateUserModal(false)} className="text-zinc-500 hover:text-white">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <form onSubmit={handleCreateUser} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Username</label>
+                    <input 
+                      type="text" required
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-white text-sm outline-none focus:border-emerald-500 transition-colors"
+                      placeholder="e.g. alex_player"
+                      value={newUserData.username}
+                      onChange={e => setNewUserData({...newUserData, username: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Email</label>
+                    <input 
+                      type="email" required
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-white text-sm outline-none focus:border-emerald-500 transition-colors"
+                      placeholder="e.g. alex@example.com"
+                      value={newUserData.email}
+                      onChange={e => setNewUserData({...newUserData, email: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Password</label>
+                    <input 
+                      type="password" required
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-white text-sm outline-none focus:border-emerald-500 transition-colors"
+                      placeholder="••••••••"
+                      value={newUserData.password}
+                      onChange={e => setNewUserData({...newUserData, password: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Role</label>
+                    <select
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-white text-sm outline-none focus:border-emerald-500 transition-colors"
+                      value={newUserData.role}
+                      onChange={e => setNewUserData({...newUserData, role: e.target.value})}
+                    >
+                      <option value="user">User Biasa</option>
+                      <option value="admin">Administrator</option>
+                    </select>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-4 border-t border-zinc-800/80">
+                    <button type="button" onClick={() => setShowCreateUserModal(false)} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium rounded-xl transition-colors">
+                      Batal
+                    </button>
+                    <button type="submit" className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl transition-colors shadow-lg shadow-emerald-600/20">
+                      Simpan User
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Modal Edit User */}
+          {showEditUserModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+              <div className="bg-[#121212] border border-zinc-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <Edit2 className="w-5 h-5 text-amber-400" /> Edit Pengguna
+                  </h3>
+                  <button onClick={() => setShowEditUserModal(false)} className="text-zinc-500 hover:text-white">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <form onSubmit={handleUpdateUser} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Username</label>
+                    <input 
+                      type="text" required
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-white text-sm outline-none focus:border-amber-500 transition-colors"
+                      value={editUserData.username}
+                      onChange={e => setEditUserData({...editUserData, username: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Email</label>
+                    <input 
+                      type="email" required
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-white text-sm outline-none focus:border-amber-500 transition-colors"
+                      value={editUserData.email}
+                      onChange={e => setEditUserData({...editUserData, email: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Password Baru (Opsional)</label>
+                    <input 
+                      type="password"
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-white text-sm outline-none focus:border-amber-500 transition-colors"
+                      placeholder="Biarkan kosong jika tidak diubah"
+                      value={editUserData.password}
+                      onChange={e => setEditUserData({...editUserData, password: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Role</label>
+                    <select
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-white text-sm outline-none focus:border-amber-500 transition-colors"
+                      value={editUserData.role}
+                      onChange={e => setEditUserData({...editUserData, role: e.target.value})}
+                      disabled={editUserData.username === 'admin'}
+                    >
+                      <option value="user">User Biasa</option>
+                      <option value="admin">Administrator</option>
+                    </select>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-4 border-t border-zinc-800/80">
+                    <button type="button" onClick={() => setShowEditUserModal(false)} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium rounded-xl transition-colors">
+                      Batal
+                    </button>
+                    <button type="submit" className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-black text-sm font-bold rounded-xl transition-colors shadow-lg shadow-amber-500/20">
+                      Simpan Perubahan
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Modal Detail User & Daftar Server Miliknya */}
+          {showUserDetailModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+              <div className="bg-[#121212] border border-zinc-800 rounded-2xl p-6 w-full max-w-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
+                <div className="flex justify-between items-start mb-6 border-b border-zinc-800 pb-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-xl font-bold text-white">{showUserDetailModal.username}</h3>
+                      <span className={`px-2 py-0.5 rounded text-xs ${showUserDetailModal.role === 'admin' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-zinc-800 text-zinc-400 border border-zinc-700'}`}>
+                        {showUserDetailModal.role}
+                      </span>
+                    </div>
+                    <p className="text-sm text-zinc-400 mt-1">{showUserDetailModal.email} · ID: #{showUserDetailModal.id}</p>
+                  </div>
+                  <button onClick={() => setShowUserDetailModal(null)} className="text-zinc-500 hover:text-white p-1">
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="text-base font-bold text-white flex items-center gap-2">
+                    <Server className="w-4 h-4 text-blue-400" /> Daftar Server Milik {showUserDetailModal.username}
+                  </h4>
+                  <button 
+                    onClick={() => setShowCreateServerModal(showUserDetailModal)}
+                    className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-lg shadow-blue-600/20"
+                  >
+                    + Buat Server untuk User Ini
+                  </button>
+                </div>
+
+                <div className="overflow-x-auto bg-[#0a0a0a] border border-zinc-800/80 rounded-xl mb-6">
+                  <table className="w-full text-left text-xs text-zinc-400">
+                    <thead className="uppercase bg-zinc-800/50 text-zinc-300 border-b border-zinc-800">
+                      <tr>
+                        <th className="px-3 py-2.5">ID</th>
+                        <th className="px-3 py-2.5">Nama Server</th>
+                        <th className="px-3 py-2.5">Status</th>
+                        <th className="px-3 py-2.5">Port</th>
+                        <th className="px-3 py-2.5">Masa Aktif</th>
+                        <th className="px-3 py-2.5">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {servers
+                        .filter(s => s.userId === showUserDetailModal.id || s.owner === showUserDetailModal.username)
+                        .map(s => (
+                          <tr key={s.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30">
+                            <td className="px-3 py-2.5 font-mono">#{s.id}</td>
+                            <td className="px-3 py-2.5 font-medium text-white">{s.name}</td>
+                            <td className="px-3 py-2.5">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${s.status === 'running' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
+                                {s.status}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2.5 font-mono text-zinc-300">{s.port}</td>
+                            <td className="px-3 py-2.5">{formatRemainingDays(s.expiresAt)}</td>
+                            <td className="px-3 py-2.5 flex flex-wrap gap-1">
+                              {s.status === 'running' && (
+                                <button onClick={() => handleServerAction(s.port, 'stop')} className="p-1 text-zinc-400 hover:text-amber-400 hover:bg-amber-400/10 rounded" title="Stop">
+                                  <StopCircle className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                              <button onClick={() => handleServerAction(s.port, 'delete')} className="p-1 text-zinc-400 hover:text-red-400 hover:bg-red-400/10 rounded" title="Delete">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button onClick={() => handleExtendServer(s.id, 30)} className="px-2 py-0.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-[10px] rounded border border-blue-500/20">
+                                +30 Hari
+                              </button>
+                              <button onClick={() => handleExtendServer(s.id, 'permanent')} className="px-2 py-0.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-[10px] rounded border border-purple-500/20">
+                                Permanen
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      {servers.filter(s => s.userId === showUserDetailModal.id || s.owner === showUserDetailModal.username).length === 0 && (
+                        <tr>
+                          <td colSpan="6" className="text-center py-8 text-zinc-500">
+                            Pengguna ini belum memiliki server
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="flex justify-end">
+                  <button onClick={() => setShowUserDetailModal(null)} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-medium rounded-xl transition-colors">
+                    Tutup Detail
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Modal Buat Server Untuk User Ini */}
+          {showCreateServerModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+              <div className="bg-[#121212] border border-zinc-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <Server className="w-5 h-5 text-blue-400" /> Buat Server untuk {showCreateServerModal.username}
+                  </h3>
+                  <button onClick={() => setShowCreateServerModal(null)} className="text-zinc-500 hover:text-white">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <form onSubmit={handleCreateServerForUser} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Nama Server</label>
+                    <input 
+                      type="text" required
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-white text-sm outline-none focus:border-blue-500 transition-colors"
+                      placeholder="e.g. Dunia Alex"
+                      value={newServerData.name}
+                      onChange={e => setNewServerData({...newServerData, name: e.target.value})}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Paket RAM (Harga)</label>
+                      <select
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-white text-sm outline-none focus:border-blue-500 transition-colors"
+                        value={newServerData.memoryLimit}
+                        onChange={e => setNewServerData({...newServerData, memoryLimit: e.target.value})}
+                      >
+                        {plans && plans.length > 0 ? (
+                          plans.map(p => {
+                            const val = p.ram.toLowerCase().replace('mb', 'm').replace('gb', 'g');
+                            const finalPrice = p.price - (p.price * (p.discount || 0) / 100);
+                            return (
+                              <option key={p.id} value={val}>
+                                {p.name} ({p.ram}) - Rp {finalPrice.toLocaleString('id-ID')}/bln
+                              </option>
+                            );
+                          })
+                        ) : (
+                          <>
+                            <option value="500m">Villager (500MB) - Rp 30.000/bln</option>
+                            <option value="1g">Spider (1GB) - Rp 40.000/bln</option>
+                            <option value="2g">Slime (2GB) - Rp 50.000/bln</option>
+                            <option value="4g">Wither (4GB) - Rp 60.000/bln</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Masa Aktif</label>
+                      <select
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-white text-sm outline-none focus:border-blue-500 transition-colors"
+                        value={newServerData.days}
+                        onChange={e => setNewServerData({...newServerData, days: e.target.value})}
+                      >
+                        <option value="30">30 Hari</option>
+                        <option value="60">60 Hari</option>
+                        <option value="90">90 Hari</option>
+                        <option value="365">1 Tahun</option>
+                        <option value="permanent">Permanen</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Mode Permainan</label>
+                      <select
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-white text-sm outline-none focus:border-blue-500 transition-colors"
+                        value={newServerData.gamemode}
+                        onChange={e => setNewServerData({...newServerData, gamemode: e.target.value})}
+                      >
+                        <option value="survival">Survival</option>
+                        <option value="creative">Creative</option>
+                        <option value="adventure">Adventure</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Tingkat Kesulitan</label>
+                      <select
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-white text-sm outline-none focus:border-blue-500 transition-colors"
+                        value={newServerData.difficulty}
+                        onChange={e => setNewServerData({...newServerData, difficulty: e.target.value})}
+                      >
+                        <option value="peaceful">Peaceful</option>
+                        <option value="easy">Easy</option>
+                        <option value="normal">Normal</option>
+                        <option value="hard">Hard</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Versi Minecraft Server</label>
+                    <select
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-white text-sm outline-none focus:border-blue-500 transition-colors"
+                      value={newServerData.version === 'latest' || newServerData.version === 'preview' ? newServerData.version : 'custom'}
+                      onChange={e => {
+                        if (e.target.value !== 'custom') {
+                          setNewServerData({...newServerData, version: e.target.value});
+                        } else {
+                          setNewServerData({...newServerData, version: ''});
+                        }
+                      }}
+                    >
+                      <option value="latest">Rilis Terbaru (Latest)</option>
+                      <option value="preview">Preview (Beta)</option>
+                      <option value="custom">Versi Kustom...</option>
+                    </select>
+                    {(newServerData.version !== 'latest' && newServerData.version !== 'preview') && (
+                      <input
+                        type="text" required
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2 text-white text-sm outline-none focus:border-blue-500 transition-colors mt-2"
+                        placeholder="misal: 1.20.10.01"
+                        value={newServerData.version}
+                        onChange={e => setNewServerData({...newServerData, version: e.target.value})}
+                      />
+                    )}
+                  </div>
+                  <div className="flex justify-end gap-2 pt-4 border-t border-zinc-800/80">
+                    <button type="button" onClick={() => setShowCreateServerModal(null)} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium rounded-xl transition-colors">
+                      Batal
+                    </button>
+                    <button type="submit" className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition-colors shadow-lg shadow-blue-600/20">
+                      Deploy Server
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+          <ConfirmModal
+            isOpen={confirmConfig.isOpen}
+            onClose={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
+            onConfirm={confirmConfig.onConfirm}
+            title={confirmConfig.title}
+            message={confirmConfig.message}
+            confirmText={confirmConfig.confirmText}
+            isDanger={confirmConfig.isDanger}
+          />
           <Footer />
         </main>
       </div>

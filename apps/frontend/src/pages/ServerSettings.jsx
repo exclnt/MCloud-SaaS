@@ -2,8 +2,11 @@ import { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { Settings, Save, CheckCircle, Copy, Link as LinkIcon, Tag, Eye, Network } from 'lucide-react';
 import { api } from '../services/api';
+import toast from 'react-hot-toast';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function ServerSettings() {
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {}, isDanger: false, confirmText: 'Konfirmasi' });
   const { serverInfo, status } = useOutletContext();
   const [displayName, setDisplayName] = useState(serverInfo.name);
   const [motd, setMotd] = useState(serverInfo.motd || '');
@@ -16,34 +19,45 @@ export default function ServerSettings() {
     setSavingDisplay(true);
     try {
       await api.updateServerConfig(serverInfo.port, { name: displayName, motd: motd });
-      alert("Pengaturan Tampilan Server Berhasil Disimpan!");
+      toast.success("Pengaturan tampilan server berhasil disimpan!");
     } catch (e) {
-      alert("Gagal menyimpan Pengaturan Tampilan: " + e.message);
+      toast.error("Gagal menyimpan pengaturan tampilan: " + e.message);
     }
     setSavingDisplay(false);
   };
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-    alert('Tersalin ke papan klip!');
+    toast.success('Tersalin ke papan klip!');
   };
 
-  const toggleVisibility = async () => {
-    const newVisibility = isVisible ? 'private' : 'public';
-    setIsVisible(!isVisible);
-    try {
-      await api.updateServerConfig(serverInfo.port, { visibility: newVisibility });
-    } catch (e) {
-      alert("Gagal menyimpan visibilitas: " + e.message);
-      setIsVisible(isVisible); // revert
-    }
+  const toggleVisibility = () => {
+    const targetVis = isVisible ? 'private' : 'public';
+    const targetText = isVisible ? 'menyembunyikan server ini dari Daftar Server publik' : 'menampilkan server ini ke Daftar Server publik agar dapat dicari oleh orang lain';
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Ubah Visibilitas Server',
+      message: `Apakah Anda yakin ingin ${targetText}?`,
+      isDanger: false,
+      confirmText: 'Ya, Ubah Visibilitas',
+      onConfirm: async () => {
+        setIsVisible(!isVisible);
+        try {
+          await api.updateServerConfig(serverInfo.port, { visibility: targetVis });
+          toast.success(`Visibilitas diubah menjadi ${targetVis}`);
+        } catch (e) {
+          toast.error("Gagal menyimpan visibilitas: " + e.message);
+          setIsVisible(isVisible); // revert
+        }
+      }
+    });
   };
 
   const handleAddTag = async (e) => {
     if (e.key === 'Enter' && tagInput.trim() !== '') {
       e.preventDefault();
       if (tags.length >= 5) {
-        alert("Maksimal 5 tag diizinkan.");
+        toast.error("Maksimal 5 tag diizinkan.");
         return;
       }
       const newTags = [...tags, tagInput.trim()];
@@ -52,7 +66,7 @@ export default function ServerSettings() {
       try {
         await api.updateServerConfig(serverInfo.port, { tags: newTags.join(',') });
       } catch (err) {
-        alert("Gagal menyimpan tag: " + err.message);
+        toast.error("Gagal menyimpan tag: " + err.message);
         setTags(tags); // revert
       }
     }
@@ -64,7 +78,7 @@ export default function ServerSettings() {
     try {
       await api.updateServerConfig(serverInfo.port, { tags: newTags.join(',') });
     } catch (err) {
-      alert("Gagal menghapus tag: " + err.message);
+      toast.error("Gagal menghapus tag: " + err.message);
       setTags(tags); // revert
     }
   };
@@ -227,6 +241,15 @@ export default function ServerSettings() {
           </div>
         </div>
       </div>
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        onClose={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
+        onConfirm={confirmConfig.onConfirm}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        confirmText={confirmConfig.confirmText}
+        isDanger={confirmConfig.isDanger}
+      />
     </div>
   );
 }

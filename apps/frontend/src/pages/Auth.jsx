@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { Server, Lock, User, UserPlus, ArrowRight, ArrowLeft, Loader2, Rocket, Key, Eye, EyeOff, CheckCircle2, XCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function Auth() {
   const location = useLocation();
@@ -36,27 +37,38 @@ export default function Auth() {
     setSuccess('');
     setLoading(true);
     try {
+      let userRole = 'user';
       if (isLogin) {
         const data = await api.login(username, password);
+        userRole = data.role || 'user';
         localStorage.setItem('token', data.token);
         localStorage.setItem('username', username);
-        if (data.role) localStorage.setItem('role', data.role);
+        localStorage.setItem('role', userRole);
         setSuccess('Berhasil masuk! Mengalihkan...');
+        toast.success('Berhasil masuk!');
       } else {
         if (password !== confirmPassword) {
           setError('Kata sandi tidak cocok!');
+          toast.error('Kata sandi tidak cocok!');
           setLoading(false);
           return;
         }
+        const data = await api.register(email, username, password);
+        userRole = data.role || 'user';
         localStorage.setItem('token', data.token);
+        localStorage.setItem('username', username);
+        localStorage.setItem('role', userRole);
         setSuccess('Pendaftaran berhasil! Mengalihkan...');
+        toast.success('Pendaftaran berhasil!');
       }
       
       const redirect = searchParams.get('redirect');
       const plan = searchParams.get('plan');
       
       setTimeout(() => {
-        if (redirect === 'checkout') {
+        if (userRole === 'admin') {
+          navigate('/admin');
+        } else if (redirect === 'checkout') {
           navigate(`/checkout?plan=${plan || 'slime'}`);
         } else {
           navigate('/dashboard');
@@ -64,6 +76,7 @@ export default function Auth() {
       }, 1500);
     } catch (err) {
       setError(err.message);
+      toast.error(err.message);
       setLoading(false);
     }
   };

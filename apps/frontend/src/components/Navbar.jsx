@@ -203,6 +203,8 @@ export default function Navbar() {
                       className="flex items-center gap-3 px-3 py-2 text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 rounded-lg cursor-pointer transition"
                       onClick={() => {
                         localStorage.removeItem('token');
+                        localStorage.removeItem('role');
+                        localStorage.removeItem('username');
                         navigate('/login');
                       }}
                     >
@@ -311,7 +313,12 @@ export default function Navbar() {
               </div>
 
               <button 
-                onClick={() => { localStorage.removeItem('token'); navigate('/login'); }} 
+                onClick={() => { 
+                  localStorage.removeItem('token'); 
+                  localStorage.removeItem('role'); 
+                  localStorage.removeItem('username'); 
+                  navigate('/login'); 
+                }} 
                 className="mt-2 p-2 sm:p-3 bg-red-500/10 text-red-500 rounded-lg border border-red-500/20 text-xs sm:text-sm font-medium text-center hover:bg-red-500/20 transition flex items-center justify-center gap-2"
               >
                 <LogOut className="w-4 h-4" /> Keluar

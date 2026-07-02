@@ -1,7 +1,7 @@
 import http from 'node:http';
 import { parseJSON } from './utils/parser.js';
 import { verifyToken } from '../../auth-service/src/utils/jwt.js';
-import { createContainer, startContainer, stopContainer, restartContainer, deleteContainer, syncServerStatuses, getServerLogs, getServerStats, rebuildContainer } from './services/dockerService.js';
+import { createContainer, startContainer, stopContainer, restartContainer, deleteContainer, deleteUserContainers, extendServer, syncServerStatuses, getServerLogs, getServerStats, rebuildContainer } from './services/dockerService.js';
 import { db } from '../../../database/db.js';
 import { servers, users, activity_logs } from '../../../database/schema.js';
 import { eq, desc } from 'drizzle-orm';
@@ -77,12 +77,81 @@ const server = http.createServer(async (req, res) => {
         ip: servers.ip,
         port: servers.port,
         memoryLimit: servers.memoryLimit,
-        owner: users.username
+        owner: users.username,
+        userId: servers.userId,
+        createdAt: servers.createdAt,
+        expiresAt: servers.expiresAt
       }).from(servers).leftJoin(users, eq(servers.userId, users.id)).all();
       
       const syncedServers = await syncServerStatuses(allServers);
       res.statusCode = 200;
       return res.end(JSON.stringify(syncedServers));
+    } catch (e) {
+      res.statusCode = 500;
+      return res.end(JSON.stringify({ error: e.message }));
+    }
+  }
+
+  if (req.method === 'POST' && url === '/admin/servers/create') {
+    const user = authMiddleware(req, res);
+    if (!user || user.role !== 'admin') {
+      res.statusCode = 403;
+      return res.end(JSON.stringify({ error: 'Forbidden' }));
+    }
+    try {
+      const body = await parseJSON(req);
+      const targetUserId = body.userId || body.targetUserId;
+      if (!targetUserId) {
+        res.statusCode = 400;
+        return res.end(JSON.stringify({ error: 'targetUserId is required' }));
+      }
+      if (!body.name) {
+        res.statusCode = 400;
+        return res.end(JSON.stringify({ error: 'Server name is required' }));
+      }
+      const newServer = await createContainer(parseInt(targetUserId), body);
+      logActivity(user.id, 'admin_create_server', { targetUserId, serverId: newServer.id, name: body.name });
+      res.statusCode = 201;
+      return res.end(JSON.stringify(newServer));
+    } catch (e) {
+      res.statusCode = 500;
+      return res.end(JSON.stringify({ error: e.message }));
+    }
+  }
+
+  if (req.method === 'PUT' && url.match(/^\/admin\/servers\/(\d+)\/extend$/)) {
+    const user = authMiddleware(req, res);
+    if (!user || user.role !== 'admin') {
+      res.statusCode = 403;
+      return res.end(JSON.stringify({ error: 'Forbidden' }));
+    }
+    const match = url.match(/^\/admin\/servers\/(\d+)\/extend$/);
+    const serverId = parseInt(match[1]);
+    try {
+      const body = await parseJSON(req);
+      const updated = await extendServer(serverId, body.days);
+      logActivity(user.id, 'admin_extend_server', { serverId, days: body.days });
+      res.statusCode = 200;
+      return res.end(JSON.stringify(updated));
+    } catch (e) {
+      res.statusCode = 500;
+      return res.end(JSON.stringify({ error: e.message }));
+    }
+  }
+
+  if (req.method === 'POST' && url.match(/^\/admin\/(?:users|servers\/user)\/(\d+)\/cleanup$/)) {
+    const user = authMiddleware(req, res);
+    if (!user || user.role !== 'admin') {
+      res.statusCode = 403;
+      return res.end(JSON.stringify({ error: 'Forbidden' }));
+    }
+    const match = url.match(/^\/admin\/(?:users|servers\/user)\/(\d+)\/cleanup$/);
+    const targetUserId = parseInt(match[1]);
+    try {
+      const result = await deleteUserContainers(targetUserId);
+      logActivity(user.id, 'admin_cleanup_user_containers', { targetUserId });
+      res.statusCode = 200;
+      return res.end(JSON.stringify(result));
     } catch (e) {
       res.statusCode = 500;
       return res.end(JSON.stringify({ error: e.message }));

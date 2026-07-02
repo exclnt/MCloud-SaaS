@@ -27,8 +27,10 @@ import {
 import Navbar from './Navbar';
 import Footer from './Footer';
 import TutorialModal from './TutorialModal';
+import ConfirmModal from './ConfirmModal';
 
 export default function ServerLayout() {
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {}, isDanger: false, confirmText: 'Konfirmasi' });
   const { port } = useParams();
   const navigate = useNavigate();
   const [serverInfo, setServerInfo] = useState(null);
@@ -72,30 +74,48 @@ export default function ServerLayout() {
     setProcessingAction(null);
   };
 
-  const handleStop = async () => {
+  const handleStop = () => {
     if (status !== 'running' || processingAction) return;
-    setProcessingAction('stop');
-    try {
-      await api.stopServer(port);
-      setStatus('stopped');
-      toast.success('Server berhasil dihentikan');
-    } catch (e) {
-      toast.error('Gagal menghentikan server');
-    }
-    setProcessingAction(null);
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Matikan Server',
+      message: `Apakah Anda yakin ingin mematikan server ini? Pemain yang aktif akan terputus.`,
+      isDanger: true,
+      confirmText: 'Matikan Server',
+      onConfirm: async () => {
+        setProcessingAction('stop');
+        try {
+          await api.stopServer(port);
+          setStatus('stopped');
+          toast.success('Server berhasil dihentikan');
+        } catch (e) {
+          toast.error('Gagal menghentikan server');
+        }
+        setProcessingAction(null);
+      }
+    });
   };
 
-  const handleRestart = async () => {
+  const handleRestart = () => {
     if (status !== 'running' || processingAction) return;
-    setProcessingAction('restart');
-    try {
-      await api.restartServer(port);
-      setStatus('running');
-      toast.success('Server berhasil direstart');
-    } catch (e) {
-      toast.error('Gagal merestart server');
-    }
-    setProcessingAction(null);
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Restart Server',
+      message: `Apakah Anda yakin ingin merestart server ini?`,
+      isDanger: false,
+      confirmText: 'Restart Server',
+      onConfirm: async () => {
+        setProcessingAction('restart');
+        try {
+          await api.restartServer(port);
+          setStatus('running');
+          toast.success('Server berhasil direstart');
+        } catch (e) {
+          toast.error('Gagal merestart server');
+        }
+        setProcessingAction(null);
+      }
+    });
   };
 
   if (!serverInfo) return <div className="min-h-screen bg-[#0a0a0a]" />;
@@ -243,6 +263,15 @@ export default function ServerLayout() {
           <Footer />
         </main>
       </div>
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        onClose={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
+        onConfirm={confirmConfig.onConfirm}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        confirmText={confirmConfig.confirmText}
+        isDanger={confirmConfig.isDanger}
+      />
     </div>
   );
 }

@@ -29,11 +29,24 @@ export default function Landing() {
     hiddenElements.forEach((el) => observer.observe(el));
 
     api.getPlans().then(data => {
-        const withAvatars = data.map(p => ({
-          ...p,
-          icon: `MHF_${p.name}`,
-          recommended: p.name.toLowerCase() === 'slime'
-        }));
+        const withAvatars = data.map(p => {
+          let ramStr = p.ram || '500MB RAM';
+          const r = ramStr.toLowerCase();
+          if (r === '500m' || r === '500mb') ramStr = '500MB RAM';
+          else if (r === '1g' || r === '1gb') ramStr = '1GB RAM';
+          else if (r === '2g' || r === '2gb') ramStr = '2GB RAM';
+          else if (r === '4g' || r === '4gb') ramStr = '4GB RAM';
+          else if (r === '8g' || r === '8gb') ramStr = '8GB RAM';
+          else if (!ramStr.toUpperCase().includes('RAM')) ramStr = `${ramStr.toUpperCase()} RAM`;
+
+          return {
+            ...p,
+            sub: p.sub || '24/7 Always Online',
+            ram: ramStr,
+            icon: `MHF_${p.name}`,
+            recommended: p.name.toLowerCase() === 'slime'
+          };
+        });
         setPricingPlans(withAvatars);
     }).catch(err => console.error("Failed to fetch plans", err));
 
@@ -178,7 +191,7 @@ export default function Landing() {
                     <div>
                       <h3 className="text-xl font-bold text-white">{plan.name}</h3>
                       <p className="text-xs text-zinc-500 flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> {plan.sub}
+                        <Clock className="w-3 h-3" /> {plan.sub || '24/7 Always Online'}
                       </p>
                     </div>
                   </div>

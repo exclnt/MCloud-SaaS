@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { useOutletContext, useParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { Users, Shield, ShieldOff, UserX, Ban, Loader2, RefreshCw } from 'lucide-react';
+import toast from 'react-hot-toast';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function ServerPlayers() {
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {}, isDanger: false, confirmText: 'Konfirmasi' });
   const { port } = useParams();
   const { status } = useOutletContext();
   const [players, setPlayers] = useState([]);
@@ -33,36 +36,65 @@ export default function ServerPlayers() {
     return () => clearInterval(interval);
   }, [port, status]);
 
-  const handleAction = async (player, action) => {
+  const handleAction = (player, action) => {
     if (actionLoading) return;
-    setActionLoading(`${player}-${action}`);
-    
-    try {
-      if (action === 'ban') {
-        if (!window.confirm(`Apakah Anda yakin ingin memblokir permanen (ban) ${player}?`)) {
-          setActionLoading(null);
-          return;
-        }
-        await api.banPlayer(port, player);
-        alert(`${player} telah diblokir.`);
-      } else {
-        let command = '';
-        if (action === 'op') command = `op "${player}"`;
-        if (action === 'deop') command = `deop "${player}"`;
-        if (action === 'kick') command = `kick "${player}" "Anda telah dikeluarkan oleh Admin."`;
-        
-        await api.sendCommand(port, command);
-        
-        if (action === 'kick') alert(`${player} berhasil dikeluarkan.`);
-        if (action === 'op') alert(`${player} sekarang adalah Operator.`);
-        if (action === 'deop') alert(`${player} bukan lagi Operator.`);
-      }
-      setTimeout(fetchPlayers, 1500);
-    } catch (e) {
-      alert(`Gagal mengeksekusi aksi: ${e.message}`);
-    } finally {
-      setActionLoading(null);
+    let title = 'Tindakan Pemain';
+    let message = `Apakah Anda yakin ingin melakukan aksi pada ${player}?`;
+    let isDanger = false;
+    let confirmText = 'Ya, Lanjutkan';
+
+    if (action === 'ban') {
+      title = 'Ban Pemain';
+      message = `Apakah Anda yakin ingin memblokir permanen (ban) ${player} dari server ini?`;
+      isDanger = true;
+      confirmText = 'Ban Pemain';
+    } else if (action === 'kick') {
+      title = 'Kick Pemain';
+      message = `Apakah Anda yakin ingin mengeluarkan (kick) ${player} dari permainan?`;
+      isDanger = true;
+      confirmText = 'Kick Pemain';
+    } else if (action === 'op') {
+      title = 'Jadikan Operator';
+      message = `Apakah Anda yakin ingin memberikan hak akses Operator (OP) kepada ${player}?`;
+      confirmText = 'Jadikan Operator';
+    } else if (action === 'deop') {
+      title = 'Hapus Operator';
+      message = `Apakah Anda yakin ingin mencabut hak akses Operator (OP) dari ${player}?`;
+      confirmText = 'Hapus Operator';
     }
+
+    setConfirmConfig({
+      isOpen: true,
+      title,
+      message,
+      isDanger,
+      confirmText,
+      onConfirm: async () => {
+        setActionLoading(`${player}-${action}`);
+        try {
+          if (action === 'ban') {
+            await api.banPlayer(port, player);
+            toast.success(`${player} telah diblokir.`);
+          } else {
+            let command = '';
+            if (action === 'op') command = `op "${player}"`;
+            if (action === 'deop') command = `deop "${player}"`;
+            if (action === 'kick') command = `kick "${player}" "Anda telah dikeluarkan oleh Admin."`;
+            
+            await api.sendCommand(port, command);
+            
+            if (action === 'kick') toast.success(`${player} berhasil dikeluarkan.`);
+            if (action === 'op') toast.success(`${player} sekarang adalah Operator.`);
+            if (action === 'deop') toast.success(`${player} bukan lagi Operator.`);
+          }
+          setTimeout(fetchPlayers, 1500);
+        } catch (e) {
+          toast.error(`Gagal mengeksekusi aksi: ${e.message}`);
+        } finally {
+          setActionLoading(null);
+        }
+      }
+    });
   };
 
   if (status !== 'running') {
@@ -158,6 +190,15 @@ export default function ServerPlayers() {
           </div>
         )}
       </div>
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        onClose={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
+        onConfirm={confirmConfig.onConfirm}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        confirmText={confirmConfig.confirmText}
+        isDanger={confirmConfig.isDanger}
+      />
     </div>
   );
 }

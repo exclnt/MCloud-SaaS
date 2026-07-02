@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { Terminal as TerminalIcon, Search, Copy, Edit3, Send, Zap } from 'lucide-react';
 import { api } from '../services/api';
+import toast from 'react-hot-toast';
 
 export default function ServerConsole() {
   const { serverInfo, status } = useOutletContext();
@@ -44,8 +45,9 @@ export default function ServerConsole() {
 
     try {
       await api.sendCommand(serverInfo.port, cmdToSend);
+      toast.success("Perintah terkirim");
     } catch (e) {
-      alert("Gagal mengirim perintah: " + e.message);
+      toast.error("Gagal mengirim perintah: " + e.message);
     }
   };
 

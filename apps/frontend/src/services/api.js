@@ -275,5 +275,54 @@ export const api = {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
     return data;
+  },
+  createAdminUser: async (userData) => {
+    const res = await fetch(`${API_URL}/admin/users`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(userData)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to create user');
+    return data;
+  },
+  updateAdminUser: async (userId, userData) => {
+    const res = await fetch(`${API_URL}/admin/users/${userId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(userData)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to update user');
+    return data;
+  },
+  deleteAdminUser: async (userId) => {
+    const res = await fetch(`${API_URL}/admin/users/${userId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to delete user');
+    return data;
+  },
+  createAdminServer: async (serverData) => {
+    const res = await fetch(`${API_URL}/admin/servers/create`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(serverData)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to create server');
+    return data;
+  },
+  extendAdminServer: async (serverId, days) => {
+    const res = await fetch(`${API_URL}/admin/servers/${serverId}/extend`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ days })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to extend server');
+    return data;
   }
 };

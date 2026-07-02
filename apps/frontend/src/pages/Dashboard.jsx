@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import ConfirmModal from '../components/ConfirmModal';
 
 const getRemainingDays = (expiresAt) => {
   if (!expiresAt) return 0;
@@ -32,6 +33,7 @@ const getPlanName = (memoryLimit) => {
 };
 
 export default function Dashboard() {
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {}, isDanger: false, confirmText: 'Konfirmasi' });
   const [servers, setServers] = useState([]);
   const [processing, setProcessing] = useState({});
   const [currentUser, setCurrentUser] = useState({ username: '' });
@@ -77,28 +79,46 @@ export default function Dashboard() {
     setProcessing(prev => ({ ...prev, [port]: null }));
   };
 
-  const handleStop = async (port) => {
-    setProcessing(prev => ({ ...prev, [port]: 'stop' }));
-    try {
-      await api.stopServer(port);
-      await fetchServers();
-      toast.success('Server berhasil dihentikan');
-    } catch (e) {
-      toast.error("Gagal menghentikan: " + e.message);
-    }
-    setProcessing(prev => ({ ...prev, [port]: null }));
+  const handleStop = (port) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Matikan Server',
+      message: `Apakah Anda yakin ingin mematikan server port ${port}? Pemain yang aktif akan terputus.`,
+      isDanger: true,
+      confirmText: 'Matikan Server',
+      onConfirm: async () => {
+        setProcessing(prev => ({ ...prev, [port]: 'stop' }));
+        try {
+          await api.stopServer(port);
+          await fetchServers();
+          toast.success('Server berhasil dihentikan');
+        } catch (e) {
+          toast.error("Gagal menghentikan: " + e.message);
+        }
+        setProcessing(prev => ({ ...prev, [port]: null }));
+      }
+    });
   };
 
-  const handleRestart = async (port) => {
-    setProcessing(prev => ({ ...prev, [port]: 'restart' }));
-    try {
-      await api.restartServer(port);
-      await fetchServers();
-      toast.success('Server berhasil direstart');
-    } catch (e) {
-      toast.error("Gagal merestart: " + e.message);
-    }
-    setProcessing(prev => ({ ...prev, [port]: null }));
+  const handleRestart = (port) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Restart Server',
+      message: `Apakah Anda yakin ingin merestart server port ${port}?`,
+      isDanger: false,
+      confirmText: 'Restart Server',
+      onConfirm: async () => {
+        setProcessing(prev => ({ ...prev, [port]: 'restart' }));
+        try {
+          await api.restartServer(port);
+          await fetchServers();
+          toast.success('Server berhasil direstart');
+        } catch (e) {
+          toast.error("Gagal merestart: " + e.message);
+        }
+        setProcessing(prev => ({ ...prev, [port]: null }));
+      }
+    });
   };
 
   return (
@@ -214,6 +234,15 @@ export default function Dashboard() {
         </div>
       </main>
 
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        onClose={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
+        onConfirm={confirmConfig.onConfirm}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        confirmText={confirmConfig.confirmText}
+        isDanger={confirmConfig.isDanger}
+      />
       <Footer />
     </div>
   );

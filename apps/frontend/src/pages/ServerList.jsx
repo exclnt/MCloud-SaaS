@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../services/api';
+import toast from 'react-hot-toast';
 import { 
   Search,
   Globe,
@@ -47,7 +48,7 @@ export default function ServerList() {
   const copyToClipboard = (text, e) => {
     e.stopPropagation();
     navigator.clipboard.writeText(text);
-    alert('IP disalin ke papan klip!');
+    toast.success('Alamat IP berhasil disalin!');
   };
 
   return (

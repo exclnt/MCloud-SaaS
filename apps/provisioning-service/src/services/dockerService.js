@@ -34,6 +34,16 @@ export const createContainer = async (userId, config) => {
   const containerName = `mcloud_${userId}_${port}`;
   const localIp = getLocalIp();
   
+  let expiresAtVal = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  if (config.expiresAt === null || config.permanent === true || config.duration === 'permanent') {
+    expiresAtVal = null;
+  } else if (config.days || config.durationDays) {
+    const daysToAdd = parseInt(config.days || config.durationDays);
+    expiresAtVal = new Date(Date.now() + daysToAdd * 24 * 60 * 60 * 1000);
+  } else if (config.expiresAt) {
+    expiresAtVal = new Date(config.expiresAt);
+  }
+
   // Simpan ke DB dulu dengan status 'error' sebagai langkah pengaman
   const newServer = db.insert(servers).values({
     userId,
@@ -46,7 +56,7 @@ export const createContainer = async (userId, config) => {
     seed: config.seed || '',
     difficulty: config.difficulty || 'easy',
     gamemode: config.gamemode || 'survival',
-    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    expiresAt: expiresAtVal
   }).returning().get();
   
   const memLimit = config.memoryLimit || '500m';
@@ -142,6 +152,34 @@ export const deleteContainer = async (port) => {
   
   db.delete(servers).where(eq(servers.id, server.id)).run();
   return { message: 'Server deleted successfully' };
+};
+
+export const deleteUserContainers = async (userId) => {
+  const userServers = db.select().from(servers).where(eq(servers.userId, userId)).all();
+  for (const s of userServers) {
+    try {
+      await deleteContainer(s.port);
+    } catch (err) {
+      console.warn(`Failed to delete container for port ${s.port}:`, err.message);
+    }
+  }
+  return { message: `Deleted ${userServers.length} servers for user ${userId}` };
+};
+
+export const extendServer = async (serverId, days) => {
+  const server = db.select().from(servers).where(eq(servers.id, serverId)).get();
+  if (!server) throw new Error('Server not found');
+  
+  let newExpires = null;
+  if (days === null || days === 'permanent' || days === 0) {
+    newExpires = null;
+  } else {
+    const baseDate = server.expiresAt && new Date(server.expiresAt) > new Date() ? new Date(server.expiresAt) : new Date();
+    newExpires = new Date(baseDate.getTime() + parseInt(days) * 24 * 60 * 60 * 1000);
+  }
+  db.update(servers).set({ expiresAt: newExpires }).where(eq(servers.id, serverId)).run();
+  const updated = db.select().from(servers).where(eq(servers.id, serverId)).get();
+  return updated;
 };
 
 export const syncServerStatuses = async (userServers) => {
