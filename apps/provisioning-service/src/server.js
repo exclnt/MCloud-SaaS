@@ -3,7 +3,7 @@ import { parseJSON } from './utils/parser.js';
 import { verifyToken } from '../../auth-service/src/utils/jwt.js';
 import { createContainer, startContainer, stopContainer, restartContainer, deleteContainer, deleteUserContainers, extendServer, syncServerStatuses, getServerLogs, getServerStats, rebuildContainer } from './services/dockerService.js';
 import { db } from '../../../database/db.js';
-import { servers, users, activity_logs, transactions } from '../../../database/schema.js';
+import { servers, users, activity_logs, transactions, tickets, ticket_messages } from '../../../database/schema.js';
 import { eq, desc } from 'drizzle-orm';
 
 function logActivity(userId, action, details = null) {
@@ -562,6 +562,227 @@ const server = http.createServer(async (req, res) => {
       return res.end(JSON.stringify(result));
     } catch (e) {
       if (req.file && req.file.path && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      res.statusCode = 500;
+      return res.end(JSON.stringify({ error: e.message }));
+    }
+  }
+
+  // --- Support Tickets API Endpoints ---
+
+  if (req.method === 'GET' && url === '/tickets') {
+    const user = authMiddleware(req, res);
+    if (!user) return;
+    try {
+      const userTickets = db.select().from(tickets)
+        .where(eq(tickets.userId, user.id))
+        .orderBy(desc(tickets.updatedAt))
+        .all();
+
+      const allServers = db.select().from(servers).all();
+      const enriched = userTickets.map(t => {
+        const s = allServers.find(srv => srv.id === t.serverId);
+        return { ...t, serverName: s ? s.name : null, serverPort: s ? s.port : null };
+      });
+
+      res.statusCode = 200;
+      return res.end(JSON.stringify(enriched));
+    } catch (e) {
+      res.statusCode = 500;
+      return res.end(JSON.stringify({ error: e.message }));
+    }
+  }
+
+  if (req.method === 'POST' && url === '/tickets') {
+    const user = authMiddleware(req, res);
+    if (!user) return;
+    try {
+      const body = await parseJSON(req);
+      const { subject, category, priority = 'medium', serverId, message, attachment } = body;
+      if (!subject || !category || !message) {
+        res.statusCode = 400;
+        return res.end(JSON.stringify({ error: 'Subject, category, and message are required' }));
+      }
+
+      const newTicket = db.insert(tickets).values({
+        userId: user.id,
+        serverId: serverId ? parseInt(serverId) : null,
+        subject,
+        category,
+        priority,
+        status: 'open',
+        attachment: attachment || null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }).returning().get();
+
+      db.insert(ticket_messages).values({
+        ticketId: newTicket.id,
+        senderId: user.id,
+        senderRole: user.role,
+        message,
+        attachment: attachment || null,
+        createdAt: new Date()
+      }).run();
+
+      logActivity(user.id, 'create_ticket', { ticketId: newTicket.id, subject });
+
+      res.statusCode = 201;
+      return res.end(JSON.stringify(newTicket));
+    } catch (e) {
+      res.statusCode = 500;
+      return res.end(JSON.stringify({ error: e.message }));
+    }
+  }
+
+  if (req.method === 'GET' && url.match(/^\/tickets\/(\d+)$/)) {
+    const user = authMiddleware(req, res);
+    if (!user) return;
+    const match = url.match(/^\/tickets\/(\d+)$/);
+    const ticketId = parseInt(match[1]);
+    try {
+      const ticket = db.select().from(tickets).where(eq(tickets.id, ticketId)).get();
+      if (!ticket || (ticket.userId !== user.id && user.role !== 'admin')) {
+        res.statusCode = 404;
+        return res.end(JSON.stringify({ error: 'Ticket not found or access denied' }));
+      }
+
+      const msgs = db.select().from(ticket_messages)
+        .where(eq(ticket_messages.ticketId, ticketId))
+        .all();
+
+      const allUsers = db.select().from(users).all();
+      const enrichedMsgs = msgs.map(m => {
+        const u = allUsers.find(usr => usr.id === m.senderId);
+        return {
+          ...m,
+          senderUsername: u ? u.username : 'Unknown'
+        };
+      });
+
+      const srv = ticket.serverId ? db.select().from(servers).where(eq(servers.id, ticket.serverId)).get() : null;
+
+      res.statusCode = 200;
+      return res.end(JSON.stringify({
+        ticket: { ...ticket, serverName: srv ? srv.name : null, serverPort: srv ? srv.port : null },
+        messages: enrichedMsgs
+      }));
+    } catch (e) {
+      res.statusCode = 500;
+      return res.end(JSON.stringify({ error: e.message }));
+    }
+  }
+
+  if (req.method === 'POST' && url.match(/^\/tickets\/(\d+)\/reply$/)) {
+    const user = authMiddleware(req, res);
+    if (!user) return;
+    const match = url.match(/^\/tickets\/(\d+)\/reply$/);
+    const ticketId = parseInt(match[1]);
+    try {
+      const ticket = db.select().from(tickets).where(eq(tickets.id, ticketId)).get();
+      if (!ticket || (ticket.userId !== user.id && user.role !== 'admin')) {
+        res.statusCode = 404;
+        return res.end(JSON.stringify({ error: 'Ticket not found or access denied' }));
+      }
+
+      const body = await parseJSON(req);
+      const { message, attachment } = body;
+      if (!message) {
+        res.statusCode = 400;
+        return res.end(JSON.stringify({ error: 'Message is required' }));
+      }
+
+      const newMsg = db.insert(ticket_messages).values({
+        ticketId,
+        senderId: user.id,
+        senderRole: user.role,
+        message,
+        attachment: attachment || null,
+        createdAt: new Date()
+      }).returning().get();
+
+      let newStatus = ticket.status;
+      if (user.role === 'admin' && ticket.status === 'open') {
+        newStatus = 'in_progress';
+      } else if (user.role !== 'admin' && (ticket.status === 'resolved' || ticket.status === 'closed')) {
+        newStatus = 'open';
+      }
+
+      db.update(tickets).set({
+        status: newStatus,
+        updatedAt: new Date()
+      }).where(eq(tickets.id, ticketId)).run();
+
+      logActivity(user.id, 'reply_ticket', { ticketId });
+
+      const u = db.select().from(users).where(eq(users.id, user.id)).get();
+      res.statusCode = 201;
+      return res.end(JSON.stringify({ ...newMsg, senderUsername: u ? u.username : 'Unknown' }));
+    } catch (e) {
+      res.statusCode = 500;
+      return res.end(JSON.stringify({ error: e.message }));
+    }
+  }
+
+  if (req.method === 'PUT' && url.match(/^\/tickets\/(\d+)\/status$/)) {
+    const user = authMiddleware(req, res);
+    if (!user) return;
+    const match = url.match(/^\/tickets\/(\d+)\/status$/);
+    const ticketId = parseInt(match[1]);
+    try {
+      const ticket = db.select().from(tickets).where(eq(tickets.id, ticketId)).get();
+      if (!ticket || (ticket.userId !== user.id && user.role !== 'admin')) {
+        res.statusCode = 404;
+        return res.end(JSON.stringify({ error: 'Ticket not found or access denied' }));
+      }
+
+      const body = await parseJSON(req);
+      const { status } = body;
+      if (!['open', 'in_progress', 'resolved', 'closed'].includes(status)) {
+        res.statusCode = 400;
+        return res.end(JSON.stringify({ error: 'Invalid status' }));
+      }
+
+      db.update(tickets).set({
+        status,
+        updatedAt: new Date()
+      }).where(eq(tickets.id, ticketId)).run();
+
+      logActivity(user.id, 'update_ticket_status', { ticketId, status });
+
+      res.statusCode = 200;
+      return res.end(JSON.stringify({ message: 'Status updated', status }));
+    } catch (e) {
+      res.statusCode = 500;
+      return res.end(JSON.stringify({ error: e.message }));
+    }
+  }
+
+  if (req.method === 'GET' && url === '/admin/tickets') {
+    const user = authMiddleware(req, res);
+    if (!user || user.role !== 'admin') {
+      res.statusCode = 403;
+      return res.end(JSON.stringify({ error: 'Forbidden' }));
+    }
+    try {
+      const allTickets = db.select().from(tickets).orderBy(desc(tickets.updatedAt)).all();
+      const allUsers = db.select().from(users).all();
+      const allServers = db.select().from(servers).all();
+
+      const enriched = allTickets.map(t => {
+        const u = allUsers.find(usr => usr.id === t.userId);
+        const s = allServers.find(srv => srv.id === t.serverId);
+        return {
+          ...t,
+          username: u ? u.username : 'Unknown',
+          email: u ? u.email : 'Unknown',
+          serverName: s ? s.name : null,
+          serverPort: s ? s.port : null
+        };
+      });
+
+      res.statusCode = 200;
+      return res.end(JSON.stringify(enriched));
+    } catch (e) {
       res.statusCode = 500;
       return res.end(JSON.stringify({ error: e.message }));
     }

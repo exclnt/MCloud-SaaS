@@ -391,5 +391,53 @@ export const api = {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to update settings');
     return data;
+  },
+  getTickets: async () => {
+    const res = await fetch(`${API_URL}/tickets`, { headers: getAuthHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Gagal mengambil daftar tiket');
+    return data;
+  },
+  createTicket: async (ticketData) => {
+    const res = await fetch(`${API_URL}/tickets`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(ticketData)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Gagal membuat tiket baru');
+    return data;
+  },
+  getTicketById: async (id) => {
+    const res = await fetch(`${API_URL}/tickets/${id}`, { headers: getAuthHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Gagal mengambil detail tiket');
+    return data;
+  },
+  replyTicket: async (id, replyData) => {
+    const res = await fetch(`${API_URL}/tickets/${id}/reply`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(replyData)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Gagal mengirim pesan balasan');
+    return data;
+  },
+  updateTicketStatus: async (id, status) => {
+    const res = await fetch(`${API_URL}/tickets/${id}/status`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ status })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Gagal mengubah status tiket');
+    return data;
+  },
+  getAdminTickets: async () => {
+    const res = await fetch(`${API_URL}/admin/tickets`, { headers: getAuthHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Gagal mengambil daftar tiket admin');
+    return data;
   }
 };

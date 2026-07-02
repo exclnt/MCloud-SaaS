@@ -85,11 +85,11 @@ export default function Footer() {
           {/* Kolom Kiri: Brand & Sosial Media */}
           <div className="md:col-span-4 space-y-5">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center p-1">
+              <div className="w-8 h-8 flex items-center justify-center">
                 <img
                   src="/creep.png"
                   alt="MCloud"
-                  className="w-5 h-5 object-contain"
+                  className="w-8 h-8 object-contain"
                 />
               </div>
               <span className="font-bold text-white text-lg tracking-wide">
@@ -131,7 +131,7 @@ export default function Footer() {
             {/* Layanan */}
             <div>
               <h4 className="font-bold text-xs text-white uppercase tracking-wider mb-4 flex items-center gap-1.5">
-                <Zap className="w-3.5 h-3.5 text-emerald-400" />
+                {/* <Zap className="w-3.5 h-3.5 text-emerald-400" /> */}
                 Layanan
               </h4>
               <ul className="space-y-2.5 text-xs text-zinc-400">
@@ -176,7 +176,7 @@ export default function Footer() {
             {/* Bantuan & Support */}
             <div>
               <h4 className="font-bold text-xs text-white uppercase tracking-wider mb-4 flex items-center gap-1.5">
-                <Headphones className="w-3.5 h-3.5 text-indigo-400" />
+                {/* <Headphones className="w-3.5 h-3.5 text-indigo-400" /> */}
                 Bantuan & Support
               </h4>
               <ul className="space-y-2.5 text-xs text-zinc-400">
@@ -234,7 +234,7 @@ export default function Footer() {
             {/* Sumber Daya */}
             <div>
               <h4 className="font-bold text-xs text-white uppercase tracking-wider mb-4 flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                {/* <ShieldCheck className="w-3.5 h-3.5 text-amber-400" /> */}
                 Legal & Privasi
               </h4>
               <ul className="space-y-2.5 text-xs text-zinc-400">

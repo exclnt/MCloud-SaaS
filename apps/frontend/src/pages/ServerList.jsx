@@ -11,6 +11,19 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { SkeletonPublicServer } from '../components/DataLoading';
 
+const formatUptime = (seconds) => {
+  if (!seconds || seconds <= 0) return '0 Detik';
+  const days = Math.floor(seconds / (3600 * 24));
+  const hours = Math.floor((seconds % (3600 * 24)) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  
+  if (days > 0) return `${days}h ${hours}j ${minutes}m`;
+  if (hours > 0) return `${hours}j ${minutes}m ${secs}d`;
+  if (minutes > 0) return `${minutes}m ${secs}d`;
+  return `${secs}d`;
+};
+
 export default function ServerList() {
   const [servers, setServers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -166,7 +179,7 @@ export default function ServerList() {
 
                 <div className="flex-1 bg-zinc-950/50 rounded-lg p-3 mb-4 border border-zinc-900 overflow-hidden relative">
                   <div className="text-sm font-mono text-zinc-300 whitespace-pre-wrap">{server.motd || 'A Minecraft Server'}</div>
-                  {server.status === 'running' && <div className="text-xs font-mono text-primary mt-1">Status: Berjalan lancar</div>}
+                  {server.status === 'running' && <div className="text-xs font-mono text-primary mt-1">Aktif: {formatUptime(server.uptime || 0)}</div>}
                 </div>
 
                 <div className="flex gap-2 mb-4 flex-wrap">

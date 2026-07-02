@@ -30,6 +30,7 @@ body {
   height: 8px;
 }
 
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
@@ -184,6 +185,25 @@ body {
 .animate-hero-buttons {
   animation: hero-buttons 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.65s forwards;
   opacity: 0;
+}
+
+/* Slide over sidebar animations */
+@keyframes slide-in-right {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(0); }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slide-out-right {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-slide-out-right {
+  animation: slide-out-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Docs Markdown Styles */

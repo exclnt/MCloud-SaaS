@@ -68,3 +68,26 @@ export const settings = sqliteTable("settings", {
   value: text("value").notNull(),
 });
 
+export const tickets = sqliteTable("tickets", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id").notNull().references(() => users.id),
+  serverId: integer("server_id").references(() => servers.id),
+  subject: text("subject").notNull(),
+  category: text("category").notNull(), // 'teknis', 'pembayaran', 'pertanyaan', 'lainnya'
+  priority: text("priority").notNull().default("medium"), // 'low', 'medium', 'high'
+  status: text("status").notNull().default("open"), // 'open', 'in_progress', 'resolved', 'closed'
+  attachment: text("attachment"), // Base64 data URL for image attachment
+  createdAt: integer("created_at", { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
+export const ticket_messages = sqliteTable("ticket_messages", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  ticketId: integer("ticket_id").notNull().references(() => tickets.id),
+  senderId: integer("sender_id").notNull().references(() => users.id),
+  senderRole: text("sender_role").notNull(), // 'user' or 'admin'
+  message: text("message").notNull(),
+  attachment: text("attachment"), // Base64 data URL for image attachment
+  createdAt: integer("created_at", { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+

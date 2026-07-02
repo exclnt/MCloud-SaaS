@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Wallet, ChevronDown, Globe, Server as ServerIcon, Settings, LogOut, User, Menu, X } from 'lucide-react';
+import { Wallet, ChevronDown, Globe, Server as ServerIcon, Settings, LogOut, User, Menu, X, MessageSquare } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function Navbar() {
@@ -205,6 +205,15 @@ export default function Navbar() {
                     <div 
                       className="flex items-center gap-3 px-3 py-2 text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 rounded-lg cursor-pointer transition"
                       onClick={() => {
+                        navigate('/tickets');
+                        setIsProfileOpen(false);
+                      }}
+                    >
+                      <MessageSquare className="w-4 h-4 text-sky-400" /> Tiket Bantuan
+                    </div>
+                    <div 
+                      className="flex items-center gap-3 px-3 py-2 text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 rounded-lg cursor-pointer transition"
+                      onClick={() => {
                         localStorage.removeItem('token');
                         localStorage.removeItem('role');
                         localStorage.removeItem('username');
@@ -292,6 +301,9 @@ export default function Navbar() {
                 </button>
                 <button onClick={() => { navigate('/clientarea?tab=transactions'); setIsMobileMenuOpen(false); }} className="p-2 sm:p-3 bg-zinc-900/50 rounded-lg border border-zinc-800 text-xs sm:text-sm font-medium text-white hover:bg-zinc-800 transition col-span-2 flex items-center justify-center gap-2">
                   <Wallet className="w-4 h-4 text-emerald-400" /> Riwayat Transaksi
+                </button>
+                <button onClick={() => { navigate('/tickets'); setIsMobileMenuOpen(false); }} className="p-2 sm:p-3 bg-zinc-900/50 rounded-lg border border-zinc-800 text-xs sm:text-sm font-medium text-white hover:bg-zinc-800 transition col-span-2 flex items-center justify-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-sky-400" /> Pusat Tiket Bantuan
                 </button>
               </div>
 

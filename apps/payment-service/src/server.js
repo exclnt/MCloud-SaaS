@@ -78,6 +78,42 @@ const authMiddleware = (req, res) => {
   return user;
 };
 
+const formatTransactionObj = (trx) => {
+  if (!trx) return trx;
+  let cfg = {};
+  try {
+    if (trx.config) cfg = typeof trx.config === 'string' ? JSON.parse(trx.config) : trx.config;
+  } catch (e) {}
+
+  const orderId = cfg.orderId || (trx.snapToken ? `MCLOUD-${trx.id}` : `TRX-${trx.id}`);
+  
+  let planName = cfg.planName || cfg.plan || '-';
+  if (planName === '-') {
+    if (cfg.renew) {
+      planName = 'Perpanjangan Server';
+    } else if (cfg.memoryLimit || cfg.ram) {
+      const ram = String(cfg.memoryLimit || cfg.ram).toLowerCase();
+      if (ram === '500m' || ram === '500mb') planName = 'Villager';
+      else if (ram === '1g' || ram === '1gb') planName = 'Spider';
+      else if (ram === '2g' || ram === '2gb') planName = 'Slime';
+      else if (ram === '4g' || ram === '4gb') planName = 'Wither';
+      else planName = `Custom (${ram.toUpperCase()})`;
+    } else if (trx.amount) {
+      if (trx.amount === 15000 || trx.amount === 30000) planName = 'Villager';
+      else if (trx.amount === 25000 || trx.amount === 40000) planName = 'Spider';
+      else if (trx.amount === 50000 || trx.amount === 80000) planName = 'Slime';
+      else if (trx.amount === 100000 || trx.amount === 160000) planName = 'Wither';
+      else planName = 'Layanan MCloud';
+    }
+  }
+
+  return {
+    ...trx,
+    orderId,
+    planName
+  };
+};
+
 // Internal communication function to call provisioning-service
 const triggerProvisioning = (userId, username, transactionId, configString) => {
   const token = generateToken({ id: userId, username });
@@ -232,7 +268,7 @@ const server = http.createServer(async (req, res) => {
       
       if (trxRecord.status !== 'pending') {
         res.statusCode = 200;
-        return res.end(JSON.stringify(trxRecord));
+        return res.end(JSON.stringify(formatTransactionObj(trxRecord)));
       }
 
       let orderId = null;
@@ -245,7 +281,7 @@ const server = http.createServer(async (req, res) => {
       
       if (!orderId) {
         res.statusCode = 200;
-        return res.end(JSON.stringify(trxRecord));
+        return res.end(JSON.stringify(formatTransactionObj(trxRecord)));
       }
 
       try {
@@ -289,7 +325,7 @@ const server = http.createServer(async (req, res) => {
 
       const updatedTrx = db.select().from(transactions).where(eq(transactions.id, trxId)).get();
       res.statusCode = 200;
-      return res.end(JSON.stringify(updatedTrx));
+      return res.end(JSON.stringify(formatTransactionObj(updatedTrx)));
     } catch (e) {
       res.statusCode = 500;
       return res.end(JSON.stringify({ error: e.message }));
@@ -475,7 +511,7 @@ const server = http.createServer(async (req, res) => {
         .orderBy(desc(transactions.createdAt))
         .all();
       res.statusCode = 200;
-      return res.end(JSON.stringify(userTransactions));
+      return res.end(JSON.stringify(userTransactions.map(formatTransactionObj)));
     } catch (e) {
       res.statusCode = 500;
       return res.end(JSON.stringify({ error: e.message }));
@@ -495,7 +531,7 @@ const server = http.createServer(async (req, res) => {
         return res.end(JSON.stringify({ error: 'Transaction not found' }));
       }
       res.statusCode = 200;
-      return res.end(JSON.stringify(userTransaction));
+      return res.end(JSON.stringify(formatTransactionObj(userTransaction)));
     } catch (e) {
       res.statusCode = 500;
       return res.end(JSON.stringify({ error: e.message }));
@@ -524,7 +560,7 @@ const server = http.createServer(async (req, res) => {
         .orderBy(desc(transactions.createdAt))
         .all();
       res.statusCode = 200;
-      return res.end(JSON.stringify(allTransactions));
+      return res.end(JSON.stringify(allTransactions.map(formatTransactionObj)));
     } catch (e) {
       res.statusCode = 500;
       return res.end(JSON.stringify({ error: e.message }));

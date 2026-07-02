@@ -15,7 +15,9 @@ const routes = {
   '/api/admin/transactions': { targetHost: 'localhost', targetPort: 3002, stripPrefix: '/api' },
   '/api/admin/settings': { targetHost: 'localhost', targetPort: 3002, stripPrefix: '/api' },
   '/api/transactions': { targetHost: 'localhost', targetPort: 3002, stripPrefix: '/api' },
-  '/api/settings': { targetHost: 'localhost', targetPort: 3002, stripPrefix: '/api' }
+  '/api/settings': { targetHost: 'localhost', targetPort: 3002, stripPrefix: '/api' },
+  '/api/tickets': { targetHost: 'localhost', targetPort: 3003, stripPrefix: '/api' },
+  '/api/admin/tickets': { targetHost: 'localhost', targetPort: 3003, stripPrefix: '/api' }
 };
 
 const server = http.createServer((req, res) => {

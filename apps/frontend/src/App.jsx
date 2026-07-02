@@ -1,29 +1,40 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import Landing from './pages/Landing';
-import Auth from './pages/Auth';
-import Dashboard from './pages/Dashboard';
-import AdminDashboard from './pages/AdminDashboard';
-import Checkout from './pages/Checkout';
-import ServerConsole from './pages/ServerConsole';
-import ServerFiles from './pages/ServerFiles';
-import ServerList from './pages/ServerList';
-import ServerSettings from './pages/ServerSettings';
-import Pricing from './pages/Pricing';
-import TransactionDetail from './pages/TransactionDetail';
-
-import ServerLayout from './components/ServerLayout';
-import ServerOverview from './pages/ServerOverview';
-import ServerPlayers from './pages/ServerPlayers';
-import ClientArea from './pages/ClientArea';
-import Terms from './pages/Terms';
-import Privacy from './pages/Privacy';
-import NotFound from './pages/NotFound';
-import DocsLayout from './components/DocsLayout';
-import DocsHome from './pages/DocsHome';
-import DocsArticle from './pages/DocsArticle';
+import { DataLoading } from './components/DataLoading';
 import SupportWidget from './components/SupportWidget';
+
+// Lazy loading halaman dan layout untuk optimasi ukuran bundle dan waktu muat (Code-Splitting)
+const Landing = lazy(() => import('./pages/Landing'));
+const Auth = lazy(() => import('./pages/Auth'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
+const AdminOverviewPage = lazy(() => import('./pages/admin/AdminOverviewPage'));
+const AdminServersPage = lazy(() => import('./pages/admin/AdminServersPage'));
+const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'));
+const AdminPlansPage = lazy(() => import('./pages/admin/AdminPlansPage'));
+const AdminTransactionsPage = lazy(() => import('./pages/admin/AdminTransactionsPage'));
+const AdminLogsPage = lazy(() => import('./pages/admin/AdminLogsPage'));
+const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage'));
+const AdminTicketsPage = lazy(() => import('./pages/admin/AdminTicketsPage'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const ServerConsole = lazy(() => import('./pages/ServerConsole'));
+const ServerFiles = lazy(() => import('./pages/ServerFiles'));
+const ServerList = lazy(() => import('./pages/ServerList'));
+const ServerSettings = lazy(() => import('./pages/ServerSettings'));
+const Pricing = lazy(() => import('./pages/Pricing'));
+const TransactionDetail = lazy(() => import('./pages/TransactionDetail'));
+const ServerLayout = lazy(() => import('./components/ServerLayout'));
+const ServerOverview = lazy(() => import('./pages/ServerOverview'));
+const ServerPlayers = lazy(() => import('./pages/ServerPlayers'));
+const ClientArea = lazy(() => import('./pages/ClientArea'));
+const Tickets = lazy(() => import('./pages/Tickets'));
+const Terms = lazy(() => import('./pages/Terms'));
+const Privacy = lazy(() => import('./pages/Privacy'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+const DocsLayout = lazy(() => import('./components/DocsLayout'));
+const DocsHome = lazy(() => import('./pages/DocsHome'));
+const DocsArticle = lazy(() => import('./pages/DocsArticle'));
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -80,63 +91,84 @@ export default function App() {
       />
       {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
       <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Auth />} />
-        <Route path="/register" element={<Auth />} />
-        
-        <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/admin" element={
-          <AdminRoute>
-            <AdminDashboard />
-          </AdminRoute>
-        } />
-        
-        <Route path="/clientarea" element={
-          <ProtectedRoute>
-            <ClientArea />
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/transaction/:id" element={
-          <ProtectedRoute>
-            <TransactionDetail />
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/pricing" element={<Pricing />} />
-        
-        <Route path="/server-list" element={<ServerList />} />
-
-        <Route path="/server/:port" element={
-          <ProtectedRoute>
-            <ServerLayout />
-          </ProtectedRoute>
+        <Suspense fallback={
+          <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6">
+            <DataLoading text="Memuat halaman..." size="lg" />
+          </div>
         }>
-          <Route index element={<ServerOverview />} />
-          <Route path="console" element={<ServerConsole />} />
-          <Route path="players" element={<ServerPlayers />} />
-          <Route path="files" element={<ServerFiles />} />
-          <Route path="settings" element={<ServerSettings />} />
-        </Route>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Auth />} />
+            <Route path="/register" element={<Auth />} />
+            
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
 
-        <Route path="/docs" element={<DocsLayout />}>
-          <Route index element={<DocsHome />} />
-          <Route path=":category/:slug" element={<DocsArticle />} />
-        </Route>
+            <Route path="/clientarea" element={
+              <ProtectedRoute>
+                <ClientArea />
+              </ProtectedRoute>
+            } />
 
-        <Route path="/terms" element={<Terms />} />
-        <Route path="/privacy" element={<Privacy />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      <SupportWidget />
-    </BrowserRouter>
+            <Route path="/tickets" element={
+              <ProtectedRoute>
+                <Tickets />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/transaction/:id" element={
+              <ProtectedRoute>
+                <TransactionDetail />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/server-list" element={<ServerList />} />
+
+            <Route path="/server/:port" element={
+              <ProtectedRoute>
+                <ServerLayout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<ServerOverview />} />
+              <Route path="console" element={<ServerConsole />} />
+              <Route path="players" element={<ServerPlayers />} />
+              <Route path="files" element={<ServerFiles />} />
+              <Route path="settings" element={<ServerSettings />} />
+            </Route>
+
+            <Route path="/admin" element={
+              <AdminRoute>
+                <AdminLayout />
+              </AdminRoute>
+            }>
+              <Route index element={<Navigate to="/admin/overview" replace />} />
+              <Route path="overview" element={<AdminOverviewPage />} />
+              <Route path="servers" element={<AdminServersPage />} />
+              <Route path="users" element={<AdminUsersPage />} />
+              <Route path="plans" element={<AdminPlansPage />} />
+              <Route path="transactions" element={<AdminTransactionsPage />} />
+              <Route path="logs" element={<AdminLogsPage />} />
+              <Route path="settings" element={<AdminSettingsPage />} />
+              <Route path="tickets" element={<AdminTicketsPage />} />
+            </Route>
+
+            <Route path="/docs" element={<DocsLayout />}>
+              <Route index element={<DocsHome />} />
+              <Route path=":category/:slug" element={<DocsArticle />} />
+            </Route>
+
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+        <SupportWidget />
+      </BrowserRouter>
     </>
   );
 }

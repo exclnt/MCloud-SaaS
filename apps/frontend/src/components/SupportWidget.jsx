@@ -64,13 +64,13 @@ export default function SupportWidget() {
       isExternal: true
     },
     {
-      id: 'email',
-      name: 'Email & Tiket Bantuan',
-      description: 'Untuk kendala penagihan & teknis mendalam',
-      icon: Mail,
+      id: 'tickets',
+      name: 'Pusat Tiket Bantuan',
+      description: 'Ajukan keluhan teknis & penagihan langsung ke Admin',
+      icon: MessageSquare,
       color: 'bg-sky-500/10 text-sky-400 border-sky-500/20 group-hover:bg-sky-500/20 group-hover:border-sky-500/40',
-      href: (settings.social_email || 'support@mcloud.id').startsWith('mailto:') ? settings.social_email : `mailto:${settings.social_email}`,
-      isExternal: true
+      to: '/tickets',
+      isExternal: false
     },
     {
       id: 'docs',
@@ -84,7 +84,7 @@ export default function SupportWidget() {
   ];
 
   return (
-    <div ref={widgetRef} className="fixed bottom-6 right-6 z-50 font-sans">
+    <div ref={widgetRef} className="fixed bottom-6 right-6 z-50 font-sans flex flex-col items-end">
       {/* Popover / Modal Support */}
       {isOpen && (
         <div className="mb-4 w-80 md:w-96 rounded-2xl bg-[#0f0f13] border border-zinc-800 shadow-2xl overflow-hidden transition-all duration-200 animate-in fade-in slide-in-from-bottom-5">
@@ -205,9 +205,7 @@ export default function SupportWidget() {
           <img 
             src="/alex.png" 
             alt="Bantuan MCloud" 
-            className={`w-16 h-16 rounded-full object-cover shadow-2xl transition-transform ${
-              isOpen ? 'scale-95' : ''
-            }`}
+            className="w-16 h-16 rounded-full object-cover shadow-2xl"
           />
           {!isOpen && (
             <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-[#0a0a0a]"></span>
