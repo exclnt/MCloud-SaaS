@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Server, Users, CreditCard, Activity, RefreshCw, StopCircle, Trash2, Edit2, CheckCircle, Save, X, PanelLeft, LogOut } from 'lucide-react';
+import { Shield, Server, Users, CreditCard, Activity, RefreshCw, StopCircle, Trash2, Edit2, CheckCircle, Save, X, PanelLeft, LogOut, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import toast from 'react-hot-toast';
@@ -15,6 +15,17 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [plans, setPlans] = useState([]);
   const [logs, setLogs] = useState([]);
+  const [logSearchQuery, setLogSearchQuery] = useState('');
+  const [logCurrentPage, setLogCurrentPage] = useState(1);
+  const [logsPerPage, setLogsPerPage] = useState(10);
+
+  const [serverSearchQuery, setServerSearchQuery] = useState('');
+  const [serverCurrentPage, setServerCurrentPage] = useState(1);
+  const [serversPerPage, setServersPerPage] = useState(10);
+
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [userCurrentPage, setUserCurrentPage] = useState(1);
+  const [usersPerPage, setUsersPerPage] = useState(10);
   const [isLoading, setIsLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
@@ -68,6 +79,9 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
+    if (activeTab === 'logs') setLogCurrentPage(1);
+    if (activeTab === 'servers') setServerCurrentPage(1);
+    if (activeTab === 'users') setUserCurrentPage(1);
     fetchData();
   }, [activeTab]);
 
@@ -235,6 +249,113 @@ export default function AdminDashboard() {
     { id: 'logs', name: 'Activity Logs', icon: <Shield className="w-5 h-5" /> },
   ];
 
+  // Filter & Paginate Servers
+  const filteredServers = servers.filter(s => {
+    if (!serverSearchQuery) return true;
+    const q = serverSearchQuery.toLowerCase();
+    return (s.name || '').toLowerCase().includes(q) || 
+           (s.owner || '').toLowerCase().includes(q) || 
+           String(s.id).includes(q) || 
+           String(s.port).includes(q) || 
+           (s.status || '').toLowerCase().includes(q);
+  });
+  const totalServerPages = Math.ceil(filteredServers.length / serversPerPage) || 1;
+  const paginatedServers = filteredServers.slice((serverCurrentPage - 1) * serversPerPage, serverCurrentPage * serversPerPage);
+
+  // Filter & Paginate Users
+  const filteredUsers = users.filter(u => {
+    if (!userSearchQuery) return true;
+    const q = userSearchQuery.toLowerCase();
+    return (u.username || '').toLowerCase().includes(q) || 
+           (u.email || '').toLowerCase().includes(q) || 
+           String(u.id).includes(q) || 
+           (u.role || '').toLowerCase().includes(q);
+  });
+  const totalUserPages = Math.ceil(filteredUsers.length / usersPerPage) || 1;
+  const paginatedUsers = filteredUsers.slice((userCurrentPage - 1) * usersPerPage, userCurrentPage * usersPerPage);
+
+  const filteredLogs = logs.filter(log => {
+    if (!logSearchQuery) return true;
+    const query = logSearchQuery.toLowerCase();
+    const user = (log.username || 'system').toLowerCase();
+    const action = (log.action || '').toLowerCase();
+    const details = (log.details || '').toLowerCase();
+    const time = new Date(log.createdAt).toLocaleString().toLowerCase();
+    return user.includes(query) || action.includes(query) || details.includes(query) || time.includes(query);
+  });
+  const totalLogPages = Math.ceil(filteredLogs.length / logsPerPage) || 1;
+  const paginatedLogs = filteredLogs.slice((logCurrentPage - 1) * logsPerPage, logCurrentPage * logsPerPage);
+
+  const renderPaginationFooter = (currentPage, totalPages, totalItems, perPage, setPage, setPerPage, label = "item") => (
+    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 pt-4 border-t border-zinc-800/80 text-xs text-zinc-400">
+      <div className="flex items-center gap-3">
+        <span>
+          Menampilkan <strong className="text-white">{totalItems === 0 ? 0 : (currentPage - 1) * perPage + 1}</strong> - <strong className="text-white">{Math.min(currentPage * perPage, totalItems)}</strong> dari <strong className="text-white">{totalItems}</strong> {label}
+        </span>
+        <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1">
+          <span className="text-zinc-500">Per halaman:</span>
+          <select 
+            value={perPage} 
+            onChange={(e) => {
+              setPerPage(Number(e.target.value));
+              setPage(1);
+            }}
+            className="bg-transparent text-white font-bold outline-none cursor-pointer"
+          >
+            <option value={5} className="bg-zinc-900">5</option>
+            <option value={10} className="bg-zinc-900">10</option>
+            <option value={25} className="bg-zinc-900">25</option>
+            <option value={50} className="bg-zinc-900">50</option>
+            <option value={100} className="bg-zinc-900">100</option>
+          </select>
+        </div>
+      </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+            title="Halaman Sebelumnya"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          
+          {Array.from({ length: totalPages }, (_, i) => i + 1)
+            .filter(page => page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1))
+            .map((page, index, array) => (
+              <React.Fragment key={page}>
+                {index > 0 && array[index - 1] !== page - 1 && (
+                  <span className="px-2 text-zinc-600">...</span>
+                )}
+                <button
+                  onClick={() => setPage(page)}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${
+                    currentPage === page
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
+                      : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800'
+                  }`}
+                >
+                  {page}
+                </button>
+              </React.Fragment>
+            ))
+          }
+
+          <button
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+            title="Halaman Berikutnya"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="h-[100dvh] bg-[#0a0a0a] text-zinc-300 font-sans flex flex-col overflow-hidden">
       <Navbar />
@@ -369,105 +490,170 @@ export default function AdminDashboard() {
               )}
 
               {activeTab === 'servers' && (
-                <div className="overflow-x-auto bg-[#101010] border border-zinc-800 rounded-xl">
-                  <table className="w-full text-left text-sm text-zinc-400">
-                    <thead className="text-xs uppercase bg-zinc-800/50 text-zinc-300 border-b border-zinc-800">
-                      <tr>
-                        <th className="px-4 py-3">ID</th>
-                        <th className="px-4 py-3">Name</th>
-                        <th className="px-4 py-3">Owner</th>
-                        <th className="px-4 py-3">Status</th>
-                        <th className="px-4 py-3">Port</th>
-                        <th className="px-4 py-3">Masa Aktif</th>
-                        <th className="px-4 py-3">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {servers.map(s => (
-                        <tr key={s.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30">
-                          <td className="px-4 py-3 font-mono">#{s.id}</td>
-                          <td className="px-4 py-3 font-medium text-white">{s.name}</td>
-                          <td className="px-4 py-3">{s.owner}</td>
-                          <td className="px-4 py-3">
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${s.status === 'running' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
-                              {s.status}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 font-mono text-zinc-300">{s.port}</td>
-                          <td className="px-4 py-3">{formatRemainingDays(s.expiresAt)}</td>
-                          <td className="px-4 py-3 flex flex-wrap items-center gap-1.5">
-                            {s.status === 'running' && (
-                              <button onClick={() => handleServerAction(s.port, 'stop')} className="p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-amber-400/10 rounded border border-transparent hover:border-amber-400/30 transition-colors" title="Stop">
-                                <StopCircle className="w-4 h-4" />
-                              </button>
-                            )}
-                            <button onClick={() => handleServerAction(s.port, 'delete')} className="p-1.5 text-zinc-400 hover:text-red-400 hover:bg-red-400/10 rounded border border-transparent hover:border-red-400/30 transition-colors" title="Delete">
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                            <button onClick={() => handleExtendServer(s.id, 30)} className="px-2 py-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs rounded border border-blue-500/20 transition-colors" title="Perpanjang 30 Hari">
-                              +30 Hari
-                            </button>
-                            <button onClick={() => handleExtendServer(s.id, 'permanent')} className="px-2 py-1 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-xs rounded border border-purple-500/20 transition-colors" title="Jadikan Permanen">
-                              Permanen
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                      {servers.length === 0 && (
-                        <tr><td colSpan="7" className="text-center py-8 text-zinc-500">No servers found</td></tr>
+                <div>
+                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 bg-[#121212] p-4 rounded-xl border border-zinc-800/80">
+                    <div className="text-sm text-zinc-400">
+                      Menampilkan <span className="font-bold text-white">{filteredServers.length}</span> server
+                      {serverSearchQuery && <span className="text-zinc-500"> untuk "{serverSearchQuery}"</span>}
+                    </div>
+                    <div className="relative w-full sm:w-72">
+                      <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type="text"
+                        placeholder="Cari server, owner, port, ID..."
+                        value={serverSearchQuery}
+                        onChange={(e) => {
+                          setServerSearchQuery(e.target.value);
+                          setServerCurrentPage(1);
+                        }}
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-9 py-2 text-sm text-white placeholder-zinc-500 outline-none focus:border-blue-500 transition-colors"
+                      />
+                      {serverSearchQuery && (
+                        <button
+                          onClick={() => {
+                            setServerSearchQuery('');
+                            setServerCurrentPage(1);
+                          }}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
                       )}
-                    </tbody>
-                  </table>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto bg-[#101010] border border-zinc-800 rounded-xl">
+                    <table className="w-full text-left text-sm text-zinc-400">
+                      <thead className="text-xs uppercase bg-zinc-800/50 text-zinc-300 border-b border-zinc-800">
+                        <tr>
+                          <th className="px-4 py-3.5">ID</th>
+                          <th className="px-4 py-3.5">Name</th>
+                          <th className="px-4 py-3.5">Owner</th>
+                          <th className="px-4 py-3.5">Status</th>
+                          <th className="px-4 py-3.5">Port</th>
+                          <th className="px-4 py-3.5">Masa Aktif</th>
+                          <th className="px-4 py-3.5">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paginatedServers.map(s => (
+                          <tr key={s.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
+                            <td className="px-4 py-3.5 font-mono">#{s.id}</td>
+                            <td className="px-4 py-3.5 font-medium text-white">{s.name}</td>
+                            <td className="px-4 py-3.5">{s.owner}</td>
+                            <td className="px-4 py-3.5">
+                              <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${s.status === 'running' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
+                                {s.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3.5 font-mono text-zinc-300">{s.port}</td>
+                            <td className="px-4 py-3.5">{formatRemainingDays(s.expiresAt)}</td>
+                            <td className="px-4 py-3.5 flex flex-wrap items-center gap-1.5">
+                              {s.status === 'running' && (
+                                <button onClick={() => handleServerAction(s.port, 'stop')} className="p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-amber-400/10 rounded border border-transparent hover:border-amber-400/30 transition-colors" title="Stop">
+                                  <StopCircle className="w-4 h-4" />
+                                </button>
+                              )}
+                              <button onClick={() => handleServerAction(s.port, 'delete')} className="p-1.5 text-zinc-400 hover:text-red-400 hover:bg-red-400/10 rounded border border-transparent hover:border-red-400/30 transition-colors" title="Delete">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                              <button onClick={() => handleExtendServer(s.id, 30)} className="px-2 py-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs rounded border border-blue-500/20 transition-colors" title="Perpanjang 30 Hari">
+                                +30 Hari
+                              </button>
+                              <button onClick={() => handleExtendServer(s.id, 'permanent')} className="px-2 py-1 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-xs rounded border border-purple-500/20 transition-colors" title="Jadikan Permanen">
+                                Permanen
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                        {paginatedServers.length === 0 && (
+                          <tr>
+                            <td colSpan="7" className="text-center py-12 text-zinc-500">
+                              {serverSearchQuery ? `Tidak ada server yang cocok dengan pencarian "${serverSearchQuery}"` : 'Tidak ada server ditemukan'}
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {renderPaginationFooter(serverCurrentPage, totalServerPages, filteredServers.length, serversPerPage, setServerCurrentPage, setServersPerPage, "server")}
                 </div>
               )}
 
               {activeTab === 'users' && (
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center bg-zinc-900/50 p-4 rounded-xl border border-zinc-800">
+                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 bg-[#121212] p-4 rounded-xl border border-zinc-800/80">
                     <div>
-                      <h3 className="text-lg font-bold text-white">Manajemen Pengguna</h3>
+                      <h3 className="text-lg font-bold text-white">Manajemen Pengguna ({filteredUsers.length})</h3>
                       <p className="text-xs text-zinc-400">Kelola daftar akun pengguna dan server milik mereka</p>
                     </div>
-                    <button 
-                      onClick={() => setShowCreateUserModal(true)}
-                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 shadow-lg shadow-emerald-600/20"
-                    >
-                      + Buat User Baru
-                    </button>
+                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                      <div className="relative w-full sm:w-64">
+                        <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                          type="text"
+                          placeholder="Cari username, email, role..."
+                          value={userSearchQuery}
+                          onChange={(e) => {
+                            setUserSearchQuery(e.target.value);
+                            setUserCurrentPage(1);
+                          }}
+                          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-9 py-2 text-sm text-white placeholder-zinc-500 outline-none focus:border-blue-500 transition-colors"
+                        />
+                        {userSearchQuery && (
+                          <button
+                            onClick={() => {
+                              setUserSearchQuery('');
+                              setUserCurrentPage(1);
+                            }}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                      <button 
+                        onClick={() => setShowCreateUserModal(true)}
+                        className="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 whitespace-nowrap"
+                      >
+                        + Buat User Baru
+                      </button>
+                    </div>
                   </div>
                   <div className="overflow-x-auto bg-[#101010] border border-zinc-800 rounded-xl">
                     <table className="w-full text-left text-sm text-zinc-400">
                       <thead className="text-xs uppercase bg-zinc-800/50 text-zinc-300 border-b border-zinc-800">
                         <tr>
-                          <th className="px-4 py-3">ID</th>
-                          <th className="px-4 py-3">Username</th>
-                          <th className="px-4 py-3">Email</th>
-                          <th className="px-4 py-3">Role</th>
-                          <th className="px-4 py-3">Server</th>
-                          <th className="px-4 py-3">Joined</th>
-                          <th className="px-4 py-3">Actions</th>
+                          <th className="px-4 py-3.5">ID</th>
+                          <th className="px-4 py-3.5">Username</th>
+                          <th className="px-4 py-3.5">Email</th>
+                          <th className="px-4 py-3.5">Role</th>
+                          <th className="px-4 py-3.5">Server</th>
+                          <th className="px-4 py-3.5">Joined</th>
+                          <th className="px-4 py-3.5">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {users.map(u => {
+                        {paginatedUsers.map(u => {
                           const userServersCount = servers.filter(s => s.userId === u.id || s.owner === u.username).length;
                           return (
                             <tr key={u.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
-                              <td className="px-4 py-3 font-mono">#{u.id}</td>
-                              <td className="px-4 py-3 font-medium text-white">{u.username}</td>
-                              <td className="px-4 py-3">{u.email}</td>
-                              <td className="px-4 py-3">
+                              <td className="px-4 py-3.5 font-mono">#{u.id}</td>
+                              <td className="px-4 py-3.5 font-medium text-white">{u.username}</td>
+                              <td className="px-4 py-3.5">{u.email}</td>
+                              <td className="px-4 py-3.5">
                                 <span className={`px-2 py-0.5 rounded text-xs font-bold border ${u.role === 'admin' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-zinc-800 text-zinc-300 border-zinc-700'}`}>
                                   {u.role}
                                 </span>
                               </td>
-                              <td className="px-4 py-3">
+                              <td className="px-4 py-3.5">
                                 <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
                                   {userServersCount} Server
                                 </span>
                               </td>
-                              <td className="px-4 py-3">{new Date(u.createdAt).toLocaleDateString()}</td>
-                              <td className="px-4 py-3 flex gap-2">
+                              <td className="px-4 py-3.5">{new Date(u.createdAt).toLocaleDateString()}</td>
+                              <td className="px-4 py-3.5 flex gap-2">
                                 <button 
                                   onClick={() => setShowUserDetailModal(u)} 
                                   className="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white rounded text-xs border border-zinc-700 transition-colors"
@@ -497,9 +683,18 @@ export default function AdminDashboard() {
                             </tr>
                           );
                         })}
+                        {paginatedUsers.length === 0 && (
+                          <tr>
+                            <td colSpan="7" className="text-center py-12 text-zinc-500">
+                              {userSearchQuery ? `Tidak ada user yang cocok dengan pencarian "${userSearchQuery}"` : 'Tidak ada user ditemukan'}
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
+
+                  {renderPaginationFooter(userCurrentPage, totalUserPages, filteredUsers.length, usersPerPage, setUserCurrentPage, setUsersPerPage, "user")}
                 </div>
               )}
 
@@ -574,32 +769,71 @@ export default function AdminDashboard() {
               )}
 
               {activeTab === 'logs' && (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm text-zinc-400">
-                    <thead className="text-xs uppercase bg-zinc-800/50 text-zinc-300">
-                      <tr>
-                        <th className="px-4 py-3">Time</th>
-                        <th className="px-4 py-3">User</th>
-                        <th className="px-4 py-3">Action</th>
-                        <th className="px-4 py-3">Details</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {logs.map(log => (
-                        <tr key={log.id} className="border-b border-zinc-800 hover:bg-zinc-800/20">
-                          <td className="px-4 py-3 whitespace-nowrap">{new Date(log.createdAt).toLocaleString()}</td>
-                          <td className="px-4 py-3 font-medium text-emerald-400">{log.username || 'System'}</td>
-                          <td className="px-4 py-3">
-                            <span className="px-2 py-1 bg-zinc-800 rounded text-xs">{log.action}</span>
-                          </td>
-                          <td className="px-4 py-3 text-xs font-mono break-all max-w-xs">{log.details || '-'}</td>
-                        </tr>
-                      ))}
-                      {logs.length === 0 && (
-                        <tr><td colSpan="4" className="text-center py-8 text-zinc-500">No activity logs found</td></tr>
+                <div>
+                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 bg-[#121212] p-4 rounded-xl border border-zinc-800/80">
+                    <div className="text-sm text-zinc-400">
+                      Menampilkan <span className="font-bold text-white">{filteredLogs.length}</span> log aktivitas
+                      {logSearchQuery && <span className="text-zinc-500"> untuk "{logSearchQuery}"</span>}
+                    </div>
+                    <div className="relative w-full sm:w-72">
+                      <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type="text"
+                        placeholder="Cari user, aksi, atau detail..."
+                        value={logSearchQuery}
+                        onChange={(e) => {
+                          setLogSearchQuery(e.target.value);
+                          setLogCurrentPage(1);
+                        }}
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-9 py-2 text-sm text-white placeholder-zinc-500 outline-none focus:border-blue-500 transition-colors"
+                      />
+                      {logSearchQuery && (
+                        <button
+                          onClick={() => {
+                            setLogSearchQuery('');
+                            setLogCurrentPage(1);
+                          }}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
                       )}
-                    </tbody>
-                  </table>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto bg-[#0a0a0a] border border-zinc-800/80 rounded-xl">
+                    <table className="w-full text-left text-sm text-zinc-400">
+                      <thead className="text-xs uppercase bg-zinc-800/50 text-zinc-300">
+                        <tr>
+                          <th className="px-4 py-3.5">Time</th>
+                          <th className="px-4 py-3.5">User</th>
+                          <th className="px-4 py-3.5">Action</th>
+                          <th className="px-4 py-3.5">Details</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paginatedLogs.map(log => (
+                          <tr key={log.id} className="border-b border-zinc-800/60 hover:bg-zinc-800/20 transition-colors">
+                            <td className="px-4 py-3.5 whitespace-nowrap text-xs">{new Date(log.createdAt).toLocaleString()}</td>
+                            <td className="px-4 py-3.5 font-medium text-emerald-400">{log.username || 'System'}</td>
+                            <td className="px-4 py-3.5">
+                              <span className="px-2.5 py-1 bg-zinc-800/80 border border-zinc-700/50 rounded-md text-xs font-medium text-zinc-300">{log.action}</span>
+                            </td>
+                            <td className="px-4 py-3.5 text-xs font-mono break-all max-w-md text-zinc-300">{log.details || '-'}</td>
+                          </tr>
+                        ))}
+                        {paginatedLogs.length === 0 && (
+                          <tr>
+                            <td colSpan="4" className="text-center py-12 text-zinc-500">
+                              {logSearchQuery ? `Tidak ada log yang cocok dengan pencarian "${logSearchQuery}"` : 'Tidak ada log aktivitas ditemukan'}
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {renderPaginationFooter(logCurrentPage, totalLogPages, filteredLogs.length, logsPerPage, setLogCurrentPage, setLogsPerPage, "log")}
                 </div>
               )}
             </>
