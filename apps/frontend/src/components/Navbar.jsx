@@ -111,8 +111,11 @@ export default function Navbar() {
           </>
         ) : token ? (
           <>
-            <div className="hidden md:flex items-center gap-2 cursor-pointer hover:text-white transition">
-              <Wallet className="w-4 h-4" /> Dompet
+            <div 
+              onClick={() => navigate('/clientarea?tab=transactions')} 
+              className="hidden md:flex items-center gap-2 cursor-pointer hover:text-white transition"
+            >
+              <Wallet className="w-4 h-4 text-emerald-400" /> Riwayat Transaksi
             </div>
             
             {/* Servers Dropdown */}
@@ -286,6 +289,9 @@ export default function Navbar() {
                 </button>
                 <button onClick={() => { navigate('/clientarea'); setIsMobileMenuOpen(false); }} className="p-2 sm:p-3 bg-zinc-900/50 rounded-lg border border-zinc-800 text-xs sm:text-sm font-medium text-white hover:bg-zinc-800 transition">
                   Area Klien
+                </button>
+                <button onClick={() => { navigate('/clientarea?tab=transactions'); setIsMobileMenuOpen(false); }} className="p-2 sm:p-3 bg-zinc-900/50 rounded-lg border border-zinc-800 text-xs sm:text-sm font-medium text-white hover:bg-zinc-800 transition col-span-2 flex items-center justify-center gap-2">
+                  <Wallet className="w-4 h-4 text-emerald-400" /> Riwayat Transaksi
                 </button>
               </div>
 

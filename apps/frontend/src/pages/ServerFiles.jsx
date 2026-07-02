@@ -4,6 +4,7 @@ import { api } from '../services/api';
 import { Folder, File, Loader2, Upload, FilePlus, FolderPlus, RefreshCw, X, Save, Trash2, ArchiveRestore } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 import toast from 'react-hot-toast';
+import { SkeletonTable } from '../components/DataLoading';
 
 export default function ServerFiles() {
   const { serverInfo } = useOutletContext();
@@ -225,9 +226,7 @@ export default function ServerFiles() {
         {/* File List */}
         <div className="flex-1 overflow-y-auto">
           {loading ? (
-            <div className="p-8 flex justify-center text-zinc-500">
-              <Loader2 className="w-6 h-6 animate-spin" />
-            </div>
+            <SkeletonTable rows={6} columns={3} className="border-0 shadow-none rounded-none" />
           ) : (
             <div className="divide-y divide-zinc-800/40">
               {currentPath && (

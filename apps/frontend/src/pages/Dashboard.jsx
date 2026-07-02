@@ -14,6 +14,7 @@ import {
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ConfirmModal from '../components/ConfirmModal';
+import { SkeletonServerRow } from '../components/DataLoading';
 
 const getRemainingDays = (expiresAt) => {
   if (!expiresAt) return 0;
@@ -35,6 +36,7 @@ const getPlanName = (memoryLimit) => {
 export default function Dashboard() {
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {}, isDanger: false, confirmText: 'Konfirmasi' });
   const [servers, setServers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState({});
   const [currentUser, setCurrentUser] = useState({ username: '' });
   const [role, setRole] = useState('');
@@ -46,6 +48,8 @@ export default function Dashboard() {
       setServers(data);
     } catch (err) {
       if (err.message === 'Unauthorized') navigate('/login');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -162,7 +166,9 @@ export default function Dashboard() {
         </div>
 
         <div className="space-y-4">
-          {servers.length === 0 ? (
+          {loading && servers.length === 0 ? (
+            <SkeletonServerRow count={3} />
+          ) : servers.length === 0 ? (
             <div className="bg-[#101010] border border-zinc-800/60 rounded-xl p-12 text-center flex flex-col items-center">
               <div className="w-16 h-16 bg-zinc-900 rounded-full flex items-center justify-center mb-4">
                 <ServerIcon className="w-8 h-8 text-zinc-600" />

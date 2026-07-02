@@ -4,6 +4,7 @@ import { api } from '../services/api';
 import { Users, Shield, ShieldOff, UserX, Ban, Loader2, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../components/ConfirmModal';
+import { DataLoading } from '../components/DataLoading';
 
 export default function ServerPlayers() {
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {}, isDanger: false, confirmText: 'Konfirmasi' });
@@ -134,10 +135,7 @@ export default function ServerPlayers() {
         </div>
         
         {loading && players.length === 0 ? (
-          <div className="p-10 flex flex-col items-center justify-center text-zinc-500">
-            <Loader2 className="w-8 h-8 animate-spin mb-3 text-primary" />
-            <p>Memuat daftar pemain...</p>
-          </div>
+          <DataLoading text="Memuat daftar pemain online..." size="sm" />
         ) : players.length === 0 ? (
           <div className="p-10 text-center text-zinc-500">
             <Users className="w-10 h-10 mx-auto mb-3 opacity-20" />

@@ -1,5 +1,5 @@
 import { db } from './db.js';
-import { plans } from './schema.js';
+import { plans, settings } from './schema.js';
 import { eq } from 'drizzle-orm';
 
 const defaultPlans = [
@@ -20,6 +20,16 @@ async function seed() {
       console.log(`${p.name} already exists`);
     }
   }
+
+  console.log('Seeding settings...');
+  const existingRam = db.select().from(settings).where(eq(settings.key, 'total_available_ram')).get();
+  if (!existingRam) {
+    db.insert(settings).values({ key: 'total_available_ram', value: '8192' }).run();
+    console.log('Inserted default total_available_ram = 8192 MB');
+  } else {
+    console.log(`total_available_ram already set to ${existingRam.value} MB`);
+  }
+
   console.log('Done!');
 }
 

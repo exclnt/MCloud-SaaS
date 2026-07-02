@@ -276,6 +276,24 @@ export const api = {
     if (!res.ok) throw new Error(data.error);
     return data;
   },
+  getResourcePool: async () => {
+    const res = await fetch(`${API_URL}/admin/resource-pool`, {
+      headers: getAuthHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    return data;
+  },
+  updateResourcePool: async (totalRamMB) => {
+    const res = await fetch(`${API_URL}/admin/resource-pool`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ totalRamMB })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    return data;
+  },
   createAdminUser: async (userData) => {
     const res = await fetch(`${API_URL}/admin/users`, {
       method: 'POST',
@@ -323,6 +341,39 @@ export const api = {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to extend server');
+    return data;
+  },
+  getUserTransactions: async () => {
+    const res = await fetch(`${API_URL}/transactions`, {
+      headers: getAuthHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to fetch user transactions');
+    return data;
+  },
+  getTransaction: async (id) => {
+    const res = await fetch(`${API_URL}/transactions/${id}`, {
+      headers: getAuthHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to fetch transaction detail');
+    return data;
+  },
+  syncTransaction: async (id) => {
+    const res = await fetch(`${API_URL}/transactions/${id}/sync`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to sync transaction status');
+    return data;
+  },
+  getAdminTransactions: async () => {
+    const res = await fetch(`${API_URL}/admin/transactions`, {
+      headers: getAuthHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to fetch admin transactions');
     return data;
   }
 };

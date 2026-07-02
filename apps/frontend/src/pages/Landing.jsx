@@ -173,7 +173,11 @@ export default function Landing() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-sm md:max-w-none mx-auto">
               {pricingPlans.map((plan, i) => (
-                <div key={i} className={`relative bg-black/50 backdrop-blur-md border ${plan.recommended ? 'border-primary shadow-[0_0_30px_rgba(16,185,129,0.2)]' : 'border-zinc-800/80'} p-8 rounded-xl flex flex-col reveal`} style={{ transitionDelay: `${i * 150}ms` }}>
+                <div key={i} className={`relative bg-black/50 backdrop-blur-md border ${
+                  plan.recommended 
+                    ? 'border-primary shadow-[0_0_30px_rgba(16,185,129,0.2)]' 
+                    : 'border-zinc-800/80'
+                } p-8 rounded-xl flex flex-col reveal`} style={{ transitionDelay: `${i * 150}ms` }}>
                   {plan.recommended && (
                     <div className="absolute -top-4 inset-x-0 flex justify-center">
                       <span className="bg-primary text-black text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
@@ -220,11 +224,23 @@ export default function Landing() {
                     </li>
                   </ul>
                   
+                  {plan.available === false && (
+                    <div className="mb-3 text-[11px] text-red-400 bg-red-500/10 border border-red-500/20 p-2 rounded-md text-center">
+                      Stok paket saat ini sedang habis
+                    </div>
+                  )}
                   <button 
+                    disabled={plan.available === false}
                     onClick={() => navigate(`/checkout?plan=${plan.name.toLowerCase()}`)}
-                    className={`w-full py-3 rounded-md font-bold transition ${plan.recommended ? 'bg-primary hover:bg-primary-hover text-black' : 'bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 text-white'}`}
+                    className={`w-full py-3 rounded-md font-bold transition ${
+                      plan.available === false 
+                        ? 'bg-zinc-900 border border-zinc-800 text-zinc-500 cursor-not-allowed' 
+                        : plan.recommended 
+                          ? 'bg-primary hover:bg-primary-hover text-black' 
+                          : 'bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 text-white'
+                    }`}
                   >
-                    Pilih Paket
+                    {plan.available === false ? 'Stok Habis' : 'Pilih Paket'}
                   </button>
                 </div>
               ))}

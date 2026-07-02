@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { Terminal as TerminalIcon, Search, Copy, Edit3, Send, Zap } from 'lucide-react';
 import { api } from '../services/api';
 import toast from 'react-hot-toast';
+import { DataLoading } from '../components/DataLoading';
 
 export default function ServerConsole() {
   const { serverInfo, status } = useOutletContext();
@@ -96,7 +97,7 @@ export default function ServerConsole() {
           {status === 'offline' ? (
             <div className="text-zinc-500">container@{serverInfo.name} Server ditandai sebagai offline.</div>
           ) : logs.length === 0 ? (
-            <div className="text-zinc-500">Menunggu log...</div>
+            <DataLoading text="Menghubungkan ke stream log konsol..." inline={true} />
           ) : (
             logs.map((log, i) => {
               // Basic colorization for Minecraft logs

@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Server, Users, CreditCard, Activity, RefreshCw, StopCircle, Trash2, Edit2, CheckCircle, Save, X, PanelLeft, LogOut, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Shield, Server, Users, CreditCard, Activity, RefreshCw, StopCircle, Trash2, Edit2, CheckCircle, Save, X, PanelLeft, LogOut, Search, ChevronLeft, ChevronRight, DollarSign, Eye, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import toast from 'react-hot-toast';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ConfirmModal from '../components/ConfirmModal';
+import CustomSelect from '../components/CustomSelect';
+import TransactionReceiptModal from '../components/TransactionReceiptModal';
+import { DataLoading } from '../components/DataLoading';
 
 export default function AdminDashboard() {
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {}, isDanger: false, confirmText: 'Konfirmasi' });
@@ -15,6 +18,11 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [plans, setPlans] = useState([]);
   const [logs, setLogs] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [trxSearchQuery, setTrxSearchQuery] = useState('');
+  const [trxCurrentPage, setTrxCurrentPage] = useState(1);
+  const [trxPerPage, setTrxPerPage] = useState(10);
+  const [showTrxDetailModal, setShowTrxDetailModal] = useState(null);
   const [logSearchQuery, setLogSearchQuery] = useState('');
   const [logCurrentPage, setLogCurrentPage] = useState(1);
   const [logsPerPage, setLogsPerPage] = useState(10);
@@ -44,20 +52,65 @@ export default function AdminDashboard() {
   const [showCreateServerModal, setShowCreateServerModal] = useState(null);
   const [newServerData, setNewServerData] = useState({ name: '', memoryLimit: '1g', version: 'latest', difficulty: 'easy', gamemode: 'survival', days: 30 });
 
+  // Resource Pool State
+  const [resourcePool, setResourcePool] = useState({ totalRamMB: 8192, usedRamMB: 0, availableRamMB: 8192, totalServers: 0 });
+  const [poolInput, setPoolInput] = useState('8192');
+  const [isSavingPool, setIsSavingPool] = useState(false);
+
+  const handleSaveResourcePool = async () => {
+    setIsSavingPool(true);
+    try {
+      const val = parseInt(poolInput);
+      if (isNaN(val) || val < 0) {
+        toast.error("Input RAM harus berupa angka positif (MB)");
+        return;
+      }
+      const res = await api.updateResourcePool(val);
+      toast.success("Kapasitas Resource Pool RAM berhasil diperbarui!");
+      if (res.pool) {
+        setResourcePool(res.pool);
+        setPoolInput(String(res.pool.totalRamMB));
+      }
+      const updatedPlans = await api.getPlans();
+      setPlans(updatedPlans);
+    } catch (e) {
+      toast.error(e.message || "Gagal memperbarui resource pool");
+    } finally {
+      setIsSavingPool(false);
+    }
+  };
+
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const plansRes = await api.getPlans().catch(() => []);
+      const [plansRes, poolRes] = await Promise.all([
+        api.getPlans().catch(() => []),
+        api.getResourcePool().catch(() => null)
+      ]);
       if (plansRes && plansRes.length > 0) setPlans(plansRes);
+      if (poolRes) {
+        setResourcePool(poolRes);
+        setPoolInput(String(poolRes.totalRamMB || 0));
+      } else if (plansRes[0]?.poolStats) {
+        setResourcePool(plansRes[0].poolStats);
+        setPoolInput(String(plansRes[0].poolStats.totalRamMB || 0));
+      }
 
       if (activeTab === 'overview') {
-        const [srvs, resUsers] = await Promise.all([api.getAllServers(), api.getAllUsers()]);
+        const [srvs, resUsers, resTrx] = await Promise.all([
+          api.getAllServers(),
+          api.getAllUsers(),
+          api.getAdminTransactions().catch(() => [])
+        ]);
         setServers(srvs);
         setUsers(resUsers.users);
+        setTransactions(resTrx);
+        const totalRev = resTrx.filter(t => t.status === 'success').reduce((acc, t) => acc + (t.amount || 0), 0);
         setStats({
           totalServers: srvs.length,
           activeServers: srvs.filter(s => s.status === 'running').length,
-          totalUsers: resUsers.users.length
+          totalUsers: resUsers.users.length,
+          totalRevenue: totalRev
         });
       } else if (activeTab === 'servers') {
         const srvs = await api.getAllServers();
@@ -66,11 +119,21 @@ export default function AdminDashboard() {
         const res = await api.getAllUsers();
         setUsers(res.users);
       } else if (activeTab === 'pricing') {
-        const res = await api.getPlans();
-        setPlans(res);
+        const [resPlans, resPool] = await Promise.all([
+          api.getPlans(),
+          api.getResourcePool().catch(() => null)
+        ]);
+        setPlans(resPlans);
+        if (resPool) {
+          setResourcePool(resPool);
+          setPoolInput(String(resPool.totalRamMB || 0));
+        }
       } else if (activeTab === 'logs') {
         const res = await api.getActivityLogs();
         setLogs(res.logs);
+      } else if (activeTab === 'transactions') {
+        const res = await api.getAdminTransactions();
+        setTransactions(res);
       }
     } catch (e) {
       toast.error('Failed to fetch data: ' + e.message);
@@ -82,6 +145,7 @@ export default function AdminDashboard() {
     if (activeTab === 'logs') setLogCurrentPage(1);
     if (activeTab === 'servers') setServerCurrentPage(1);
     if (activeTab === 'users') setUserCurrentPage(1);
+    if (activeTab === 'transactions') setTrxCurrentPage(1);
     fetchData();
   }, [activeTab]);
 
@@ -246,6 +310,7 @@ export default function AdminDashboard() {
     { id: 'servers', name: 'Servers', icon: <Server className="w-5 h-5" /> },
     { id: 'users', name: 'Users', icon: <Users className="w-5 h-5" /> },
     { id: 'pricing', name: 'Pricing', icon: <CreditCard className="w-5 h-5" /> },
+    { id: 'transactions', name: 'Transactions', icon: <DollarSign className="w-5 h-5" /> },
     { id: 'logs', name: 'Activity Logs', icon: <Shield className="w-5 h-5" /> },
   ];
 
@@ -257,7 +322,7 @@ export default function AdminDashboard() {
            (s.owner || '').toLowerCase().includes(q) || 
            String(s.id).includes(q) || 
            String(s.port).includes(q) || 
-           (s.status || '').toLowerCase().includes(q);
+           (s.ip || '').toLowerCase().includes(q);
   });
   const totalServerPages = Math.ceil(filteredServers.length / serversPerPage) || 1;
   const paginatedServers = filteredServers.slice((serverCurrentPage - 1) * serversPerPage, serverCurrentPage * serversPerPage);
@@ -268,8 +333,8 @@ export default function AdminDashboard() {
     const q = userSearchQuery.toLowerCase();
     return (u.username || '').toLowerCase().includes(q) || 
            (u.email || '').toLowerCase().includes(q) || 
-           String(u.id).includes(q) || 
-           (u.role || '').toLowerCase().includes(q);
+           (u.role || '').toLowerCase().includes(q) || 
+           String(u.id).includes(q);
   });
   const totalUserPages = Math.ceil(filteredUsers.length / usersPerPage) || 1;
   const paginatedUsers = filteredUsers.slice((userCurrentPage - 1) * usersPerPage, userCurrentPage * usersPerPage);
@@ -286,28 +351,45 @@ export default function AdminDashboard() {
   const totalLogPages = Math.ceil(filteredLogs.length / logsPerPage) || 1;
   const paginatedLogs = filteredLogs.slice((logCurrentPage - 1) * logsPerPage, logCurrentPage * logsPerPage);
 
+  const filteredTransactions = transactions.filter(t => {
+    if (!trxSearchQuery) return true;
+    const q = trxSearchQuery.toLowerCase();
+    return String(t.id).includes(q) ||
+           (t.username || '').toLowerCase().includes(q) ||
+           (t.email || '').toLowerCase().includes(q) ||
+           (t.status || '').toLowerCase().includes(q) ||
+           (t.config || '').toLowerCase().includes(q);
+  });
+  const totalTrxPages = Math.ceil(filteredTransactions.length / trxPerPage) || 1;
+  const paginatedTransactions = filteredTransactions.slice((trxCurrentPage - 1) * trxPerPage, trxCurrentPage * trxPerPage);
+
+  const totalRevenueIdr = transactions.filter(t => t.status === 'success').reduce((sum, t) => sum + (t.amount || 0), 0);
+  const successTrxCount = transactions.filter(t => t.status === 'success').length;
+  const adminManualTrxCount = transactions.filter(t => t.status === 'admin_manual').length;
+
   const renderPaginationFooter = (currentPage, totalPages, totalItems, perPage, setPage, setPerPage, label = "item") => (
     <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 pt-4 border-t border-zinc-800/80 text-xs text-zinc-400">
       <div className="flex items-center gap-3">
         <span>
           Menampilkan <strong className="text-white">{totalItems === 0 ? 0 : (currentPage - 1) * perPage + 1}</strong> - <strong className="text-white">{Math.min(currentPage * perPage, totalItems)}</strong> dari <strong className="text-white">{totalItems}</strong> {label}
         </span>
-        <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1">
+        <div className="flex items-center gap-2">
           <span className="text-zinc-500">Per halaman:</span>
-          <select 
+          <CustomSelect 
+            size="sm"
+            className="!w-20"
             value={perPage} 
             onChange={(e) => {
               setPerPage(Number(e.target.value));
               setPage(1);
             }}
-            className="bg-transparent text-white font-bold outline-none cursor-pointer"
           >
-            <option value={5} className="bg-zinc-900">5</option>
-            <option value={10} className="bg-zinc-900">10</option>
-            <option value={25} className="bg-zinc-900">25</option>
-            <option value={50} className="bg-zinc-900">50</option>
-            <option value={100} className="bg-zinc-900">100</option>
-          </select>
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </CustomSelect>
         </div>
       </div>
 
@@ -455,19 +537,19 @@ export default function AdminDashboard() {
 
             <div className="bg-transparent animate-fade-in min-h-[400px]">
               {isLoading && !stats && !users.length && !plans.length && !logs.length ? (
-                <div className="text-center py-12 text-zinc-500">Memuat data...</div>
-          ) : (
-            <>
-              {activeTab === 'overview' && (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {/* Total Servers */}
-                  <div className="bg-[#101010] border border-zinc-800/60 rounded-xl p-5">
-                    <div className="flex items-center gap-2 text-zinc-400 mb-4 text-xs font-bold uppercase tracking-wider">
-                      <Server className="w-4 h-4 text-primary" /> Total Server
-                    </div>
-                    <div className="text-3xl font-bold text-white mb-1">{stats?.totalServers || 0}</div>
-                    <div className="text-xs text-zinc-500">Semua server terdaftar</div>
-                  </div>
+                <DataLoading text="Memuat statistik & data panel admin..." size="lg" />
+              ) : (
+                <>
+                  {activeTab === 'overview' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                      {/* Total Servers */}
+                      <div className="bg-[#101010] border border-zinc-800/60 rounded-xl p-5">
+                        <div className="flex items-center gap-2 text-zinc-400 mb-4 text-xs font-bold uppercase tracking-wider">
+                          <Server className="w-4 h-4 text-primary" /> Total Server
+                        </div>
+                        <div className="text-3xl font-bold text-white mb-1">{stats?.totalServers || 0}</div>
+                        <div className="text-xs text-zinc-500">Semua server terdaftar</div>
+                      </div>
 
                   {/* Active Servers */}
                   <div className="bg-[#101010] border border-zinc-800/60 rounded-xl p-5">
@@ -485,6 +567,15 @@ export default function AdminDashboard() {
                     </div>
                     <div className="text-3xl font-bold text-white mb-1">{stats?.totalUsers || 0}</div>
                     <div className="text-xs text-zinc-500">Semua pengguna terdaftar</div>
+                  </div>
+
+                  {/* Total Revenue */}
+                  <div className="bg-[#101010] border border-zinc-800/60 rounded-xl p-5">
+                    <div className="flex items-center gap-2 text-zinc-400 mb-4 text-xs font-bold uppercase tracking-wider">
+                      <DollarSign className="w-4 h-4 text-emerald-400" /> Pendapatan
+                    </div>
+                    <div className="text-3xl font-bold text-emerald-400 font-mono mb-1">Rp {(stats?.totalRevenue || 0).toLocaleString('id-ID')}</div>
+                    <div className="text-xs text-zinc-500">Total pembayaran sukses</div>
                   </div>
                 </div>
               )}
@@ -699,15 +790,100 @@ export default function AdminDashboard() {
               )}
 
               {activeTab === 'pricing' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {plans.map(p => (
-                    <div key={p.id} className="bg-zinc-900 border border-zinc-800 rounded-lg p-5">
-                      <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-xl font-bold text-white">{p.name}</h3>
-                        <span className="text-zinc-500 text-sm">RAM: {p.ram}</span>
+                <div className="space-y-6">
+                  {/* Resource Pool Card */}
+                  <div className="bg-[#101010] border border-primary/30 shadow-[0_0_20px_rgba(16,185,129,0.1)] rounded-xl p-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                      <div>
+                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse inline-block"></span>
+                          Ketersediaan Resource Server (Total Pool RAM)
+                        </h3>
+                        <p className="text-xs text-zinc-400 mt-1">
+                          Atur total RAM fisik yang tersedia untuk disewa oleh seluruh pengguna MCloud. Paket yang melebihi sisa RAM tidak akan dapat dibeli.
+                        </p>
                       </div>
-                      
-                      {editingPlan === p.id ? (
+                      <div className="flex items-center gap-2">
+                        <div className="relative">
+                          <input
+                            type="number"
+                            value={poolInput}
+                            onChange={(e) => setPoolInput(e.target.value)}
+                            placeholder="Total RAM (MB)"
+                            className="bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-white text-sm w-36 focus:border-primary outline-none pr-12 font-mono"
+                          />
+                          <span className="absolute right-3 top-2.5 text-xs text-zinc-500 font-bold">MB</span>
+                        </div>
+                        <button
+                          onClick={handleSaveResourcePool}
+                          disabled={isSavingPool}
+                          className="bg-primary hover:bg-primary-hover text-black px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-1.5 disabled:opacity-50"
+                        >
+                          {isSavingPool ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                          Simpan
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 pt-4 border-t border-zinc-800/80">
+                      <div className="bg-zinc-900/60 p-4 rounded-lg border border-zinc-800">
+                        <div className="text-xs text-zinc-400 mb-1">Total Pool RAM</div>
+                        <div className="text-xl font-extrabold text-white font-mono">
+                          {resourcePool?.totalRamMB >= 1024 ? `${(resourcePool.totalRamMB / 1024).toFixed(1)} GB` : `${resourcePool?.totalRamMB || 0} MB`}
+                        </div>
+                        <div className="text-[10px] text-zinc-500 mt-0.5">({resourcePool?.totalRamMB || 0} MB)</div>
+                      </div>
+                      <div className="bg-zinc-900/60 p-4 rounded-lg border border-zinc-800">
+                        <div className="text-xs text-zinc-400 mb-1">RAM Terpakai</div>
+                        <div className="text-xl font-extrabold text-amber-400 font-mono">
+                          {resourcePool?.usedRamMB >= 1024 ? `${(resourcePool.usedRamMB / 1024).toFixed(1)} GB` : `${resourcePool?.usedRamMB || 0} MB`}
+                        </div>
+                        <div className="text-[10px] text-zinc-500 mt-0.5">Oleh {resourcePool?.totalServers || 0} Server Aktif</div>
+                      </div>
+                      <div className="bg-zinc-900/60 p-4 rounded-lg border border-zinc-800">
+                        <div className="text-xs text-zinc-400 mb-1">Sisa RAM Tersedia</div>
+                        <div className={`text-xl font-extrabold font-mono ${resourcePool?.availableRamMB <= 500 ? 'text-red-400' : 'text-emerald-400'}`}>
+                          {resourcePool?.availableRamMB >= 1024 ? `${(resourcePool.availableRamMB / 1024).toFixed(1)} GB` : `${resourcePool?.availableRamMB || 0} MB`}
+                        </div>
+                        <div className="text-[10px] text-zinc-500 mt-0.5">Siap dialokasikan</div>
+                      </div>
+                      <div className="bg-zinc-900/60 p-4 rounded-lg border border-zinc-800 flex flex-col justify-center">
+                        <div className="text-xs text-zinc-400 mb-1.5">Status Penyewaan</div>
+                        <div>
+                          {resourcePool?.totalRamMB <= 0 ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
+                              Ditutup (0 MB)
+                            </span>
+                          ) : resourcePool?.availableRamMB < 500 ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                              Kapasitas Penuh
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                              Tersedia Normal
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {plans.map(p => (
+                      <div key={p.id} className="bg-zinc-900 border border-zinc-800 rounded-lg p-5">
+                        <div className="flex justify-between items-center mb-4">
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-xl font-bold text-white">{p.name}</h3>
+                            {p.available === false && (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/10 text-red-400 border border-red-500/20 uppercase tracking-wider">
+                                Stok Habis
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-zinc-500 text-sm">RAM: {p.ram}</span>
+                        </div>
+                        
+                        {editingPlan === p.id ? (
                         <div className="space-y-4 bg-zinc-950 p-4 rounded-md border border-zinc-800">
                           <div>
                             <label className="block text-xs text-zinc-400 mb-1">Price (IDR)</label>
@@ -765,6 +941,164 @@ export default function AdminDashboard() {
                       )}
                     </div>
                   ))}
+                </div>
+                </div>
+              )}
+
+              {activeTab === 'transactions' && (
+                <div>
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-[#121212] border border-zinc-800/80 rounded-xl p-5">
+                      <div className="flex items-center gap-2 text-zinc-400 mb-2 text-xs font-bold uppercase tracking-wider">
+                        <DollarSign className="w-4 h-4 text-emerald-400" /> Total Pendapatan
+                      </div>
+                      <div className="text-2xl font-bold text-emerald-400 font-mono">Rp {totalRevenueIdr.toLocaleString('id-ID')}</div>
+                      <div className="text-xs text-zinc-500 mt-1">Pembayaran sukses Midtrans</div>
+                    </div>
+                    <div className="bg-[#121212] border border-zinc-800/80 rounded-xl p-5">
+                      <div className="flex items-center gap-2 text-zinc-400 mb-2 text-xs font-bold uppercase tracking-wider">
+                        <Activity className="w-4 h-4 text-blue-400" /> Total Transaksi
+                      </div>
+                      <div className="text-2xl font-bold text-white">{transactions.length}</div>
+                      <div className="text-xs text-zinc-500 mt-1">Semua riwayat pesanan</div>
+                    </div>
+                    <div className="bg-[#121212] border border-zinc-800/80 rounded-xl p-5">
+                      <div className="flex items-center gap-2 text-zinc-400 mb-2 text-xs font-bold uppercase tracking-wider">
+                        <CheckCircle className="w-4 h-4 text-emerald-400" /> Transaksi Berhasil
+                      </div>
+                      <div className="text-2xl font-bold text-white">{successTrxCount}</div>
+                      <div className="text-xs text-zinc-500 mt-1">Status success / dibayar</div>
+                    </div>
+                    <div className="bg-[#121212] border border-zinc-800/80 rounded-xl p-5">
+                      <div className="flex items-center gap-2 text-zinc-400 mb-2 text-xs font-bold uppercase tracking-wider">
+                        <Shield className="w-4 h-4 text-purple-400" /> Admin Manual
+                      </div>
+                      <div className="text-2xl font-bold text-purple-400">{adminManualTrxCount}</div>
+                      <div className="text-xs text-zinc-500 mt-1">Aksi perpanjangan / pembuatan admin</div>
+                    </div>
+                  </div>
+
+                  {/* Search & List */}
+                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 bg-[#121212] p-4 rounded-xl border border-zinc-800/80">
+                    <div className="text-sm text-zinc-400">
+                      Menampilkan <span className="font-bold text-white">{filteredTransactions.length}</span> transaksi
+                      {trxSearchQuery && <span className="text-zinc-500"> untuk "{trxSearchQuery}"</span>}
+                    </div>
+                    <div className="relative w-full sm:w-72">
+                      <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type="text"
+                        placeholder="Cari ID, user, status, detail..."
+                        value={trxSearchQuery}
+                        onChange={(e) => {
+                          setTrxSearchQuery(e.target.value);
+                          setTrxCurrentPage(1);
+                        }}
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-9 py-2 text-sm text-white placeholder-zinc-500 outline-none focus:border-emerald-500 transition-colors"
+                      />
+                      {trxSearchQuery && (
+                        <button
+                          onClick={() => {
+                            setTrxSearchQuery('');
+                            setTrxCurrentPage(1);
+                          }}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-[#121212] border border-zinc-800/80 rounded-xl overflow-hidden">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-zinc-800 bg-zinc-900/50 text-xs text-zinc-400 uppercase font-bold tracking-wider">
+                          <th className="py-3.5 px-4">ID / Tanggal</th>
+                          <th className="py-3.5 px-4">Pengguna</th>
+                          <th className="py-3.5 px-4">Keterangan / Item</th>
+                          <th className="py-3.5 px-4">Nominal</th>
+                          <th className="py-3.5 px-4">Status</th>
+                          <th className="py-3.5 px-4 text-right">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-800/60 text-sm">
+                        {paginatedTransactions.length > 0 ? (
+                          paginatedTransactions.map((t) => {
+                            let parsedConfig = {};
+                            try {
+                              if (t.config) parsedConfig = JSON.parse(t.config);
+                            } catch (e) {}
+                            
+                            const descText = parsedConfig.note || parsedConfig.type || (t.snapToken ? 'Order Midtrans' : 'Transaksi');
+                            
+                            return (
+                              <tr key={t.id} className="hover:bg-zinc-900/40 transition-colors">
+                                <td className="py-3.5 px-4">
+                                  <div className="font-mono font-bold text-white">#{t.id}</div>
+                                  <div className="text-xs text-zinc-500 mt-0.5">
+                                    {t.createdAt ? new Date(t.createdAt).toLocaleString('id-ID') : '-'}
+                                  </div>
+                                </td>
+                                <td className="py-3.5 px-4">
+                                  <div className="font-bold text-zinc-200">{t.username || `User #${t.userId}`}</div>
+                                  <div className="text-xs text-zinc-500">{t.email || ''}</div>
+                                </td>
+                                <td className="py-3.5 px-4">
+                                  <div className="text-zinc-300 font-medium">{descText}</div>
+                                  {parsedConfig.serverName && (
+                                    <div className="text-xs text-zinc-500 mt-0.5">Server: {parsedConfig.serverName}</div>
+                                  )}
+                                </td>
+                                <td className="py-3.5 px-4 font-mono font-bold text-zinc-200">
+                                  Rp {(t.amount || 0).toLocaleString('id-ID')}
+                                </td>
+                                <td className="py-3.5 px-4">
+                                  {t.status === 'success' && (
+                                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                      Success
+                                    </span>
+                                  )}
+                                  {t.status === 'admin_manual' && (
+                                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                      Admin Manual
+                                    </span>
+                                  )}
+                                  {t.status === 'pending' && (
+                                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                      Pending
+                                    </span>
+                                  )}
+                                  {!['success', 'admin_manual', 'pending'].includes(t.status) && (
+                                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/20">
+                                      {t.status || 'Unknown'}
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="py-3.5 px-4 text-right">
+                                  <button
+                                    onClick={() => setShowTrxDetailModal(t)}
+                                    className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ml-auto"
+                                  >
+                                    <Eye className="w-3.5 h-3.5" /> Detail
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        ) : (
+                          <tr>
+                            <td colSpan={6} className="py-12 text-center text-zinc-500">
+                              {trxSearchQuery ? `Tidak ada transaksi yang cocok dengan pencarian "${trxSearchQuery}"` : 'Belum ada data transaksi'}
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {renderPaginationFooter(trxCurrentPage, totalTrxPages, filteredTransactions.length, trxPerPage, setTrxCurrentPage, setTrxPerPage, "transaksi")}
                 </div>
               )}
 
@@ -886,14 +1220,13 @@ export default function AdminDashboard() {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Role</label>
-                    <select
-                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-white text-sm outline-none focus:border-emerald-500 transition-colors"
+                    <CustomSelect
                       value={newUserData.role}
                       onChange={e => setNewUserData({...newUserData, role: e.target.value})}
                     >
                       <option value="user">User Biasa</option>
                       <option value="admin">Administrator</option>
-                    </select>
+                    </CustomSelect>
                   </div>
                   <div className="flex justify-end gap-2 pt-4 border-t border-zinc-800/80">
                     <button type="button" onClick={() => setShowCreateUserModal(false)} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium rounded-xl transition-colors">
@@ -951,15 +1284,14 @@ export default function AdminDashboard() {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Role</label>
-                    <select
-                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-white text-sm outline-none focus:border-amber-500 transition-colors"
+                    <CustomSelect
                       value={editUserData.role}
                       onChange={e => setEditUserData({...editUserData, role: e.target.value})}
                       disabled={editUserData.username === 'admin'}
                     >
                       <option value="user">User Biasa</option>
                       <option value="admin">Administrator</option>
-                    </select>
+                    </CustomSelect>
                   </div>
                   <div className="flex justify-end gap-2 pt-4 border-t border-zinc-800/80">
                     <button type="button" onClick={() => setShowEditUserModal(false)} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium rounded-xl transition-colors">
@@ -1095,8 +1427,7 @@ export default function AdminDashboard() {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Paket RAM (Harga)</label>
-                      <select
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-white text-sm outline-none focus:border-blue-500 transition-colors"
+                      <CustomSelect
                         value={newServerData.memoryLimit}
                         onChange={e => setNewServerData({...newServerData, memoryLimit: e.target.value})}
                       >
@@ -1118,12 +1449,11 @@ export default function AdminDashboard() {
                             <option value="4g">Wither (4GB) - Rp 60.000/bln</option>
                           </>
                         )}
-                      </select>
+                      </CustomSelect>
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Masa Aktif</label>
-                      <select
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-white text-sm outline-none focus:border-blue-500 transition-colors"
+                      <CustomSelect
                         value={newServerData.days}
                         onChange={e => setNewServerData({...newServerData, days: e.target.value})}
                       >
@@ -1132,26 +1462,24 @@ export default function AdminDashboard() {
                         <option value="90">90 Hari</option>
                         <option value="365">1 Tahun</option>
                         <option value="permanent">Permanen</option>
-                      </select>
+                      </CustomSelect>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Mode Permainan</label>
-                      <select
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-white text-sm outline-none focus:border-blue-500 transition-colors"
+                      <CustomSelect
                         value={newServerData.gamemode}
                         onChange={e => setNewServerData({...newServerData, gamemode: e.target.value})}
                       >
                         <option value="survival">Survival</option>
                         <option value="creative">Creative</option>
                         <option value="adventure">Adventure</option>
-                      </select>
+                      </CustomSelect>
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Tingkat Kesulitan</label>
-                      <select
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-white text-sm outline-none focus:border-blue-500 transition-colors"
+                      <CustomSelect
                         value={newServerData.difficulty}
                         onChange={e => setNewServerData({...newServerData, difficulty: e.target.value})}
                       >
@@ -1159,13 +1487,12 @@ export default function AdminDashboard() {
                         <option value="easy">Easy</option>
                         <option value="normal">Normal</option>
                         <option value="hard">Hard</option>
-                      </select>
+                      </CustomSelect>
                     </div>
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Versi Minecraft Server</label>
-                    <select
-                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-white text-sm outline-none focus:border-blue-500 transition-colors"
+                    <CustomSelect
                       value={newServerData.version === 'latest' || newServerData.version === 'preview' ? newServerData.version : 'custom'}
                       onChange={e => {
                         if (e.target.value !== 'custom') {
@@ -1178,7 +1505,7 @@ export default function AdminDashboard() {
                       <option value="latest">Rilis Terbaru (Latest)</option>
                       <option value="preview">Preview (Beta)</option>
                       <option value="custom">Versi Kustom...</option>
-                    </select>
+                    </CustomSelect>
                     {(newServerData.version !== 'latest' && newServerData.version !== 'preview') && (
                       <input
                         type="text" required
@@ -1201,6 +1528,13 @@ export default function AdminDashboard() {
               </div>
             </div>
           )}
+
+          {/* Modal Detail Transaksi / Struk */}
+          <TransactionReceiptModal
+            transaction={showTrxDetailModal}
+            onClose={() => setShowTrxDetailModal(null)}
+          />
+
           <ConfirmModal
             isOpen={confirmConfig.isOpen}
             onClose={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}

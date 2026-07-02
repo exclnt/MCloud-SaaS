@@ -3,7 +3,7 @@ import { parseJSON } from './utils/parser.js';
 import { verifyToken } from '../../auth-service/src/utils/jwt.js';
 import { createContainer, startContainer, stopContainer, restartContainer, deleteContainer, deleteUserContainers, extendServer, syncServerStatuses, getServerLogs, getServerStats, rebuildContainer } from './services/dockerService.js';
 import { db } from '../../../database/db.js';
-import { servers, users, activity_logs } from '../../../database/schema.js';
+import { servers, users, activity_logs, transactions } from '../../../database/schema.js';
 import { eq, desc } from 'drizzle-orm';
 
 function logActivity(userId, action, details = null) {
@@ -110,10 +110,45 @@ const server = http.createServer(async (req, res) => {
         return res.end(JSON.stringify({ error: 'Server name is required' }));
       }
       const newServer = await createContainer(parseInt(targetUserId), body);
-      logActivity(user.id, 'admin_create_server', { targetUserId, serverId: newServer.id, name: body.name });
+      logActivity(user.id, 'admin_create_server', { targetUserId, serverId: newServer.id, name: body.name, status: 'success' });
+      try {
+        db.insert(transactions).values({
+          userId: parseInt(targetUserId),
+          amount: 0,
+          status: 'admin_manual',
+          config: JSON.stringify({
+            type: 'admin_create',
+            serverName: body.name,
+            memoryLimit: body.memoryLimit || '1g',
+            days: body.days || 30,
+            adminUsername: user.username,
+            note: 'Server dibuat secara manual oleh Admin'
+          })
+        }).run();
+      } catch (err) {
+        console.error('Failed to log transaction for admin create server:', err.message);
+      }
       res.statusCode = 201;
       return res.end(JSON.stringify(newServer));
     } catch (e) {
+      logActivity(user.id, 'admin_create_server_failed', { targetUserId: body?.userId || body?.targetUserId, name: body?.name, error: e.message, status: 'failed' });
+      try {
+        if (body?.userId || body?.targetUserId) {
+          db.insert(transactions).values({
+            userId: parseInt(body.userId || body.targetUserId),
+            amount: 0,
+            status: 'failed',
+            config: JSON.stringify({
+              type: 'admin_create',
+              serverName: body?.name || 'Unknown Server',
+              adminUsername: user.username,
+              note: `Gagal membuat server oleh Admin: ${e.message}`
+            })
+          }).run();
+        }
+      } catch (err) {
+        console.error('Failed to log failed transaction for admin create:', err.message);
+      }
       res.statusCode = 500;
       return res.end(JSON.stringify({ error: e.message }));
     }
@@ -130,10 +165,47 @@ const server = http.createServer(async (req, res) => {
     try {
       const body = await parseJSON(req);
       const updated = await extendServer(serverId, body.days);
-      logActivity(user.id, 'admin_extend_server', { serverId, days: body.days });
+      logActivity(user.id, 'admin_extend_server', { serverId, days: body.days, status: 'success' });
+      try {
+        db.insert(transactions).values({
+          userId: updated.userId,
+          amount: 0,
+          status: 'admin_manual',
+          config: JSON.stringify({
+            type: 'admin_extend',
+            serverId: serverId,
+            serverName: updated.name,
+            days: body.days,
+            adminUsername: user.username,
+            note: `Masa aktif diperpanjang (${body.days} hari / permanen) oleh Admin`
+          })
+        }).run();
+      } catch (err) {
+        console.error('Failed to log transaction for admin extend server:', err.message);
+      }
       res.statusCode = 200;
       return res.end(JSON.stringify(updated));
     } catch (e) {
+      logActivity(user.id, 'admin_extend_server_failed', { serverId, error: e.message, status: 'failed' });
+      try {
+        const srvRecord = db.select().from(servers).where(eq(servers.id, serverId)).get();
+        if (srvRecord) {
+          db.insert(transactions).values({
+            userId: srvRecord.userId,
+            amount: 0,
+            status: 'failed',
+            config: JSON.stringify({
+              type: 'admin_extend',
+              serverId: serverId,
+              serverName: srvRecord.name,
+              adminUsername: user.username,
+              note: `Gagal perpanjang server oleh Admin: ${e.message}`
+            })
+          }).run();
+        }
+      } catch (err) {
+        console.error('Failed to log failed transaction for admin extend:', err.message);
+      }
       res.statusCode = 500;
       return res.end(JSON.stringify({ error: e.message }));
     }
@@ -149,10 +221,11 @@ const server = http.createServer(async (req, res) => {
     const targetUserId = parseInt(match[1]);
     try {
       const result = await deleteUserContainers(targetUserId);
-      logActivity(user.id, 'admin_cleanup_user_containers', { targetUserId });
+      logActivity(user.id, 'admin_cleanup_user_containers', { targetUserId, status: 'success' });
       res.statusCode = 200;
       return res.end(JSON.stringify(result));
     } catch (e) {
+      logActivity(user.id, 'admin_cleanup_user_containers_failed', { targetUserId, error: e.message, status: 'failed' });
       res.statusCode = 500;
       return res.end(JSON.stringify({ error: e.message }));
     }
@@ -205,10 +278,11 @@ const server = http.createServer(async (req, res) => {
       }
       
       const newServer = await createContainer(user.id, body);
-      logActivity(user.id, 'create_server', { serverId: newServer.id, name: body.name });
+      logActivity(user.id, 'create_server', { serverId: newServer.id, name: body.name, status: 'success' });
       res.statusCode = 201;
       return res.end(JSON.stringify(newServer));
     } catch (e) {
+      logActivity(user.id, 'create_server_failed', { name: body?.name, error: e.message, status: 'failed' });
       res.statusCode = 500;
       return res.end(JSON.stringify({ error: e.message }));
     }
@@ -223,10 +297,11 @@ const server = http.createServer(async (req, res) => {
     
     try {
       const result = await startContainer(port);
-      logActivity(user.id, 'start_server', { port });
+      logActivity(user.id, 'start_server', { port, status: 'success' });
       res.statusCode = 200;
       return res.end(JSON.stringify(result));
     } catch (e) {
+      logActivity(user.id, 'start_server_failed', { port, error: e.message, status: 'failed' });
       res.statusCode = 500;
       return res.end(JSON.stringify({ error: e.message }));
     }
@@ -241,10 +316,11 @@ const server = http.createServer(async (req, res) => {
     
     try {
       const result = await stopContainer(port);
-      logActivity(user.id, 'stop_server', { port });
+      logActivity(user.id, 'stop_server', { port, status: 'success' });
       res.statusCode = 200;
       return res.end(JSON.stringify(result));
     } catch (e) {
+      logActivity(user.id, 'stop_server_failed', { port, error: e.message, status: 'failed' });
       res.statusCode = 500;
       return res.end(JSON.stringify({ error: e.message }));
     }
@@ -259,10 +335,11 @@ const server = http.createServer(async (req, res) => {
     
     try {
       const result = await restartContainer(port);
-      logActivity(user.id, 'restart_server', { port });
+      logActivity(user.id, 'restart_server', { port, status: 'success' });
       res.statusCode = 200;
       return res.end(JSON.stringify(result));
     } catch (e) {
+      logActivity(user.id, 'restart_server_failed', { port, error: e.message, status: 'failed' });
       res.statusCode = 500;
       return res.end(JSON.stringify({ error: e.message }));
     }
@@ -277,10 +354,11 @@ const server = http.createServer(async (req, res) => {
     
     try {
       const result = await deleteContainer(port);
-      logActivity(user.id, 'delete_server', { port });
+      logActivity(user.id, 'delete_server', { port, status: 'success' });
       res.statusCode = 200;
       return res.end(JSON.stringify(result));
     } catch (e) {
+      logActivity(user.id, 'delete_server_failed', { port, error: e.message, status: 'failed' });
       res.statusCode = 500;
       return res.end(JSON.stringify({ error: e.message }));
     }

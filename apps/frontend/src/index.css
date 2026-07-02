@@ -126,6 +126,16 @@ body {
   visibility: hidden;
 }
 
+/* Shimmer Animation for Skeletons */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s infinite;
+}
+
 /* Docs Markdown Styles */
 .docs-content h1 {
   @apply text-3xl font-extrabold text-white mb-6 mt-8;

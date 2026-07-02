@@ -9,9 +9,11 @@ import {
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { SkeletonPublicServer } from '../components/DataLoading';
 
 export default function ServerList() {
   const [servers, setServers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState('');
   const navigate = useNavigate();
@@ -22,6 +24,8 @@ export default function ServerList() {
       setServers(data);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -130,12 +134,15 @@ export default function ServerList() {
         </div>
 
         {/* Server Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-12">
-          {filteredServers.length === 0 ? (
-            <div className="col-span-full py-12 text-center text-zinc-500">
-              Tidak ada server yang cocok dengan kriteria Anda.
-            </div>
-          ) : (
+        {loading && servers.length === 0 ? (
+          <SkeletonPublicServer count={6} className="mb-12" />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-12">
+            {filteredServers.length === 0 ? (
+              <div className="col-span-full py-12 text-center text-zinc-500">
+                Tidak ada server yang cocok dengan kriteria Anda.
+              </div>
+            ) : (
             filteredServers.map((server, idx) => (
               <div key={server.id} className="bg-[#101010] border border-zinc-800/60 rounded-xl p-5 hover:border-zinc-700 transition flex flex-col h-full group relative overflow-hidden">
                 {/* Status Indicator */}
@@ -184,6 +191,7 @@ export default function ServerList() {
             ))
           )}
         </div>
+        )}
 
         {/* CTA Banner */}
         <div className="text-center py-12 border-t border-zinc-800/60">

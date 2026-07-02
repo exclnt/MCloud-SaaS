@@ -11,6 +11,7 @@ import ServerFiles from './pages/ServerFiles';
 import ServerList from './pages/ServerList';
 import ServerSettings from './pages/ServerSettings';
 import Pricing from './pages/Pricing';
+import TransactionDetail from './pages/TransactionDetail';
 
 import ServerLayout from './components/ServerLayout';
 import ServerOverview from './pages/ServerOverview';
@@ -102,6 +103,11 @@ export default function App() {
         } />
         
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/transaction/:id" element={
+          <ProtectedRoute>
+            <TransactionDetail />
+          </ProtectedRoute>
+        } />
         
         <Route path="/pricing" element={<Pricing />} />
         

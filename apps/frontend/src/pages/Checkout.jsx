@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import ConfirmModal from "../components/ConfirmModal";
+import CustomSelect from "../components/CustomSelect";
+import { SkeletonCheckoutCard } from "../components/DataLoading";
 
 const DEFAULT_PLANS = {
   villager: { name: 'Villager', ram: '500MB', price: 30000, priceStr: '30.000', icon: 'MHF_Villager', desc: 'Cocok untuk server bertahan hidup (survival) pribadi dengan beberapa teman.' },
@@ -70,7 +72,9 @@ export default function Checkout() {
         setSelectedPlan({
           ...defaultDetails,
           price: finalPrice,
-          priceStr: finalPrice.toLocaleString()
+          priceStr: finalPrice.toLocaleString(),
+          available: dbPlan.available,
+          reason: dbPlan.reason
         });
       }
       setIsPlanLoading(false);
@@ -90,6 +94,10 @@ export default function Checkout() {
   };
 
   const handleCheckoutClick = () => {
+    if (!isRenew && selectedPlan?.available === false) {
+      toast.error(selectedPlan.reason || "Stok paket saat ini sedang habis. Tidak dapat memesan paket ini.");
+      return;
+    }
     if (!isRenew && !config.name) {
       toast.error("Harap masukkan nama server!");
       return;
@@ -119,20 +127,22 @@ export default function Checkout() {
 
       window.snap.pay(data.token, {
         onSuccess: function (result) {
-          setSuccess(true);
-          toast.success("Pesanan berhasil! Server sedang disiapkan...");
-          setTimeout(() => navigate(isRenew && renewServerPort ? `/server/${renewServerPort}` : "/dashboard"), 4000);
+          toast.success("Pembayaran berhasil!");
+          navigate(`/transaction/${data.transactionId}`);
         },
         onPending: function (result) {
-          console.log("pending", result);
+          toast("Pesanan menunggu pembayaran.", { icon: "⏳" });
+          navigate(`/transaction/${data.transactionId}`);
         },
         onError: function (result) {
           console.error("error", result);
           toast.error("Pembayaran gagal atau dibatalkan");
           setLoading(false);
+          navigate(`/transaction/${data.transactionId}`);
         },
         onClose: function () {
           setLoading(false);
+          navigate(`/transaction/${data.transactionId}`);
         },
       });
     } catch (e) {
@@ -213,8 +223,7 @@ export default function Checkout() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-zinc-400 mb-1">Versi Minecraft</label>
-                    <select 
-                      className="input-field appearance-none"
+                    <CustomSelect 
                       value={config.version === 'latest' || config.version === 'preview' ? config.version : 'custom'}
                       onChange={e => {
                         if (e.target.value !== 'custom') {
@@ -227,7 +236,7 @@ export default function Checkout() {
                       <option value="latest">Rilis Terbaru</option>
                       <option value="preview">Preview (Beta)</option>
                       <option value="custom">Versi Kustom</option>
-                    </select>
+                    </CustomSelect>
                     {(config.version !== 'latest' && config.version !== 'preview') && (
                       <input 
                         type="text" 
@@ -240,23 +249,21 @@ export default function Checkout() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-zinc-400 mb-1">Mode Permainan</label>
-                    <select 
-                      className="input-field appearance-none"
+                    <CustomSelect 
                       value={config.gamemode}
                       onChange={e => setConfig({...config, gamemode: e.target.value})}
                     >
                       <option value="survival">Bertahan Hidup (Survival)</option>
                       <option value="creative">Kreatif (Creative)</option>
                       <option value="adventure">Petualangan (Adventure)</option>
-                    </select>
+                    </CustomSelect>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-zinc-400 mb-1">Tingkat Kesulitan</label>
-                    <select 
-                      className="input-field appearance-none"
+                    <CustomSelect 
                       value={config.difficulty}
                       onChange={e => setConfig({...config, difficulty: e.target.value})}
                     >
@@ -264,7 +271,7 @@ export default function Checkout() {
                       <option value="easy">Mudah (Easy)</option>
                       <option value="normal">Normal</option>
                       <option value="hard">Sulit (Hard)</option>
-                    </select>
+                    </CustomSelect>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-zinc-400 mb-1">Seed Dunia (Opsional)</label>
@@ -284,38 +291,55 @@ export default function Checkout() {
 
         {/* Right Payment Column */}
         <div className="glass-panel p-5 md:p-6 rounded-xl bg-[#101010] flex flex-col justify-center animate-slide-up" style={{ animationDelay: "0.1s" }}>
-          
-          <div className="flex items-center gap-4 mb-6">
-            <img 
-              src={`https://mc-heads.net/avatar/${selectedPlan.icon}/64`} 
-              alt={selectedPlan.name} 
-              className="w-12 h-12" 
-            />
-            <div>
-              <h3 className="text-2xl font-bold text-white">
-                Paket {selectedPlan.name}
-              </h3>
-              <div className="flex items-center gap-2 text-sm text-zinc-400 mt-1">
-                <span>RAM {selectedPlan.ram}</span>
-                <span className="w-1 h-1 bg-zinc-700 rounded-full"></span>
-                <span>Penyimpanan Permanen</span>
+          {isPlanLoading ? (
+            <SkeletonCheckoutCard className="mb-8" />
+          ) : (
+            <>
+              <div className="flex items-center gap-4 mb-6">
+                <img 
+                  src={`https://mc-heads.net/avatar/${selectedPlan.icon}/64`} 
+                  alt={selectedPlan.name} 
+                  className="w-12 h-12" 
+                />
+                <div>
+                  <h3 className="text-2xl font-bold text-white">
+                    Paket {selectedPlan.name}
+                  </h3>
+                  <div className="flex items-center gap-2 text-sm text-zinc-400 mt-1">
+                    <span>RAM {selectedPlan.ram}</span>
+                    <span className="w-1 h-1 bg-zinc-700 rounded-full"></span>
+                    <span>Penyimpanan Permanen</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-baseline gap-2 mb-6 border-b border-zinc-800/60 pb-6">
+                <span className="text-3xl font-extrabold text-primary">Rp {selectedPlan.priceStr}</span>
+                <span className="text-zinc-500 text-sm">/ 1 Bulan</span>
+              </div>
+              
+              <div className="space-y-4 mb-8">
+                <p className="text-sm text-zinc-300 leading-relaxed">
+                  <strong className="text-white">Detail Paket:</strong> {selectedPlan.desc}
+                </p>
+                <p className="text-xs text-zinc-500 leading-relaxed">
+                  Pembayaran ini bersifat satu kali untuk 30 hari ke depan. Harga sudah termasuk perlindungan anti-DDoS, dan akses FTP penuh. Transaksi diproses secara instan dan aman via Midtrans.
+                </p>
+              </div>
+            </>
+          )}
+
+          {!isRenew && selectedPlan?.available === false && (
+            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-start gap-3">
+              <span className="text-xl">⚠️</span>
+              <div>
+                <strong className="block font-bold mb-1">Stok Paket Tidak Tersedia</strong>
+                <p className="text-xs text-red-300/80 leading-relaxed">
+                  {selectedPlan?.reason || "Stok paket saat ini sedang habis. Silakan pilih paket lain atau coba lagi nanti."}
+                </p>
               </div>
             </div>
-          </div>
-
-          <div className="flex items-baseline gap-2 mb-6 border-b border-zinc-800/60 pb-6">
-            <span className="text-3xl font-extrabold text-primary">Rp {selectedPlan.priceStr}</span>
-            <span className="text-zinc-500 text-sm">/ 1 Bulan</span>
-          </div>
-          
-          <div className="space-y-4 mb-8">
-            <p className="text-sm text-zinc-300 leading-relaxed">
-              <strong className="text-white">Detail Paket:</strong> {selectedPlan.desc}
-            </p>
-            <p className="text-xs text-zinc-500 leading-relaxed">
-              Pembayaran ini bersifat satu kali untuk 30 hari ke depan. Harga sudah termasuk perlindungan anti-DDoS, dan akses FTP penuh. Transaksi diproses secara instan dan aman via Midtrans.
-            </p>
-          </div>
+          )}
 
           <h2 className="text-xl font-bold mb-4 text-white">
             2. Selesaikan Pembelian
@@ -335,7 +359,7 @@ export default function Checkout() {
           ) : (
             <button
               onClick={handleCheckoutClick}
-              disabled={loading || isPlanLoading || (!isRenew && !config.name)}
+              disabled={loading || isPlanLoading || (!isRenew && !config.name) || (!isRenew && selectedPlan?.available === false)}
               className="btn-primary !py-4 flex items-center justify-center gap-3 text-lg disabled:opacity-50"
             >
               {(loading || isPlanLoading) ? (
@@ -343,7 +367,11 @@ export default function Checkout() {
               ) : (
                 <CreditCard className="w-6 h-6" />
               )}
-              {loading || isPlanLoading ? "Memproses..." : `Bayar Rp ${selectedPlan.priceStr}`}
+              {loading || isPlanLoading 
+                ? "Memproses..." 
+                : (!isRenew && selectedPlan?.available === false) 
+                  ? "Stok Habis" 
+                  : `Bayar Rp ${selectedPlan.priceStr}`}
             </button>
           )}
         </div>
