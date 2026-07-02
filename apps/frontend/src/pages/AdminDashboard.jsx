@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Server, Users, CreditCard, Activity, RefreshCw, StopCircle, Trash2, Edit2, CheckCircle, Save, X, PanelLeft, LogOut, Search, ChevronLeft, ChevronRight, DollarSign, Eye, Loader2 } from 'lucide-react';
+import { Shield, Server, Users, CreditCard, Activity, RefreshCw, StopCircle, Trash2, Edit2, CheckCircle, Save, X, PanelLeft, LogOut, Search, ChevronLeft, ChevronRight, DollarSign, Eye, Loader2, Share2, MessageSquare, MessageCircle, Mail, Globe } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import toast from 'react-hot-toast';
@@ -57,6 +57,29 @@ export default function AdminDashboard() {
   const [poolInput, setPoolInput] = useState('8192');
   const [isSavingPool, setIsSavingPool] = useState(false);
 
+  // Social Media Settings State
+  const [socialSettings, setSocialSettings] = useState({
+    social_discord: 'https://discord.gg/mcloud',
+    social_whatsapp: 'https://wa.me/6281234567890',
+    social_instagram: 'https://instagram.com/mcloud.id',
+    social_twitter: 'https://x.com/mcloud_id',
+    social_email: 'support@mcloud.id'
+  });
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  const handleSaveSettings = async (e) => {
+    e.preventDefault();
+    setIsSavingSettings(true);
+    try {
+      await api.updateSettings(socialSettings);
+      toast.success('Pengaturan sosial media berhasil disimpan!');
+      fetchData();
+    } catch (err) {
+      toast.error('Gagal menyimpan pengaturan: ' + err.message);
+    }
+    setIsSavingSettings(false);
+  };
+
   const handleSaveResourcePool = async () => {
     setIsSavingPool(true);
     try {
@@ -83,9 +106,10 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [plansRes, poolRes] = await Promise.all([
+      const [plansRes, poolRes, settingsRes] = await Promise.all([
         api.getPlans().catch(() => []),
-        api.getResourcePool().catch(() => null)
+        api.getResourcePool().catch(() => null),
+        api.getSettings().catch(() => null)
       ]);
       if (plansRes && plansRes.length > 0) setPlans(plansRes);
       if (poolRes) {
@@ -94,6 +118,9 @@ export default function AdminDashboard() {
       } else if (plansRes[0]?.poolStats) {
         setResourcePool(plansRes[0].poolStats);
         setPoolInput(String(plansRes[0].poolStats.totalRamMB || 0));
+      }
+      if (settingsRes) {
+        setSocialSettings(prev => ({ ...prev, ...settingsRes }));
       }
 
       if (activeTab === 'overview') {
@@ -134,6 +161,9 @@ export default function AdminDashboard() {
       } else if (activeTab === 'transactions') {
         const res = await api.getAdminTransactions();
         setTransactions(res);
+      } else if (activeTab === 'settings') {
+        const res = await api.getSettings().catch(() => null);
+        if (res) setSocialSettings(prev => ({ ...prev, ...res }));
       }
     } catch (e) {
       toast.error('Failed to fetch data: ' + e.message);
@@ -312,6 +342,7 @@ export default function AdminDashboard() {
     { id: 'pricing', name: 'Pricing', icon: <CreditCard className="w-5 h-5" /> },
     { id: 'transactions', name: 'Transactions', icon: <DollarSign className="w-5 h-5" /> },
     { id: 'logs', name: 'Activity Logs', icon: <Shield className="w-5 h-5" /> },
+    { id: 'settings', name: 'Social Media', icon: <Share2 className="w-5 h-5" /> },
   ];
 
   // Filter & Paginate Servers
@@ -1168,6 +1199,115 @@ export default function AdminDashboard() {
                   </div>
 
                   {renderPaginationFooter(logCurrentPage, totalLogPages, filteredLogs.length, logsPerPage, setLogCurrentPage, setLogsPerPage, "log")}
+                </div>
+              )}
+
+              {activeTab === 'settings' && (
+                <div className="max-w-3xl mx-auto bg-[#121212] border border-zinc-800/80 rounded-2xl p-6 sm:p-8 shadow-2xl">
+                  <div className="flex items-center gap-3 mb-6 pb-6 border-b border-zinc-800/80">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                      <Share2 className="w-6 h-6 text-emerald-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white">Pengaturan Sosial Media & Kontak</h3>
+                      <p className="text-xs text-zinc-400">Atur tautan komunitas dan kontak bantuan yang ditampilkan pada Footer dan Widget Support.</p>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleSaveSettings} className="space-y-6">
+                    <div className="grid grid-cols-1 gap-6">
+                      <div>
+                        <label className="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-2 flex items-center gap-2">
+                          <MessageSquare className="w-4 h-4 text-indigo-400" /> Discord Invite Link
+                        </label>
+                        <input
+                          type="url"
+                          required
+                          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-indigo-500 transition-colors"
+                          placeholder="https://discord.gg/mcloud"
+                          value={socialSettings.social_discord || ''}
+                          onChange={(e) => setSocialSettings({ ...socialSettings, social_discord: e.target.value })}
+                        />
+                        <p className="text-[11px] text-zinc-500 mt-1">Tautan undangan server Discord resmi Anda.</p>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-2 flex items-center gap-2">
+                          <MessageCircle className="w-4 h-4 text-emerald-400" /> WhatsApp Support URL / Nomor
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-emerald-500 transition-colors"
+                          placeholder="https://wa.me/6281234567890"
+                          value={socialSettings.social_whatsapp || ''}
+                          onChange={(e) => setSocialSettings({ ...socialSettings, social_whatsapp: e.target.value })}
+                        />
+                        <p className="text-[11px] text-zinc-500 mt-1">Gunakan format link wa.me lengkap dengan kode negara.</p>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-2 flex items-center gap-2">
+                          <Globe className="w-4 h-4 text-pink-400" /> Instagram Profile Link
+                        </label>
+                        <input
+                          type="url"
+                          required
+                          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-pink-500 transition-colors"
+                          placeholder="https://instagram.com/mcloud.id"
+                          value={socialSettings.social_instagram || ''}
+                          onChange={(e) => setSocialSettings({ ...socialSettings, social_instagram: e.target.value })}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-2 flex items-center gap-2">
+                          <Globe className="w-4 h-4 text-zinc-300" /> X (Twitter) Profile Link
+                        </label>
+                        <input
+                          type="url"
+                          required
+                          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-zinc-500 transition-colors"
+                          placeholder="https://x.com/mcloud_id"
+                          value={socialSettings.social_twitter || ''}
+                          onChange={(e) => setSocialSettings({ ...socialSettings, social_twitter: e.target.value })}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-2 flex items-center gap-2">
+                          <Mail className="w-4 h-4 text-sky-400" /> Email Support (mailto / alamat)
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-sky-500 transition-colors"
+                          placeholder="mailto:support@mcloud.id"
+                          value={socialSettings.social_email || ''}
+                          onChange={(e) => setSocialSettings({ ...socialSettings, social_email: e.target.value })}
+                        />
+                        <p className="text-[11px] text-zinc-500 mt-1">Gunakan format mailto:email@domain.com atau alamat email langsung.</p>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-zinc-800/80 flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={isSavingSettings}
+                        className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-zinc-700 text-black font-bold rounded-xl transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-2"
+                      >
+                        {isSavingSettings ? (
+                          <>
+                            <Loader2 className="w-5 h-5 animate-spin" /> Menyimpan...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-5 h-5" /> Simpan Perubahan
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
                 </div>
               )}
             </>

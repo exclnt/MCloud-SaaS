@@ -531,6 +531,54 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  if (req.method === 'GET' && url === '/settings') {
+    try {
+      const allSettings = db.select().from(settings).all();
+      const settingsMap = {
+        social_discord: 'https://discord.gg/mcloud',
+        social_whatsapp: 'https://wa.me/6281234567890',
+        social_instagram: 'https://instagram.com/mcloud.id',
+        social_twitter: 'https://x.com/mcloud_id',
+        social_email: 'support@mcloud.id'
+      };
+      for (const item of allSettings) {
+        settingsMap[item.key] = item.value;
+      }
+      res.statusCode = 200;
+      return res.end(JSON.stringify(settingsMap));
+    } catch (e) {
+      res.statusCode = 500;
+      return res.end(JSON.stringify({ error: e.message }));
+    }
+  }
+
+  if ((req.method === 'PUT' || req.method === 'POST') && url === '/admin/settings') {
+    const user = authMiddleware(req, res);
+    if (!user || user.role !== 'admin') {
+      res.statusCode = 403;
+      return res.end(JSON.stringify({ error: 'Forbidden' }));
+    }
+    try {
+      const body = await parseJSON(req);
+      for (const [key, value] of Object.entries(body)) {
+        if (value === undefined || value === null) continue;
+        const valStr = String(value);
+        const existing = db.select().from(settings).where(eq(settings.key, key)).get();
+        if (!existing) {
+          db.insert(settings).values({ key, value: valStr }).run();
+        } else {
+          db.update(settings).set({ value: valStr }).where(eq(settings.key, key)).run();
+        }
+      }
+      logActivity(user.id, 'update_settings', body);
+      res.statusCode = 200;
+      return res.end(JSON.stringify({ message: 'Settings updated successfully' }));
+    } catch (e) {
+      res.statusCode = 500;
+      return res.end(JSON.stringify({ error: e.message }));
+    }
+  }
+
   res.statusCode = 404;
   res.end(JSON.stringify({ error: 'Not Found' }));
 });

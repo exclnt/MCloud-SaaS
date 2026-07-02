@@ -23,6 +23,7 @@ import NotFound from './pages/NotFound';
 import DocsLayout from './components/DocsLayout';
 import DocsHome from './pages/DocsHome';
 import DocsArticle from './pages/DocsArticle';
+import SupportWidget from './components/SupportWidget';
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -134,6 +135,7 @@ export default function App() {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      <SupportWidget />
     </BrowserRouter>
     </>
   );

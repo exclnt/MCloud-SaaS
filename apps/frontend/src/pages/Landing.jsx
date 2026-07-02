@@ -93,25 +93,25 @@ export default function Landing() {
             <source src="/hero-animation.mp4" type="video/mp4" />
           </video>
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-[#0a0a0a]/80 to-[#0a0a0a]"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.15)_0%,transparent_70%)] pointer-events-none"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.18)_0%,transparent_70%)] pointer-events-none animate-pulse" style={{ animationDuration: '5s' }}></div>
           
           <div className="relative z-10 max-w-7xl mx-auto px-6 text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 mb-6 animate-badge-pop">
               <span className="w-2 h-2 rounded-full bg-[#10b981] shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
               <span className="text-xs">
                 <span className="font-bold text-white tracking-wide">MCloud</span> <span className="text-zinc-300">Server Online</span>
               </span>
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white mb-6 tracking-tight leading-tight">
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white mb-6 tracking-tight leading-tight animate-hero-title">
               Hosting Server Minecraft<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-300">
                 Masa Depan
               </span>
             </h1>
-            <p className="text-lg text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+            <p className="text-lg text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed animate-hero-sub">
               MCloud memberikan performa maksimal dengan harga yang terjangkau. Kelola server Anda dengan kontrol panel modern, cepat, dan mudah digunakan.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-hero-buttons">
               <button 
                 onClick={() => navigate('/register')}
                 className="px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base bg-primary hover:bg-primary-hover text-black font-bold rounded-md transition shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] flex items-center gap-2 w-full sm:w-auto justify-center"

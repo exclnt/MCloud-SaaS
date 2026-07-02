@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { User, Lock, Mail, Save, Shield, Loader2, DollarSign, Eye, X, Printer, Share2, Download, Check } from 'lucide-react';
+import { User, Lock, Mail, Save, Shield, Loader2, DollarSign, Eye, X, Printer, Share2, Download, Check, Headphones, MessageSquare, ExternalLink, Sparkles } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { api } from '../services/api';
 import Navbar from '../components/Navbar';
@@ -131,24 +131,24 @@ export default function ClientArea() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8 items-start">
           
           {/* Navigation Sidebar */}
-          <div className="bg-[#101010] border border-zinc-800/60 rounded-xl p-3 flex md:flex-col gap-1 shadow-lg sticky top-24">
+          <div className="bg-[#101010] border border-zinc-800/60 rounded-xl p-3 flex flex-wrap sm:flex-nowrap md:flex-col gap-1.5 shadow-lg static md:sticky md:top-24">
             <button
               onClick={() => setActiveTab('profile')}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition w-full text-left ${activeTab === 'profile' ? 'bg-primary text-black font-bold shadow-md' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'}`}
+              className={`flex-1 md:flex-none flex items-center justify-center md:justify-start gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-lg text-xs md:text-sm font-semibold transition w-full text-left ${activeTab === 'profile' ? 'bg-primary text-black font-bold shadow-md' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'}`}
             >
-              <User className="w-4 h-4 shrink-0" /> Profil Saya
+              <User className="w-4 h-4 shrink-0" /> <span className="whitespace-nowrap">Profil Saya</span>
             </button>
             <button
               onClick={() => setActiveTab('security')}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition w-full text-left ${activeTab === 'security' ? 'bg-primary text-black font-bold shadow-md' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'}`}
+              className={`flex-1 md:flex-none flex items-center justify-center md:justify-start gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-lg text-xs md:text-sm font-semibold transition w-full text-left ${activeTab === 'security' ? 'bg-primary text-black font-bold shadow-md' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'}`}
             >
-              <Shield className="w-4 h-4 shrink-0" /> Keamanan Akun
+              <Shield className="w-4 h-4 shrink-0" /> <span className="whitespace-nowrap">Keamanan Akun</span>
             </button>
             <button
               onClick={() => setActiveTab('transactions')}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition w-full text-left ${activeTab === 'transactions' ? 'bg-primary text-black font-bold shadow-md' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'}`}
+              className={`flex-1 md:flex-none flex items-center justify-center md:justify-start gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-lg text-xs md:text-sm font-semibold transition w-full text-left ${activeTab === 'transactions' ? 'bg-primary text-black font-bold shadow-md' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'}`}
             >
-              <DollarSign className="w-4 h-4 shrink-0" /> Riwayat Transaksi
+              <DollarSign className="w-4 h-4 shrink-0" /> <span className="whitespace-nowrap">Riwayat Transaksi</span>
             </button>
           </div>
 
@@ -353,6 +353,51 @@ export default function ClientArea() {
                 )}
               </div>
             )}
+
+            {/* Banner Pusat Bantuan & Komunitas */}
+            <div className="mt-8 bg-[#101010] border border-zinc-800/80 rounded-2xl p-6 md:p-8 shadow-xl relative overflow-hidden">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+                <div className="flex items-start md:items-center gap-4 max-w-xl">
+                  <div className="relative shrink-0 hidden sm:block">
+                    <img 
+                      src="/alex.png" 
+                      alt="Alex Mascot" 
+                      className="w-12 h-12 rounded-full border border-zinc-700 object-cover bg-zinc-900" 
+                    />
+                    <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#101010]"></span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {/* <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs font-bold uppercase tracking-wider">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Bantuan & Dukungan 24/7
+                    </div> */}
+                    <h3 className="text-xl md:text-2xl font-bold text-white tracking-wide">
+                      Butuh Bantuan Konfigurasi atau Kendala Teknis?
+                    </h3>
+                    <p className="text-sm text-zinc-400 leading-relaxed">
+                      Tim dukungan teknis MCloud dan 5,000+ anggota komunitas Discord kami selalu siap membantu menyelesaikan masalah server Anda kapan saja.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-3 w-full md:w-auto shrink-0">
+                  <a
+                    href="https://discord.gg/mcloud"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold text-sm transition-all shadow-lg hover:scale-105"
+                  >
+                    <MessageSquare className="w-4 h-4 fill-current" /> Join Discord
+                  </a>
+                  <a
+                    href="https://wa.me/6281234567890"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm border border-zinc-700 transition-all hover:scale-105"
+                  >
+                    <Headphones className="w-4 h-4 text-emerald-400" /> Live Chat CS <ExternalLink className="w-3.5 h-3.5 opacity-60" />
+                  </a>
+                </div>
+              </div>
+            </div>
 
           </div>
         </div>

@@ -375,5 +375,21 @@ export const api = {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to fetch admin transactions');
     return data;
+  },
+  getSettings: async () => {
+    const res = await fetch(`${API_URL}/settings`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to fetch settings');
+    return data;
+  },
+  updateSettings: async (settingsData) => {
+    const res = await fetch(`${API_URL}/admin/settings`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(settingsData)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to update settings');
+    return data;
   }
 };

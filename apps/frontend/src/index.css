@@ -136,6 +136,56 @@ body {
   animation: shimmer 1.5s infinite;
 }
 
+/* Header & Hero Entrance Animations */
+@keyframes header-drop {
+  0% { transform: translateY(-100%); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.animate-header-drop {
+  animation: header-drop 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes badge-pop {
+  0% { transform: scale(0.75) translateY(15px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.animate-badge-pop {
+  animation: badge-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s forwards;
+  opacity: 0;
+}
+
+@keyframes hero-title {
+  0% { transform: translateY(40px) scale(0.95); opacity: 0; filter: blur(6px); }
+  100% { transform: translateY(0) scale(1); opacity: 1; filter: blur(0px); }
+}
+
+.animate-hero-title {
+  animation: hero-title 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+  opacity: 0;
+}
+
+@keyframes hero-sub {
+  0% { transform: translateY(25px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.animate-hero-sub {
+  animation: hero-sub 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
+  opacity: 0;
+}
+
+@keyframes hero-buttons {
+  0% { transform: translateY(20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.animate-hero-buttons {
+  animation: hero-buttons 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.65s forwards;
+  opacity: 0;
+}
+
 /* Docs Markdown Styles */
 .docs-content h1 {
   @apply text-3xl font-extrabold text-white mb-6 mt-8;

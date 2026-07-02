@@ -65,7 +65,7 @@ export default function Navbar() {
   const token = localStorage.getItem('token');
 
   return (
-    <header className="h-16 border-b border-zinc-800/60 bg-[#0a0a0a]/80 backdrop-blur-md flex items-center justify-between px-6 shrink-0 z-50 sticky top-0">
+    <header className="h-16 border-b border-zinc-800/60 bg-[#0a0a0a]/80 backdrop-blur-md flex items-center justify-between px-6 shrink-0 z-50 sticky top-0 animate-header-drop">
       <div className="flex items-center gap-8">
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
           <img src="/creep.png" alt="MCloud" className="w-8 h-8 object-contain" />
