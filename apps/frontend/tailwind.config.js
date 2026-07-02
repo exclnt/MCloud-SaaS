@@ -13,7 +13,7 @@ export default {
         background: '#09090b',
         surface: '#18181b',
         primary: '#10b981',
-        'primary-hover': '#059669',
+        'primary-hover': '#34d399',
         secondary: '#3b82f6',
       },
       animation: {

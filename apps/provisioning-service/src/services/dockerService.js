@@ -5,6 +5,7 @@ import { db } from '../../../../database/db.js';
 import { servers } from '../../../../database/schema.js';
 import { desc, eq } from 'drizzle-orm';
 
+process.env.DOCKER_HOST = process.env.DOCKER_HOST || 'unix:///var/run/docker.sock';
 const execAsync = promisify(exec);
 
 const getLocalIp = () => {
@@ -89,7 +90,7 @@ export const stopContainer = async (port) => {
   
   const containerName = `mcloud_${server.userId}_${port}`;
   try {
-    await execAsync(`docker stop ${containerName}`);
+    await execAsync(`docker stop -t 5 ${containerName}`);
   } catch (e) {
     console.warn(`Docker stop failed: ${e.message}`);
   }
@@ -125,7 +126,7 @@ export const restartContainer = async (port) => {
   if (!server) throw new Error('Server not found');
   
   const containerName = `mcloud_${server.userId}_${port}`;
-  await execAsync(`docker restart ${containerName}`);
+  await execAsync(`docker restart -t 5 ${containerName}`);
   
   db.update(servers).set({ status: 'running' }).where(eq(servers.id, server.id)).run();
   return { message: 'Server restarted' };
@@ -193,12 +194,28 @@ export const syncServerStatuses = async (userServers) => {
       const containerName = `mcloud_${server.userId}_${server.port}`;
       const isRunning = runningContainers.includes(containerName);
       
-      if (isRunning && server.status !== 'running') {
-        db.update(servers).set({ status: 'running' }).where(eq(servers.id, server.id)).run();
-        server.status = 'running';
-      } else if (!isRunning && server.status === 'running') {
-        db.update(servers).set({ status: 'stopped' }).where(eq(servers.id, server.id)).run();
-        server.status = 'stopped';
+      if (isRunning) {
+        if (server.status !== 'running') {
+          db.update(servers).set({ status: 'running' }).where(eq(servers.id, server.id)).run();
+          server.status = 'running';
+        }
+        try {
+          const { stdout: inspectOut } = await execAsync(`docker inspect --format='{{.State.StartedAt}}' ${containerName}`);
+          if (inspectOut && !inspectOut.startsWith('0001-01-01')) {
+            const startTime = new Date(inspectOut.trim()).getTime();
+            if (!isNaN(startTime)) {
+              server.uptime = Math.max(0, Math.floor((Date.now() - startTime) / 1000));
+            }
+          }
+        } catch (err) {
+          server.uptime = 0;
+        }
+      } else {
+        if (server.status === 'running') {
+          db.update(servers).set({ status: 'stopped' }).where(eq(servers.id, server.id)).run();
+          server.status = 'stopped';
+        }
+        server.uptime = 0;
       }
     }
     return userServers;
@@ -234,7 +251,7 @@ export const getServerStats = async (port) => {
   const server = db.select().from(servers).where(eq(servers.port, port)).get();
   if (!server) throw new Error('Server not found');
   
-  if (server.status !== 'running') return { memory: 0, cpu: 0, disk: 0 };
+  if (server.status !== 'running') return { memory: 0, cpu: 0, disk: 0, uptime: 0 };
   
   const containerName = `mcloud_${server.userId}_${port}`;
   try {
@@ -258,9 +275,20 @@ export const getServerStats = async (port) => {
       cpuVal = parseFloat(raw.cpu.replace('%', ''));
     }
     
-    return { memory: memoryVal, cpu: cpuVal, disk: 0 };
+    let uptimeVal = 0;
+    try {
+      const { stdout: inspectOut } = await execAsync(`docker inspect --format='{{.State.StartedAt}}' ${containerName}`);
+      if (inspectOut && !inspectOut.startsWith('0001-01-01')) {
+        const startTime = new Date(inspectOut.trim()).getTime();
+        if (!isNaN(startTime)) {
+          uptimeVal = Math.max(0, Math.floor((Date.now() - startTime) / 1000));
+        }
+      }
+    } catch (err) {}
+
+    return { memory: memoryVal, cpu: cpuVal, disk: 0, uptime: uptimeVal };
   } catch (e) {
-    return { memory: 0, cpu: 0, disk: 0 };
+    return { memory: 0, cpu: 0, disk: 0, uptime: 0 };
   }
 };
 
@@ -405,13 +433,14 @@ export const listFiles = async (port, path = '') => {
   const server = db.select().from(servers).where(eq(servers.port, port)).get();
   if (!server) throw new Error('Server not found');
 
-  const safePath = path.replace(/[^a-zA-Z0-9\-_./]/g, '');
+  const safePath = path.replace(/[^a-zA-Z0-9\-_./ ()\[\],+=~]/g, '');
   if (safePath.includes('..')) throw new Error('Invalid path');
 
   const volumeName = `mcloud_${server.userId}_${port}_data`;
+  const targetDir = safePath ? `/data/${safePath}` : '/data';
   
   try {
-    const cmd = `docker run --rm -v ${volumeName}:/data alpine sh -c "ls -lp /data/${safePath}"`;
+    const cmd = `docker run --rm -v ${volumeName}:/data alpine sh -c "ls -lp '${targetDir}'"`;
     const { stdout } = await execAsync(cmd);
     
     const lines = stdout.trim().split('\n');
@@ -441,12 +470,12 @@ export const readFile = async (port, path) => {
   const server = db.select().from(servers).where(eq(servers.port, port)).get();
   if (!server) throw new Error('Server not found');
 
-  const safePath = path.replace(/[^a-zA-Z0-9\-_./]/g, '');
+  const safePath = path.replace(/[^a-zA-Z0-9\-_./ ()\[\],+=~]/g, '');
   if (safePath.includes('..')) throw new Error('Invalid path');
 
   const volumeName = `mcloud_${server.userId}_${port}_data`;
   try {
-    const cmd = `docker run --rm -v ${volumeName}:/data alpine cat /data/${safePath}`;
+    const cmd = `docker run --rm -v ${volumeName}:/data alpine cat "/data/${safePath}"`;
     const { stdout } = await execAsync(cmd);
     return { content: stdout };
   } catch (e) {
@@ -458,13 +487,14 @@ export const writeFile = async (port, path, content) => {
   const server = db.select().from(servers).where(eq(servers.port, port)).get();
   if (!server) throw new Error('Server not found');
 
-  const safePath = path.replace(/[^a-zA-Z0-9\-_./]/g, '');
+  const safePath = path.replace(/[^a-zA-Z0-9\-_./ ()\[\],+=~]/g, '');
   if (safePath.includes('..')) throw new Error('Invalid path');
 
   const volumeName = `mcloud_${server.userId}_${port}_data`;
+  const targetFile = safePath ? `/data/${safePath}` : '/data';
   try {
     const base64Content = Buffer.from(content).toString('base64');
-    const cmd = `docker run --rm -v ${volumeName}:/data alpine sh -c "echo '${base64Content}' | base64 -d > /data/${safePath}"`;
+    const cmd = `docker run --rm -v ${volumeName}:/data alpine sh -c "echo '${base64Content}' | base64 -d > '${targetFile}'"`;
     await execAsync(cmd);
     return { message: 'File saved successfully' };
   } catch (e) {
@@ -476,12 +506,12 @@ export const deleteFile = async (port, path) => {
   const server = db.select().from(servers).where(eq(servers.port, port)).get();
   if (!server) throw new Error('Server not found');
 
-  const safePath = path.replace(/[^a-zA-Z0-9\-_./]/g, '');
+  const safePath = path.replace(/[^a-zA-Z0-9\-_./ ()\[\],+=~]/g, '');
   if (safePath.includes('..')) throw new Error('Invalid path');
 
   const volumeName = `mcloud_${server.userId}_${port}_data`;
   try {
-    const cmd = `docker run --rm -v ${volumeName}:/data alpine rm -rf /data/${safePath}`;
+    const cmd = `docker run --rm -v ${volumeName}:/data alpine rm -rf "/data/${safePath}"`;
     await execAsync(cmd);
     return { message: 'File deleted successfully' };
   } catch (e) {
@@ -493,22 +523,24 @@ export const uploadFileToVolume = async (port, path, filePath, filename) => {
   const server = db.select().from(servers).where(eq(servers.port, port)).get();
   if (!server) throw new Error('Server not found');
 
-  const safePath = path.replace(/[^a-zA-Z0-9\-_./]/g, '');
+  const safePath = path.replace(/[^a-zA-Z0-9\-_./ ()\[\],+=~]/g, '');
   if (safePath.includes('..')) throw new Error('Invalid path');
 
+  const safeFilename = filename.replace(/[^a-zA-Z0-9\-_./ ()\[\],+=~]/g, '');
   const volumeName = `mcloud_${server.userId}_${port}_data`;
+  const targetDir = safePath ? `/data/${safePath}` : '/data';
   
   try {
-    const isZip = filename.endsWith('.zip') || filename.endsWith('.mcworld');
+    const isZip = safeFilename.endsWith('.zip') || safeFilename.endsWith('.mcworld');
     
     if (isZip) {
       // Create a temporary container, mount volume, and bind mount the local file
-      const cmd = `docker run --rm -v ${volumeName}:/data -v "${filePath}":/tmp/upload.zip alpine sh -c "unzip -o /tmp/upload.zip -d /data/${safePath} || true"`;
+      const cmd = `docker run --rm -v ${volumeName}:/data -v "${filePath}":/tmp/upload.zip alpine sh -c "unzip -o /tmp/upload.zip -d '${targetDir}' || true"`;
       await execAsync(cmd);
       return { message: 'World extracted successfully' };
     } else {
       // Just copy the file directly
-      const cmd = `docker run --rm -v ${volumeName}:/data -v "${filePath}":/tmp/upload_file alpine sh -c "cp /tmp/upload_file /data/${safePath}/${filename}"`;
+      const cmd = `docker run --rm -v ${volumeName}:/data -v "${filePath}":/tmp/upload_file alpine sh -c "cp /tmp/upload_file '${targetDir}/${safeFilename}'"`;
       await execAsync(cmd);
       return { message: 'File uploaded successfully' };
     }

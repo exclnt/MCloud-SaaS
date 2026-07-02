@@ -251,7 +251,7 @@ export default function Auth() {
               <button 
                 type="submit" 
                 disabled={loading}
-                className="w-full py-3 bg-primary text-black font-bold rounded-md shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-all disabled:opacity-50"
+                className="w-full py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-md shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-all disabled:opacity-50"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                   <>

@@ -308,7 +308,7 @@ export default function ServerFiles() {
               <button 
                 disabled={saving}
                 onClick={handleSaveFile}
-                className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-black font-bold rounded-md transition"
+                className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white font-bold rounded-md transition"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Simpan Perubahan

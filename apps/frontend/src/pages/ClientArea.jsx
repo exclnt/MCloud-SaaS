@@ -134,19 +134,19 @@ export default function ClientArea() {
           <div className="bg-[#101010] border border-zinc-800/60 rounded-xl p-3 flex flex-wrap sm:flex-nowrap md:flex-col gap-1.5 shadow-lg static md:sticky md:top-24">
             <button
               onClick={() => setActiveTab('profile')}
-              className={`flex-1 md:flex-none flex items-center justify-center md:justify-start gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-lg text-xs md:text-sm font-semibold transition w-full text-left ${activeTab === 'profile' ? 'bg-primary text-black font-bold shadow-md' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'}`}
+              className={`flex-1 md:flex-none flex items-center justify-center md:justify-start gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-lg text-xs md:text-sm font-semibold transition w-full text-left ${activeTab === 'profile' ? 'bg-primary text-white font-bold shadow-md' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'}`}
             >
               <User className="w-4 h-4 shrink-0" /> <span className="whitespace-nowrap">Profil Saya</span>
             </button>
             <button
               onClick={() => setActiveTab('security')}
-              className={`flex-1 md:flex-none flex items-center justify-center md:justify-start gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-lg text-xs md:text-sm font-semibold transition w-full text-left ${activeTab === 'security' ? 'bg-primary text-black font-bold shadow-md' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'}`}
+              className={`flex-1 md:flex-none flex items-center justify-center md:justify-start gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-lg text-xs md:text-sm font-semibold transition w-full text-left ${activeTab === 'security' ? 'bg-primary text-white font-bold shadow-md' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'}`}
             >
               <Shield className="w-4 h-4 shrink-0" /> <span className="whitespace-nowrap">Keamanan Akun</span>
             </button>
             <button
               onClick={() => setActiveTab('transactions')}
-              className={`flex-1 md:flex-none flex items-center justify-center md:justify-start gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-lg text-xs md:text-sm font-semibold transition w-full text-left ${activeTab === 'transactions' ? 'bg-primary text-black font-bold shadow-md' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'}`}
+              className={`flex-1 md:flex-none flex items-center justify-center md:justify-start gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-lg text-xs md:text-sm font-semibold transition w-full text-left ${activeTab === 'transactions' ? 'bg-primary text-white font-bold shadow-md' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'}`}
             >
               <DollarSign className="w-4 h-4 shrink-0" /> <span className="whitespace-nowrap">Riwayat Transaksi</span>
             </button>
@@ -194,7 +194,7 @@ export default function ClientArea() {
                   </div>
 
                   <div className="pt-4 border-t border-zinc-800/60 flex justify-start">
-                    <button type="submit" disabled={loading} className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-black font-bold rounded-md transition shadow-[0_0_15px_rgba(16,185,129,0.3)] disabled:opacity-50">
+                    <button type="submit" disabled={loading} className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-white font-bold rounded-md transition shadow-[0_0_15px_rgba(16,185,129,0.3)] disabled:opacity-50">
                       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Simpan Perubahan
                     </button>
                   </div>
@@ -249,7 +249,7 @@ export default function ClientArea() {
                   </div>
 
                   <div className="flex justify-start pt-4 border-t border-zinc-800/60">
-                    <button type="submit" disabled={loading} className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-black font-bold rounded-md transition shadow-[0_0_15px_rgba(16,185,129,0.3)] disabled:opacity-50">
+                    <button type="submit" disabled={loading} className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-white font-bold rounded-md transition shadow-[0_0_15px_rgba(16,185,129,0.3)] disabled:opacity-50">
                       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Perbarui Sandi
                     </button>
                   </div>

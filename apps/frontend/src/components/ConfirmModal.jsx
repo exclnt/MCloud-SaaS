@@ -39,7 +39,7 @@ export default function ConfirmModal({
               onConfirm();
               onClose();
             }}
-            className={`px-4 py-2 rounded-md text-sm font-semibold transition ${isDanger ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-primary hover:bg-primary-hover text-black'}`}
+            className={`px-4 py-2 rounded-md text-sm font-semibold transition ${isDanger ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-primary hover:bg-primary-hover text-white'}`}
           >
             {confirmText}
           </button>

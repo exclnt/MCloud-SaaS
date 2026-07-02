@@ -107,14 +107,14 @@ export default function TutorialModal() {
             {step < steps.length - 1 ? (
               <button 
                 onClick={() => setStep(step + 1)}
-                className="flex items-center gap-2 px-5 py-2 bg-primary hover:bg-primary-hover text-black text-sm font-bold rounded-lg transition"
+                className="flex items-center gap-2 px-5 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-lg transition"
               >
                 Lanjut <ArrowRight className="w-4 h-4" />
               </button>
             ) : (
               <button 
                 onClick={handleClose}
-                className="flex items-center gap-2 px-5 py-2 bg-primary hover:bg-primary-hover text-black text-sm font-bold rounded-lg transition"
+                className="flex items-center gap-2 px-5 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-lg transition"
               >
                 Mulai Gunakan <CheckCircle2 className="w-4 h-4" />
               </button>

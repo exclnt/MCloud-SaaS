@@ -124,7 +124,7 @@ export default function Pricing() {
                     plan.available === false 
                       ? 'bg-zinc-900 border border-zinc-800 text-zinc-500 cursor-not-allowed' 
                       : plan.recommended 
-                        ? 'bg-primary hover:bg-primary-hover text-black' 
+                        ? 'bg-primary hover:bg-primary-hover text-white' 
                         : 'bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 text-white'
                   }`}
                 >

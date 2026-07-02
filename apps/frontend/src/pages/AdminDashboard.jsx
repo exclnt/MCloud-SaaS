@@ -179,6 +179,13 @@ export default function AdminDashboard() {
     fetchData();
   }, [activeTab]);
 
+  useEffect(() => {
+    const ticker = setInterval(() => {
+      setServers(prev => prev.map(s => s.status === 'running' && typeof s.uptime === 'number' && s.uptime > 0 ? { ...s, uptime: s.uptime + 1 } : s));
+    }, 1000);
+    return () => clearInterval(ticker);
+  }, []);
+
   const handleServerAction = (port, action) => {
     if (action === 'stop') {
       setConfirmConfig({
@@ -324,6 +331,19 @@ export default function AdminDashboard() {
         }
       }
     });
+  };
+
+  const formatUptime = (seconds) => {
+    if (!seconds || seconds <= 0) return '0 Detik';
+    const days = Math.floor(seconds / (3600 * 24));
+    const hours = Math.floor((seconds % (3600 * 24)) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    
+    if (days > 0) return `${days}h ${hours}j ${minutes}m`;
+    if (hours > 0) return `${hours}j ${minutes}m ${secs}d`;
+    if (minutes > 0) return `${minutes}m ${secs}d`;
+    return `${secs} Detik`;
   };
 
   const formatRemainingDays = (expiresAt) => {
@@ -664,8 +684,9 @@ export default function AdminDashboard() {
                             <td className="px-4 py-3.5 font-medium text-white">{s.name}</td>
                             <td className="px-4 py-3.5">{s.owner}</td>
                             <td className="px-4 py-3.5">
-                              <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${s.status === 'running' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
-                                {s.status}
+                              <span className={`px-2.5 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 ${s.status === 'running' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-mono' : 'bg-red-500/20 text-red-400 border border-red-500/30 uppercase'}`}>
+                                {s.status === 'running' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>}
+                                <span>{s.status === 'running' ? `Aktif: ${formatUptime(s.uptime || 0)}` : s.status}</span>
                               </span>
                             </td>
                             <td className="px-4 py-3.5 font-mono text-zinc-300">{s.port}</td>
@@ -737,7 +758,7 @@ export default function AdminDashboard() {
                       </div>
                       <button 
                         onClick={() => setShowCreateUserModal(true)}
-                        className="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 whitespace-nowrap"
+                        className="w-full sm:w-auto px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-primary/20 whitespace-nowrap"
                       >
                         + Buat User Baru
                       </button>
@@ -848,7 +869,7 @@ export default function AdminDashboard() {
                         <button
                           onClick={handleSaveResourcePool}
                           disabled={isSavingPool}
-                          className="bg-primary hover:bg-primary-hover text-black px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-1.5 disabled:opacity-50"
+                          className="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-1.5 disabled:opacity-50"
                         >
                           {isSavingPool ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                           Simpan
@@ -1294,7 +1315,7 @@ export default function AdminDashboard() {
                       <button
                         type="submit"
                         disabled={isSavingSettings}
-                        className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-zinc-700 text-black font-bold rounded-xl transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-2"
+                        className="px-6 py-3 bg-primary hover:bg-primary-hover disabled:bg-zinc-700 text-white font-bold rounded-xl transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-2"
                       >
                         {isSavingSettings ? (
                           <>
@@ -1372,7 +1393,7 @@ export default function AdminDashboard() {
                     <button type="button" onClick={() => setShowCreateUserModal(false)} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium rounded-xl transition-colors">
                       Batal
                     </button>
-                    <button type="submit" className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl transition-colors shadow-lg shadow-emerald-600/20">
+                    <button type="submit" className="px-5 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-xl transition-colors shadow-lg shadow-primary/20">
                       Simpan User
                     </button>
                   </div>
@@ -1497,8 +1518,9 @@ export default function AdminDashboard() {
                             <td className="px-3 py-2.5 font-mono">#{s.id}</td>
                             <td className="px-3 py-2.5 font-medium text-white">{s.name}</td>
                             <td className="px-3 py-2.5">
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${s.status === 'running' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
-                                {s.status}
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${s.status === 'running' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-mono' : 'bg-red-500/20 text-red-400 border border-red-500/30 uppercase'}`}>
+                                {s.status === 'running' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>}
+                                <span>{s.status === 'running' ? `Aktif: ${formatUptime(s.uptime || 0)}` : s.status}</span>
                               </span>
                             </td>
                             <td className="px-3 py-2.5 font-mono text-zinc-300">{s.port}</td>

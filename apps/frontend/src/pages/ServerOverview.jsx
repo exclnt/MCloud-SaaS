@@ -36,6 +36,19 @@ export default function ServerOverview() {
     navigate(`/checkout?renew=true&serverId=${serverInfo.id}&port=${serverInfo.port}&plan=${plan}&serverName=${encodeURIComponent(serverInfo.name)}`);
   };
 
+  const formatUptime = (seconds) => {
+    if (!seconds || seconds <= 0) return '0 Detik';
+    const days = Math.floor(seconds / (3600 * 24));
+    const hours = Math.floor((seconds % (3600 * 24)) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    
+    if (days > 0) return `${days}h ${hours}j ${minutes}m`;
+    if (hours > 0) return `${hours}j ${minutes}m ${secs}d`;
+    if (minutes > 0) return `${minutes}m ${secs}d`;
+    return `${secs} Detik`;
+  };
+
   useEffect(() => {
     let interval;
     if (status === 'running') {
@@ -52,10 +65,18 @@ export default function ServerOverview() {
       fetchStats();
       interval = setInterval(fetchStats, 5000);
     } else {
-      setStats({ cpu: 0, memory: 0, disk: 0 });
+      setStats({ cpu: 0, memory: 0, disk: 0, uptime: 0 });
     }
     return () => clearInterval(interval);
   }, [status, serverInfo.port]);
+
+  useEffect(() => {
+    if (status !== 'running') return;
+    const ticker = setInterval(() => {
+      setStats(prev => (typeof prev.uptime === 'number' && prev.uptime > 0 ? { ...prev, uptime: prev.uptime + 1 } : prev));
+    }, 1000);
+    return () => clearInterval(ticker);
+  }, [status]);
 
   const handleDelete = () => {
     setIsDeleteModalOpen(true);
@@ -166,11 +187,20 @@ export default function ServerOverview() {
           <div className="flex items-center gap-2 text-zinc-400 mb-4 text-xs font-bold uppercase tracking-wider">
             <Clock className="w-4 h-4 text-blue-400" /> Waktu Aktif
           </div>
-          <div className="text-2xl font-bold text-white mb-2">{status === 'running' ? 'Online' : 'Offline'}</div>
+          <div className="text-2xl font-bold text-white mb-2 font-mono tracking-tight">{status === 'running' ? (stats.uptime ? formatUptime(stats.uptime) : 'Memuat...') : 'Offline'}</div>
           <div className="w-full bg-zinc-900 rounded-full h-1.5 mb-2 overflow-hidden">
-            <div className={`h-1.5 rounded-full transition-all ${status === 'running' ? 'bg-blue-500 w-full' : 'w-0'}`}></div>
+            <div className={`h-1.5 rounded-full transition-all duration-500 ${status === 'running' ? 'bg-blue-500 w-full animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'w-0'}`}></div>
           </div>
-          <div className="text-xs text-zinc-500">{status === 'running' ? 'Server sedang berjalan' : 'Saat ini tidak berjalan'}</div>
+          <div className="text-xs text-zinc-500 flex items-center gap-1.5">
+            {status === 'running' ? (
+              <>
+                <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping inline-block"></span>
+                <span>Status: Online (Berjalan)</span>
+              </>
+            ) : (
+              'Saat ini tidak berjalan'
+            )}
+          </div>
         </div>
       </div>
 
@@ -272,7 +302,7 @@ export default function ServerOverview() {
               </div>
               <button 
                 onClick={handleRenew} 
-                className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-primary hover:bg-primary-hover text-black text-xs sm:text-sm font-bold rounded-md transition shadow-[0_0_10px_rgba(16,185,129,0.3)] hover:shadow-[0_0_20px_rgba(16,185,129,0.5)]"
+                className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-primary hover:bg-primary-hover text-white text-xs sm:text-sm font-bold rounded-md transition shadow-[0_0_10px_rgba(16,185,129,0.3)] hover:shadow-[0_0_20px_rgba(16,185,129,0.5)]"
               >
                 Perpanjang Sewa
               </button>

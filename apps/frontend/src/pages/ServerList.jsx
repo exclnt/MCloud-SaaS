@@ -199,7 +199,7 @@ export default function ServerList() {
           <p className="text-zinc-500 mb-6">Tampil di daftar secara otomatis saat server Anda online.</p>
           <button 
             onClick={() => navigate('/pricing')} 
-            className="bg-primary hover:bg-primary-hover text-black font-bold px-8 py-3 rounded-md transition"
+            className="bg-primary hover:bg-primary-hover text-white font-bold px-8 py-3 rounded-md transition"
           >
             Buat Server
           </button>

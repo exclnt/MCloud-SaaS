@@ -19,11 +19,11 @@ export default function DocsNavbar() {
       <div className="flex items-center gap-4 text-sm font-medium text-zinc-400">
         <div className="flex items-center gap-4">
           {token ? (
-            <Link to="/dashboard" className="bg-primary text-black px-4 py-2 rounded-lg font-bold hover:bg-primary-hover transition">Dasbor</Link>
+            <Link to="/dashboard" className="bg-primary text-white px-4 py-2 rounded-lg font-bold hover:bg-primary-hover transition">Dasbor</Link>
           ) : (
             <>
               <Link to="/login" className="hover:text-white transition font-bold hidden sm:block">Masuk</Link>
-              <Link to="/register" className="bg-primary text-black px-4 py-2 rounded-lg font-bold hover:bg-primary-hover transition">Daftar</Link>
+              <Link to="/register" className="bg-primary text-white px-4 py-2 rounded-lg font-bold hover:bg-primary-hover transition">Daftar</Link>
             </>
           )}
         </div>

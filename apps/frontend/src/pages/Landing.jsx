@@ -114,7 +114,7 @@ export default function Landing() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-hero-buttons">
               <button 
                 onClick={() => navigate('/register')}
-                className="px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base bg-primary hover:bg-primary-hover text-black font-bold rounded-md transition shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] flex items-center gap-2 w-full sm:w-auto justify-center"
+                className="px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base bg-primary hover:bg-primary-hover text-white font-bold rounded-md transition shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] flex items-center gap-2 w-full sm:w-auto justify-center"
               >
                 Mulai Sekarang <ArrowRight className="w-5 h-5" />
               </button>
@@ -180,7 +180,7 @@ export default function Landing() {
                 } p-8 rounded-xl flex flex-col reveal`} style={{ transitionDelay: `${i * 150}ms` }}>
                   {plan.recommended && (
                     <div className="absolute -top-4 inset-x-0 flex justify-center">
-                      <span className="bg-primary text-black text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                      <span className="bg-primary text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                         Terpopuler
                       </span>
                     </div>
@@ -236,7 +236,7 @@ export default function Landing() {
                       plan.available === false 
                         ? 'bg-zinc-900 border border-zinc-800 text-zinc-500 cursor-not-allowed' 
                         : plan.recommended 
-                          ? 'bg-primary hover:bg-primary-hover text-black' 
+                          ? 'bg-primary hover:bg-primary-hover text-white' 
                           : 'bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 text-white'
                     }`}
                   >
@@ -412,7 +412,7 @@ export default function Landing() {
             </p>
             <button 
               onClick={() => navigate('/register')}
-              className="px-6 py-3 sm:px-10 sm:py-5 text-sm sm:text-base w-full sm:w-auto justify-center bg-primary hover:bg-primary-hover text-black font-bold rounded-md transition shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] flex items-center gap-2 mx-auto pointer-events-auto"
+              className="px-6 py-3 sm:px-10 sm:py-5 text-sm sm:text-base w-full sm:w-auto justify-center bg-primary hover:bg-primary-hover text-white font-bold rounded-md transition shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] flex items-center gap-2 mx-auto pointer-events-auto"
             >
               Daftar Sekarang <ArrowRight className="w-5 h-5" />
             </button>

@@ -1,22 +1,11 @@
 import React from 'react';
-import { Server, Cpu, Database, Cloud, Shield, Activity } from 'lucide-react';
 
 export function DataLoading({ text = 'Memuat data...', inline = false, size = 'md' }) {
   if (inline) {
     return (
-      <div className="flex items-center justify-center gap-3 py-6 px-4 bg-zinc-900/40 border border-zinc-800/60 rounded-xl animate-fade-in w-full">
-        <div className="relative flex items-center justify-center w-6 h-6 shrink-0">
-          <div className="absolute inset-0 rounded-full border-2 border-primary/20 border-t-primary animate-spin"></div>
-          <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
-        </div>
-        <span className="text-sm font-medium text-zinc-300 tracking-wide flex items-center gap-1">
-          {text}
-          <span className="inline-flex gap-0.5 ml-1">
-            <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }}></span>
-            <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }}></span>
-            <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }}></span>
-          </span>
-        </span>
+      <div className="flex items-center justify-center gap-2.5 py-4 w-full animate-fade-in">
+        <div className="w-4 h-4 rounded-full border-2 border-zinc-800 border-t-primary animate-spin shrink-0"></div>
+        <span className="text-xs font-medium text-zinc-400 tracking-wide">{text}</span>
       </div>
     );
   }
@@ -25,48 +14,14 @@ export function DataLoading({ text = 'Memuat data...', inline = false, size = 'm
   const isLarge = size === 'lg';
 
   return (
-    <div className="w-full flex items-center justify-center py-12 px-4 animate-fade-in">
-      <div className={`relative flex flex-col items-center justify-center bg-[#101010]/90 backdrop-blur-xl border border-zinc-800/80 rounded-2xl p-8 sm:p-10 max-w-md w-full text-center shadow-[0_0_50px_rgba(16,185,129,0.08)] ${isSmall ? 'p-6' : ''}`}>
-        
-        {/* Ambient Glow Background */}
-        <div className="absolute -top-10 -left-10 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none animate-pulse"></div>
-        <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none animate-pulse" style={{ animationDelay: '1s' }}></div>
-
-        {/* 3D Core Animated Spinner */}
-        <div className={`relative flex items-center justify-center mb-6 ${isSmall ? 'w-14 h-14' : isLarge ? 'w-24 h-24' : 'w-20 h-20'}`}>
-          {/* Outer Rotating Ring */}
-          <div className="absolute inset-0 rounded-full border-2 border-dashed border-primary/40 animate-[spin_6s_linear_infinite]"></div>
-          
-          {/* Middle Fast Rotating Gradient Ring */}
-          <div className="absolute inset-1 rounded-full border-2 border-transparent border-t-primary border-r-emerald-400/80 animate-[spin_1.5s_cubic-bezier(0.68,-0.55,0.26,1.55)_infinite] shadow-[0_0_15px_rgba(16,185,129,0.3)]"></div>
-          
-          {/* Inner Reverse Rotating Ring */}
-          <div className="absolute inset-3 rounded-full border border-blue-400/30 border-b-blue-400 animate-[spin_2s_linear_infinite_reverse]"></div>
-
-          {/* Center Glowing Server Core Icon */}
-          <div className="relative z-10 w-10 h-10 bg-zinc-900/90 border border-primary/50 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.5)] transform transition hover:scale-105">
-            <Server className="w-5 h-5 text-primary animate-pulse" />
-          </div>
-        </div>
-
-        {/* Typography */}
-        <h3 className="text-base sm:text-lg font-bold text-white mb-1 tracking-wide">
-          Memuat Sistem
-        </h3>
-        <p className="text-xs sm:text-sm text-zinc-400 max-w-xs leading-relaxed flex items-center justify-center gap-1">
-          {text}
-          <span className="inline-flex gap-0.5 ml-1">
-            <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }}></span>
-            <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }}></span>
-            <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }}></span>
-          </span>
-        </p>
-
-        {/* Decorative Status Bar */}
-        <div className="w-32 h-1 bg-zinc-800/80 rounded-full mt-6 overflow-hidden relative">
-          <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-primary to-transparent animate-[shimmer_1.5s_infinite]"></div>
-        </div>
+    <div className="w-full flex flex-col items-center justify-center py-12 px-4 animate-fade-in gap-3.5">
+      <div className={`relative flex items-center justify-center ${isSmall ? 'w-8 h-8' : isLarge ? 'w-12 h-12' : 'w-10 h-10'}`}>
+        <div className="absolute inset-0 rounded-full border-2 border-zinc-800/80 border-t-primary border-r-primary/40 animate-spin shadow-[0_0_15px_rgba(16,185,129,0.2)]"></div>
+        <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
       </div>
+      <span className="text-sm font-medium text-zinc-400 tracking-wide">
+        {text}
+      </span>
     </div>
   );
 }

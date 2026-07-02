@@ -94,11 +94,11 @@ export default function Navbar() {
           <>
             <div className="hidden sm:flex items-center gap-4">
               {token ? (
-                <Link to="/dashboard" className="bg-primary text-black px-4 py-2 rounded-lg font-bold hover:bg-primary-hover transition">Dasbor</Link>
+                <Link to="/dashboard" className="bg-primary text-white px-4 py-2 rounded-lg font-bold hover:bg-primary-hover transition">Dasbor</Link>
               ) : (
                 <>
                   <Link to="/login" className="hover:text-white transition font-bold">Masuk</Link>
-                  <Link to="/register" className="bg-primary text-black px-4 py-2 rounded-lg font-bold hover:bg-primary-hover transition">Daftar</Link>
+                  <Link to="/register" className="bg-primary text-white px-4 py-2 rounded-lg font-bold hover:bg-primary-hover transition">Daftar</Link>
                 </>
               )}
             </div>
@@ -232,7 +232,7 @@ export default function Navbar() {
           <>
             <div className="hidden sm:flex items-center gap-4">
               <Link to="/login" className="hover:text-white transition font-bold">Masuk</Link>
-              <Link to="/register" className="bg-primary text-black px-4 py-2 rounded-lg font-bold hover:bg-primary-hover transition">Daftar</Link>
+              <Link to="/register" className="bg-primary text-white px-4 py-2 rounded-lg font-bold hover:bg-primary-hover transition">Daftar</Link>
             </div>
             <button 
               className="sm:hidden flex items-center justify-center w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition"
@@ -256,11 +256,11 @@ export default function Navbar() {
               
               <div className="pt-2 border-t border-zinc-800/60">
                 {token ? (
-                  <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="w-full block p-2 sm:p-3 bg-primary text-black rounded-lg text-sm font-bold text-center hover:bg-primary-hover transition">Dasbor</Link>
+                  <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="w-full block p-2 sm:p-3 bg-primary text-white rounded-lg text-sm font-bold text-center hover:bg-primary-hover transition">Dasbor</Link>
                 ) : (
                   <div className="flex flex-col gap-2 sm:gap-3">
                     <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="w-full p-2 sm:p-3 bg-zinc-900 border border-zinc-800 text-white rounded-lg text-sm font-bold text-center hover:bg-zinc-800 transition">Masuk</Link>
-                    <Link to="/register" onClick={() => setIsMobileMenuOpen(false)} className="w-full p-2 sm:p-3 bg-primary text-black rounded-lg text-sm font-bold text-center hover:bg-primary-hover transition">Daftar</Link>
+                    <Link to="/register" onClick={() => setIsMobileMenuOpen(false)} className="w-full p-2 sm:p-3 bg-primary text-white rounded-lg text-sm font-bold text-center hover:bg-primary-hover transition">Daftar</Link>
                   </div>
                 )}
               </div>
@@ -333,7 +333,7 @@ export default function Navbar() {
           ) : (
             <div className="flex flex-col gap-2 sm:gap-3">
               <Link to="/login" className="w-full p-2 sm:p-3 bg-zinc-900 border border-zinc-800 text-white rounded-lg text-sm font-bold text-center hover:bg-zinc-800 transition">Masuk</Link>
-              <Link to="/register" className="w-full p-2 sm:p-3 bg-primary text-black rounded-lg text-sm font-bold text-center hover:bg-primary-hover transition">Daftar</Link>
+              <Link to="/register" className="w-full p-2 sm:p-3 bg-primary text-white rounded-lg text-sm font-bold text-center hover:bg-primary-hover transition">Daftar</Link>
             </div>
           )}
         </div>

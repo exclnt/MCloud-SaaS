@@ -33,6 +33,19 @@ const getPlanName = (memoryLimit) => {
   }
 };
 
+const formatUptime = (seconds) => {
+  if (!seconds || seconds <= 0) return '0 Detik';
+  const days = Math.floor(seconds / (3600 * 24));
+  const hours = Math.floor((seconds % (3600 * 24)) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  
+  if (days > 0) return `${days}h ${hours}j ${minutes}m`;
+  if (hours > 0) return `${hours}j ${minutes}m ${secs}d`;
+  if (minutes > 0) return `${minutes}m ${secs}d`;
+  return `${secs} Detik`;
+};
+
 export default function Dashboard() {
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {}, isDanger: false, confirmText: 'Konfirmasi' });
   const [servers, setServers] = useState([]);
@@ -67,7 +80,13 @@ export default function Dashboard() {
     }
     setRole(localStorage.getItem('role') || '');
     const interval = setInterval(fetchServers, 5000);
-    return () => clearInterval(interval);
+    const ticker = setInterval(() => {
+      setServers(prev => prev.map(s => s.status === 'running' && typeof s.uptime === 'number' && s.uptime > 0 ? { ...s, uptime: s.uptime + 1 } : s));
+    }, 1000);
+    return () => {
+      clearInterval(interval);
+      clearInterval(ticker);
+    };
     // eslint-disable-next-line
   }, []);
 
@@ -149,7 +168,7 @@ export default function Dashboard() {
             )}
             <button 
               onClick={() => navigate('/pricing')}
-              className="flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 text-sm sm:text-base bg-primary hover:bg-primary-hover text-black font-bold rounded-md transition shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)]"
+              className="flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 text-sm sm:text-base bg-primary hover:bg-primary-hover text-white font-bold rounded-md transition shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)]"
             >
               <Plus className="w-5 h-5" /> Buat Server
             </button>
@@ -206,8 +225,9 @@ export default function Dashboard() {
                 </div>
 
                 <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto pl-2 sm:pl-0">
-                  <div className={`text-xs font-bold px-2 py-1 rounded-md border ${server.status === 'running' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-red-950/30 text-red-500 border-red-900/50'}`}>
-                    {server.status}
+                  <div className={`text-xs font-bold px-2.5 py-1 rounded-md border flex items-center gap-1.5 ${server.status === 'running' ? 'bg-primary/10 text-primary border-primary/20 font-mono shadow-[0_0_10px_rgba(16,185,129,0.2)]' : 'bg-red-950/30 text-red-500 border-red-900/50 uppercase'}`}>
+                    {server.status === 'running' && <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>}
+                    <span>{server.status === 'running' ? `Aktif: ${formatUptime(server.uptime || 0)}` : server.status}</span>
                   </div>
                   
                   <div className="flex items-center gap-1">
