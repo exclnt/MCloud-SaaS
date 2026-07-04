@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" width="100%" height="100%" style="background: #0b0f19; font-family: 'Inter', system-ui, sans-serif;">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f19" />
+      <stop offset="100%" stop-color="#131b2e" />
+    </linearGradient>
+    <linearGradient id="box-blue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a8a" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.4" />
+    </linearGradient>
+    <linearGradient id="box-purple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#581c87" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0.4" />
+    </linearGradient>
+    <linearGradient id="box-green" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#064e3b" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0.4" />
+    </linearGradient>
+    <linearGradient id="box-amber" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#78350f" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.4" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="600" rx="16" fill="url(#bg-grad)" stroke="#1e293b" stroke-width="2" />
+
+  <!-- Title -->
+  <text x="500" y="45" font-size="22" font-weight="800" fill="#f8fafc" text-anchor="middle" letter-spacing="1">MCLOUD SAAS — MICROSERVICES ARCHITECTURE</text>
+  <text x="500" y="68" font-size="13" font-weight="500" fill="#94a3b8" text-anchor="middle">Production-Ready Minecraft Bedrock Cloud Platform with Docker &amp; PM2 Cluster</text>
+
+  <!-- External Client Zone -->
+  <g transform="translate(50, 110)">
+    <rect width="180" height="80" rx="12" fill="#0f172a" stroke="#38bdf8" stroke-width="2" filter="url(#glow)" />
+    <text x="90" y="38" font-size="15" font-weight="700" fill="#38bdf8" text-anchor="middle">Client / Gamer</text>
+    <text x="90" y="58" font-size="12" fill="#cbd5e1" text-anchor="middle">HTTPS / WSS / TCP / UDP</text>
+  </g>
+
+  <!-- Nginx Reverse Proxy -->
+  <g transform="translate(300, 110)">
+    <rect width="200" height="80" rx="12" fill="url(#box-blue)" stroke="#60a5fa" stroke-width="2" filter="url(#glow)" />
+    <text x="100" y="38" font-size="16" font-weight="700" fill="#ffffff" text-anchor="middle">Nginx Proxy + SSL</text>
+    <text x="100" y="58" font-size="12" fill="#e2e8f0" text-anchor="middle">Port 80/443 (Let's Encrypt)</text>
+  </g>
+
+  <!-- Frontend Vite Build -->
+  <g transform="translate(580, 110)">
+    <rect width="180" height="80" rx="12" fill="#0f172a" stroke="#a78bfa" stroke-width="2" />
+    <text x="90" y="38" font-size="15" font-weight="700" fill="#a78bfa" text-anchor="middle">React 19 Frontend</text>
+    <text x="90" y="58" font-size="12" fill="#cbd5e1" text-anchor="middle">Vite SPA /dist</text>
+  </g>
+
+  <!-- API Gateway -->
+  <g transform="translate(300, 260)">
+    <rect width="200" height="80" rx="12" fill="url(#box-purple)" stroke="#c084fc" stroke-width="2" filter="url(#glow)" />
+    <text x="100" y="38" font-size="16" font-weight="700" fill="#ffffff" text-anchor="middle">API Gateway</text>
+    <text x="100" y="58" font-size="12" fill="#e2e8f0" text-anchor="middle">Port 3000 (PM2 Managed)</text>
+  </g>
+
+  <!-- Microservices Layer -->
+  <g transform="translate(80, 420)">
+    <rect width="170" height="80" rx="12" fill="#0f172a" stroke="#f43f5e" stroke-width="2" />
+    <text x="85" y="38" font-size="15" font-weight="700" fill="#f43f5e" text-anchor="middle">Auth Service</text>
+    <text x="85" y="58" font-size="12" fill="#cbd5e1" text-anchor="middle">Port 3001 • JWT / Drizzle</text>
+  </g>
+
+  <g transform="translate(315, 420)">
+    <rect width="170" height="80" rx="12" fill="url(#box-amber)" stroke="#fbbf24" stroke-width="2" filter="url(#glow)" />
+    <text x="85" y="38" font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle">Payment Service</text>
+    <text x="85" y="58" font-size="12" fill="#fef3c7" text-anchor="middle">Port 3002 • Midtrans Snap</text>
+  </g>
+
+  <g transform="translate(550, 420)">
+    <rect width="180" height="80" rx="12" fill="url(#box-green)" stroke="#34d399" stroke-width="2" filter="url(#glow)" />
+    <text x="90" y="38" font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle">Provisioning Service</text>
+    <text x="90" y="58" font-size="12" fill="#d1fae5" text-anchor="middle">Port 3003 • Docker Socket</text>
+  </g>
+
+  <!-- External Docker / Midtrans -->
+  <g transform="translate(800, 420)">
+    <rect width="150" height="80" rx="12" fill="#0f172a" stroke="#38bdf8" stroke-width="2" />
+    <text x="75" y="38" font-size="14" font-weight="700" fill="#38bdf8" text-anchor="middle">Docker Engine</text>
+    <text x="75" y="58" font-size="11" fill="#cbd5e1" text-anchor="middle">Bedrock Containers</text>
+  </g>
+
+  <g transform="translate(325, 540)">
+    <rect width="150" height="45" rx="8" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.5" />
+    <text x="75" y="27" font-size="12" font-weight="600" fill="#818cf8" text-anchor="middle">Midtrans Production</text>
+  </g>
+
+  <!-- Connecting Lines -->
+  <!-- Client to Nginx -->
+  <line x1="230" y1="150" x2="300" y2="150" stroke="#38bdf8" stroke-width="3" stroke-dasharray="6,4" />
+  <polygon points="295,145 305,150 295,155" fill="#38bdf8" />
+
+  <!-- Nginx to Frontend -->
+  <line x1="500" y1="150" x2="580" y2="150" stroke="#a78bfa" stroke-width="2" />
+  <polygon points="575,145 585,150 575,155" fill="#a78bfa" />
+
+  <!-- Nginx to API Gateway -->
+  <line x1="400" y1="190" x2="400" y2="260" stroke="#60a5fa" stroke-width="3" />
+  <polygon points="395,255 400,265 405,255" fill="#60a5fa" />
+
+  <!-- Gateway to Auth -->
+  <path d="M 330 340 L 165 420" stroke="#f43f5e" stroke-width="2" fill="none" />
+  <polygon points="165,410 160,422 173,416" fill="#f43f5e" />
+
+  <!-- Gateway to Payment -->
+  <line x1="400" y1="340" x2="400" y2="420" stroke="#fbbf24" stroke-width="2" />
+  <polygon points="395,415 400,425 405,415" fill="#fbbf24" />
+
+  <!-- Gateway to Provisioning -->
+  <path d="M 470 340 L 640 420" stroke="#34d399" stroke-width="2" fill="none" />
+  <polygon points="632,416 645,422 640,410" fill="#34d399" />
+
+  <!-- Payment to Midtrans -->
+  <line x1="400" y1="500" x2="400" y2="540" stroke="#818cf8" stroke-width="2" stroke-dasharray="4,4" />
+
+  <!-- Provisioning to Docker -->
+  <line x1="730" y1="460" x2="800" y2="460" stroke="#38bdf8" stroke-width="3" />
+  <polygon points="795,455 805,460 795,465" fill="#38bdf8" />
+
+  <!-- Footer note -->
+  <text x="500" y="585" font-size="11" fill="#64748b" text-anchor="middle">All data persisted cleanly to SQLite via Drizzle ORM • Ultra-fast boot &amp; automated PM2 self-healing cluster</text>
+</svg>
