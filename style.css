@@ -417,6 +417,60 @@ body {
   font-weight: 600 !important;
 }
 
+/* Release Badge Styles */
+.release-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.release-feat {
+  background-color: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+}
+
+.release-docs {
+  background-color: rgba(148, 163, 184, 0.1);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #94a3b8;
+}
+
+.release-init {
+  background-color: rgba(100, 116, 139, 0.1);
+  border: 1px solid rgba(100, 116, 139, 0.3);
+  color: #64748b;
+}
+
+.release-link {
+  color: var(--accent-blue);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+}
+
+.release-link:hover {
+  opacity: 0.75;
+}
+
+/* Internal anchor links */
+.doc-section a {
+  color: var(--accent-blue);
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.doc-section a:hover {
+  opacity: 0.75;
+}
+
 /* Responsive Styles */
 @media (max-width: 768px) {
   .nav-links {
