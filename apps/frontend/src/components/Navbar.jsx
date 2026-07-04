@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Wallet, ChevronDown, Globe, Server as ServerIcon, Settings, LogOut, User, Menu, X, MessageSquare } from 'lucide-react';
+import { Wallet, ChevronDown, Globe, Server as ServerIcon, Settings, LogOut, User, Menu, X, MessageSquare, HelpCircle, History } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function Navbar() {
@@ -13,6 +13,8 @@ export default function Navbar() {
   const isLanding = location.pathname === '/';
   
   const [currentUser, setCurrentUser] = useState({ username: 'Pengguna', email: '' });
+  const [maintenanceSettings, setMaintenanceSettings] = useState(null);
+  const isAdmin = localStorage.getItem('role') === 'admin';
 
   const serversRef = useRef(null);
   const profileRef = useRef(null);
@@ -39,6 +41,17 @@ export default function Navbar() {
       } catch (e) {}
     }
 
+    const checkAdminMaintenance = () => {
+      if (localStorage.getItem('role') === 'admin') {
+        api.getSettings().then(res => setMaintenanceSettings(res)).catch(() => {});
+      } else {
+        setMaintenanceSettings(null);
+      }
+    };
+    checkAdminMaintenance();
+    const maintInterval = setInterval(checkAdminMaintenance, 3000);
+    window.addEventListener('settingsUpdated', checkAdminMaintenance);
+
     const handleClickOutside = (event) => {
       if (serversRef.current && !serversRef.current.contains(event.target)) {
         setIsServersOpen(false);
@@ -51,7 +64,11 @@ export default function Navbar() {
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      clearInterval(maintInterval);
+      window.removeEventListener('settingsUpdated', checkAdminMaintenance);
+    };
   }, []);
 
   const navLinkClass = (path) => {
@@ -65,17 +82,36 @@ export default function Navbar() {
   const token = localStorage.getItem('token');
 
   return (
-    <header className="h-16 border-b border-zinc-800/60 bg-[#0a0a0a]/80 backdrop-blur-md flex items-center justify-between px-6 shrink-0 z-50 sticky top-0 animate-header-drop">
+    <>
+      {isAdmin && maintenanceSettings?.maintenance_mode === 'true' && (
+        <div className="bg-gradient-to-r from-amber-500/90 to-amber-600/90 text-black px-4 py-1.5 text-xs sm:text-sm font-bold flex items-center justify-between shadow-md z-50 animate-pulse">
+          <div className="flex items-center gap-2 overflow-hidden truncate">
+            <span className="w-2 h-2 rounded-full bg-black animate-ping shrink-0"></span>
+            <span className="truncate">⚠️ Mode Pemeliharaan Sedang Aktif! Akses pengguna publik saat ini ditutup.</span>
+          </div>
+          <Link to="/admin/settings" className="bg-black/20 hover:bg-black/30 px-2.5 py-0.5 rounded text-xs transition shrink-0 ml-2 font-black">
+            Kelola
+          </Link>
+        </div>
+      )}
+      <header className="h-16 border-b border-zinc-800/60 bg-[#0a0a0a]/80 backdrop-blur-md flex items-center justify-between px-6 shrink-0 z-50 sticky top-0 animate-header-drop">
       <div className="flex items-center gap-8">
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
           <img src="/creep.png" alt="MCloud" className="w-8 h-8 object-contain" />
           <span className="font-bold text-white tracking-wide">MCloud</span>
         </div>
-        {!isLanding && token && (
-          <nav className="hidden md:flex items-center gap-2 text-sm font-medium">
-            <Link to="/dashboard" className={navLinkClass('/dashboard')}>Beranda</Link>
-            <Link to="/pricing" className={navLinkClass('/pricing')}>Buat Server</Link>
-            <Link to="/server-list" className={navLinkClass('/server-list')}>Daftar Server</Link>
+        {!isLanding && (
+          <nav className="hidden md:flex items-center gap-4 text-sm font-medium">
+            {token && (
+              <>
+                <Link to="/dashboard" className={navLinkClass('/dashboard')}>Beranda</Link>
+                <Link to="/pricing" className={navLinkClass('/pricing')}>Buat Server</Link>
+                <Link to="/server-list" className={navLinkClass('/server-list')}>Daftar Server</Link>
+              </>
+            )}
+            <Link to="/faq" className={navLinkClass('/faq')}>FAQ</Link>
+            <Link to="/changelog" className={navLinkClass('/changelog')}>Changelog</Link>
+            <Link to="/docs" className={navLinkClass('/docs')}>Docs</Link>
           </nav>
         )}
       </div>
@@ -84,7 +120,8 @@ export default function Navbar() {
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-400 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           <a href="#home" className="hover:text-white transition">Beranda</a>
           <a href="#pricing" className="hover:text-white transition">Harga</a>
-          <a href="#faq" className="hover:text-white transition">FAQ</a>
+          <Link to="/faq" className="hover:text-white transition">FAQ</Link>
+          <Link to="/changelog" className="hover:text-white transition">Changelog</Link>
           <Link to="/docs" className="hover:text-white transition">Docs</Link>
         </nav>
       )}
@@ -260,7 +297,8 @@ export default function Navbar() {
             <div className="flex flex-col gap-4 px-2">
               <a href="#home" onClick={() => setIsMobileMenuOpen(false)} className="py-2 text-zinc-300 hover:text-white text-sm font-medium transition">Beranda</a>
               <a href="#pricing" onClick={() => setIsMobileMenuOpen(false)} className="py-2 text-zinc-300 hover:text-white text-sm font-medium transition">Harga</a>
-              <a href="#faq" onClick={() => setIsMobileMenuOpen(false)} className="py-2 text-zinc-300 hover:text-white text-sm font-medium transition">FAQ</a>
+              <Link to="/faq" onClick={() => setIsMobileMenuOpen(false)} className="py-2 text-zinc-300 hover:text-white text-sm font-medium transition">FAQ</Link>
+              <Link to="/changelog" onClick={() => setIsMobileMenuOpen(false)} className="py-2 text-zinc-300 hover:text-white text-sm font-medium transition">Changelog</Link>
               <Link to="/docs" onClick={() => setIsMobileMenuOpen(false)} className="py-2 text-zinc-300 hover:text-white text-sm font-medium transition">Docs</Link>
               
               <div className="pt-2 border-t border-zinc-800/60">
@@ -305,6 +343,12 @@ export default function Navbar() {
                 <button onClick={() => { navigate('/tickets'); setIsMobileMenuOpen(false); }} className="p-2 sm:p-3 bg-zinc-900/50 rounded-lg border border-zinc-800 text-xs sm:text-sm font-medium text-white hover:bg-zinc-800 transition col-span-2 flex items-center justify-center gap-2">
                   <MessageSquare className="w-4 h-4 text-sky-400" /> Pusat Tiket Bantuan
                 </button>
+                <button onClick={() => { navigate('/faq'); setIsMobileMenuOpen(false); }} className="p-2 sm:p-3 bg-zinc-900/50 rounded-lg border border-zinc-800 text-xs sm:text-sm font-medium text-white hover:bg-zinc-800 transition flex items-center justify-center gap-2">
+                  <HelpCircle className="w-4 h-4 text-amber-400" /> FAQ
+                </button>
+                <button onClick={() => { navigate('/changelog'); setIsMobileMenuOpen(false); }} className="p-2 sm:p-3 bg-zinc-900/50 rounded-lg border border-zinc-800 text-xs sm:text-sm font-medium text-white hover:bg-zinc-800 transition flex items-center justify-center gap-2">
+                  <History className="w-4 h-4 text-purple-400" /> Changelog
+                </button>
               </div>
 
               <div className="pt-2 border-t border-zinc-800/60">
@@ -344,6 +388,11 @@ export default function Navbar() {
             </>
           ) : (
             <div className="flex flex-col gap-2 sm:gap-3">
+              <div className="grid grid-cols-3 gap-2 pb-2 border-b border-zinc-800/60">
+                <Link to="/faq" onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-zinc-900/50 border border-zinc-800 text-zinc-300 rounded-lg text-xs font-semibold text-center hover:bg-zinc-800 transition">FAQ</Link>
+                <Link to="/changelog" onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-zinc-900/50 border border-zinc-800 text-zinc-300 rounded-lg text-xs font-semibold text-center hover:bg-zinc-800 transition">Changelog</Link>
+                <Link to="/docs" onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-zinc-900/50 border border-zinc-800 text-zinc-300 rounded-lg text-xs font-semibold text-center hover:bg-zinc-800 transition">Docs</Link>
+              </div>
               <Link to="/login" className="w-full p-2 sm:p-3 bg-zinc-900 border border-zinc-800 text-white rounded-lg text-sm font-bold text-center hover:bg-zinc-800 transition">Masuk</Link>
               <Link to="/register" className="w-full p-2 sm:p-3 bg-primary text-white rounded-lg text-sm font-bold text-center hover:bg-primary-hover transition">Daftar</Link>
             </div>
@@ -351,5 +400,6 @@ export default function Navbar() {
         </div>
       )}
     </header>
+    </>
   );
 }

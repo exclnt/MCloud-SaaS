@@ -2,13 +2,15 @@ import { useState, useEffect, useRef } from 'react';
 import { 
   MessageSquare, Plus, Loader2, Send, Paperclip, X, Eye, 
   CheckCircle2, AlertCircle, Clock, Shield, User, HelpCircle, 
-  Server, ArrowLeft, RefreshCw, Image as ImageIcon, Check
+  Server, ArrowLeft, RefreshCw, Image as ImageIcon, Check,
+  Search, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { api } from '../services/api';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { SkeletonTable } from '../components/DataLoading';
+import CustomSelect from '../components/CustomSelect';
 
 export default function Tickets() {
   const [tickets, setTickets] = useState([]);
@@ -17,6 +19,12 @@ export default function Tickets() {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [messages, setMessages] = useState([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
+
+  // Pagination & Search States
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
 
   // Modal Buat Tiket
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -39,8 +47,33 @@ export default function Tickets() {
 
   // Fullscreen Image Preview Modal
   const [lightboxImg, setLightboxImg] = useState(null);
+  const [isClosing, setIsClosing] = useState(false);
 
   const chatEndRef = useRef(null);
+
+  useEffect(() => {
+    if (selectedTicket) {
+      setIsClosing(false);
+    }
+  }, [selectedTicket]);
+
+  const handleCloseChat = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setSelectedTicket(null);
+      setIsClosing(false);
+    }, 280);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && selectedTicket && !isClosing) {
+        handleCloseChat();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedTicket, isClosing]);
 
   const fetchTickets = async () => {
     try {
@@ -67,6 +100,39 @@ export default function Tickets() {
     fetchServers();
   }, []);
 
+  // Realtime background sync for user tickets list
+  useEffect(() => {
+    const listPoll = setInterval(() => {
+      api.getTickets().then(res => {
+        if (res) setTickets(res);
+      }).catch(() => {});
+    }, 5000);
+    return () => clearInterval(listPoll);
+  }, []);
+
+  // Realtime polling for active selected ticket chat
+  useEffect(() => {
+    if (!selectedTicket || !selectedTicket.id || isClosing) return;
+    const chatPoll = setInterval(async () => {
+      try {
+        const res = await api.getTicketById(selectedTicket.id);
+        if (res && res.messages) {
+          setMessages(prev => {
+            if (res.messages.length !== prev.length || JSON.stringify(res.messages) !== JSON.stringify(prev)) {
+              return res.messages;
+            }
+            return prev;
+          });
+        }
+        if (res && res.ticket) {
+          setSelectedTicket(prev => prev && prev.id === res.ticket.id ? { ...prev, ...res.ticket } : prev);
+          setTickets(prev => prev.map(t => t.id === res.ticket.id ? { ...t, ...res.ticket } : t));
+        }
+      } catch (err) {}
+    }, 2500);
+    return () => clearInterval(chatPoll);
+  }, [selectedTicket?.id, isClosing]);
+
   useEffect(() => {
     if (selectedTicket && messages.length > 0) {
       chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -75,6 +141,7 @@ export default function Tickets() {
 
   const handleSelectTicket = async (ticket) => {
     setSelectedTicket(ticket);
+    setIsClosing(false);
     setLoadingMessages(true);
     try {
       const res = await api.getTicketById(ticket.id);
@@ -188,6 +255,28 @@ export default function Tickets() {
     }
   };
 
+  const getPriorityBadge = (prio) => {
+    switch (prio) {
+      case 'high': return <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20">Tinggi</span>;
+      case 'medium': return <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">Sedang</span>;
+      default: return <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">Rendah</span>;
+    }
+  };
+
+  const filteredTickets = tickets.filter(t => {
+    const matchStatus = statusFilter === 'all' || t.status === statusFilter;
+    if (!matchStatus) return false;
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (t.subject || '').toLowerCase().includes(q) ||
+           (t.category || '').toLowerCase().includes(q) ||
+           (t.serverName || '').toLowerCase().includes(q) ||
+           String(t.id).includes(q);
+  });
+
+  const totalPages = Math.ceil(filteredTickets.length / perPage) || 1;
+  const paginatedTickets = filteredTickets.slice((currentPage - 1) * perPage, currentPage * perPage);
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-zinc-100 flex flex-col font-sans">
       <Navbar />
@@ -210,29 +299,261 @@ export default function Tickets() {
           </button>
         </div>
 
-        {selectedTicket ? (
-          /* Tampilan Detail Tiket & Chat */
-          <div className="bg-[#101010] border border-zinc-800/80 rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[700px] animate-fade-in">
-            {/* Header Ticket */}
-            <div className="p-5 bg-[#141418] border-b border-zinc-800/80 flex flex-wrap items-center justify-between gap-4">
+        {/* Daftar Tiket */}
+        <div className="bg-[#101010] border border-zinc-800/80 rounded-2xl overflow-hidden shadow-xl">
+            <div className="p-6 border-b border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setSelectedTicket(null)}
-                  className="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition"
-                  title="Kembali ke daftar tiket"
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-primary" /> Daftar Tiket Anda
+                </h2>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-zinc-800 text-zinc-300">
+                  {filteredTickets.length}
+                </span>
+              </div>
+              
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative flex-1 sm:w-64">
+                  <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Cari ID, judul, server..."
+                    value={searchQuery}
+                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-8 py-2 text-xs text-white placeholder-zinc-500 outline-none focus:border-primary transition-colors"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => { setSearchQuery(''); setCurrentPage(1); }}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <button 
+                  onClick={fetchTickets}
+                  className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition border border-zinc-800"
+                  title="Refresh Daftar"
                 >
-                  <ArrowLeft className="w-5 h-5" />
+                  <RefreshCw className="w-4 h-4" />
                 </button>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs text-zinc-500 font-bold">#{selectedTicket.id}</span>
-                    <h2 className="text-lg font-bold text-white tracking-wide">{selectedTicket.subject}</h2>
+              </div>
+            </div>
+
+            {/* Status Filter Tabs */}
+            <div className="px-6 py-3 bg-[#141418]/60 border-b border-zinc-800/60 flex flex-wrap items-center gap-2">
+              {[
+                { id: 'all', label: 'Semua' },
+                { id: 'open', label: 'Menunggu Admin' },
+                { id: 'in_progress', label: 'Diproses' },
+                { id: 'resolved', label: 'Selesai' },
+                { id: 'closed', label: 'Ditutup' }
+              ].map(filter => (
+                <button
+                  key={filter.id}
+                  onClick={() => { setStatusFilter(filter.id); setCurrentPage(1); }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                    statusFilter === filter.id 
+                      ? 'bg-primary text-white shadow-md shadow-primary/20' 
+                      : 'bg-zinc-900/80 border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800'
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+
+            {loading ? (
+              <div className="p-6">
+                <SkeletonTable rows={4} columns={5} className="border border-zinc-800/80 rounded-xl" />
+              </div>
+            ) : tickets.length === 0 ? (
+              <div className="text-center py-16 px-4 space-y-3">
+                <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-zinc-500">
+                  <HelpCircle className="w-8 h-8" />
+                </div>
+                <h3 className="font-bold text-white text-base">Belum Ada Tiket Bantuan</h3>
+                <p className="text-sm text-zinc-400 max-w-sm mx-auto">
+                  Jika Anda mengalami masalah teknis server atau pembayaran, silakan buat tiket baru agar Admin dapat membantu.
+                </p>
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white font-bold text-sm rounded-lg transition"
+                >
+                  <Plus className="w-4 h-4" /> Buat Tiket Sekarang
+                </button>
+              </div>
+            ) : filteredTickets.length === 0 ? (
+              <div className="text-center py-16 px-4 space-y-2">
+                <div className="w-12 h-12 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-zinc-500">
+                  <Search className="w-6 h-6" />
+                </div>
+                <h3 className="font-bold text-white text-base">Tiket Tidak Ditemukan</h3>
+                <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+                  Tidak ada tiket yang cocok dengan filter atau kata kunci pencarian Anda.
+                </p>
+                <button
+                  onClick={() => { setSearchQuery(''); setStatusFilter('all'); setCurrentPage(1); }}
+                  className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold rounded-lg transition"
+                >
+                  Reset Filter
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-zinc-800 bg-zinc-900/50 text-xs text-zinc-400 uppercase font-bold tracking-wider">
+                        <th className="py-3.5 px-6">ID / Judul Kendala</th>
+                        <th className="py-3.5 px-6">Kategori</th>
+                        <th className="py-3.5 px-6">Server Terkait</th>
+                        <th className="py-3.5 px-6">Pembaruan Terakhir</th>
+                        <th className="py-3.5 px-6">Status</th>
+                        <th className="py-3.5 px-6 text-right">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-800/60 text-sm">
+                      {paginatedTickets.map((t) => (
+                        <tr 
+                          key={t.id} 
+                          onClick={() => handleSelectTicket(t)}
+                          className="hover:bg-zinc-900/50 transition-colors cursor-pointer group"
+                        >
+                          <td className="py-4 px-6">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs text-zinc-500 font-bold">#{t.id}</span>
+                              <span className="font-bold text-white group-hover:text-primary transition-colors">{t.subject}</span>
+                              {t.attachment && <ImageIcon className="w-3.5 h-3.5 text-zinc-500 shrink-0" title="Ada lampiran gambar" />}
+                            </div>
+                          </td>
+                          <td className="py-4 px-6 text-zinc-300 font-medium">
+                            {getCategoryLabel(t.category)}
+                          </td>
+                          <td className="py-4 px-6">
+                            {t.serverName ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-xs font-semibold text-zinc-300">
+                                <Server className="w-3 h-3 text-primary" /> {t.serverName}
+                              </span>
+                            ) : (
+                              <span className="text-zinc-500 text-xs">-</span>
+                            )}
+                          </td>
+                          <td className="py-4 px-6 text-xs text-zinc-400">
+                            {t.updatedAt ? new Date(t.updatedAt).toLocaleString('id-ID') : '-'}
+                          </td>
+                          <td className="py-4 px-6">
+                            {getStatusBadge(t.status)}
+                          </td>
+                          <td className="py-4 px-6 text-right">
+                            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-zinc-800 group-hover:bg-primary group-hover:text-white text-zinc-300 text-xs font-bold transition">
+                              Buka Chat <Eye className="w-3.5 h-3.5" />
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination Footer */}
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 p-5 border-t border-zinc-800/80 text-xs text-zinc-400 bg-[#121216]/50">
+                  <div className="flex items-center gap-3">
+                    <span>
+                      Menampilkan <strong className="text-white">{(currentPage - 1) * perPage + 1}</strong> - <strong className="text-white">{Math.min(currentPage * perPage, filteredTickets.length)}</strong> dari <strong className="text-white">{filteredTickets.length}</strong> tiket
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-zinc-500">Per halaman:</span>
+                      <CustomSelect 
+                        size="sm"
+                        className="!w-20"
+                        value={perPage} 
+                        onChange={(e) => {
+                          setPerPage(Number(e.target.value));
+                          setCurrentPage(1);
+                        }}
+                      >
+                        <option value={5}>5</option>
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                      </CustomSelect>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-zinc-400">
+
+                  {totalPages >= 1 && (
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                        className="p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                        title="Halaman Sebelumnya"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                      
+                      <div className="flex items-center gap-1 px-2.5 py-1 font-medium text-zinc-300 bg-zinc-900/60 rounded-lg border border-zinc-800">
+                        <span>Halaman</span>
+                        <strong className="text-white">{currentPage}</strong>
+                        <span>dari</span>
+                        <strong className="text-white">{totalPages}</strong>
+                      </div>
+
+                      <button
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                        className="p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                        title="Halaman Berikutnya"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+      </main>
+
+      {/* Slide-over Sidebar untuk Obrolan Tiket (Muncul dari Kanan persis Admin) */}
+      {selectedTicket && (
+        <>
+          {/* Backdrop Blur */}
+          <div
+            className={`fixed inset-0 bg-black/75 backdrop-blur-md z-[100] transition-opacity duration-300 ${
+              isClosing ? 'opacity-0 animate-out fade-out' : 'animate-in fade-in'
+            }`}
+            onClick={handleCloseChat}
+          />
+
+          {/* Sidebar Drawer dari Kanan */}
+          <div
+            className={`fixed inset-y-0 right-0 z-[101] w-full sm:w-[550px] md:w-[650px] lg:w-[750px] bg-[#0c0c10] border-l border-zinc-800 shadow-[0_0_50px_rgba(0,0,0,0.9)] flex flex-col ${
+              isClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'
+            }`}
+          >
+            {/* Header Sidebar */}
+            <div className="p-5 bg-[#121218] border-b border-zinc-800/80 flex flex-wrap items-center justify-between gap-4 shrink-0">
+              <div className="flex items-center gap-3 min-w-0">
+                <button
+                  onClick={handleCloseChat}
+                  className="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition border border-zinc-800 shrink-0"
+                  title="Tutup Panel Obrolan (ESC)"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs text-zinc-500 font-bold shrink-0">#{selectedTicket.id}</span>
+                    <h2 className="text-base font-bold text-white truncate">{selectedTicket.subject}</h2>
+                    <div className="shrink-0">{getPriorityBadge(selectedTicket.priority)}</div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-zinc-400">
                     <span className="text-emerald-400 font-semibold">{getCategoryLabel(selectedTicket.category)}</span>
                     {selectedTicket.serverName && (
-                      <span className="flex items-center gap-1 text-zinc-300 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
-                        <Server className="w-3 h-3 text-primary" /> {selectedTicket.serverName}
+                      <span className="inline-flex items-center gap-1 text-zinc-300 bg-zinc-900/80 px-2 py-0.5 rounded border border-zinc-800 text-[11px]">
+                        <Server className="w-3 h-3 text-primary shrink-0" /> {selectedTicket.serverName}
                       </span>
                     )}
                     <span>• {selectedTicket.createdAt ? new Date(selectedTicket.createdAt).toLocaleString('id-ID') : ''}</span>
@@ -240,7 +561,7 @@ export default function Tickets() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 shrink-0">
                 {getStatusBadge(selectedTicket.status)}
                 {selectedTicket.status !== 'closed' && (
                   <button
@@ -253,8 +574,8 @@ export default function Tickets() {
               </div>
             </div>
 
-            {/* Chat History */}
-            <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-[#0c0c0f]">
+            {/* Area Chat / Pesan */}
+            <div className="flex-1 p-5 overflow-y-auto space-y-4 bg-[#0a0a0e]">
               {loadingMessages ? (
                 <div className="flex flex-col items-center justify-center h-full text-zinc-500 gap-2">
                   <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -276,7 +597,7 @@ export default function Tickets() {
                         </span>
                       </div>
                       
-                      <div className={`max-w-[85%] sm:max-w-[70%] rounded-2xl p-4 text-sm leading-relaxed shadow-md ${
+                      <div className={`max-w-[85%] sm:max-w-[80%] rounded-2xl p-4 text-sm leading-relaxed shadow-md ${
                         isAdmin 
                           ? 'bg-[#181824] border border-indigo-500/20 text-zinc-100 rounded-tl-none' 
                           : 'bg-[#14231c] border border-emerald-500/20 text-emerald-50 rounded-tr-none'
@@ -304,13 +625,13 @@ export default function Tickets() {
               <div ref={chatEndRef} />
             </div>
 
-            {/* Chat Input */}
+            {/* Chat Input Footer */}
             {selectedTicket.status === 'closed' ? (
-              <div className="p-4 bg-[#141418] border-t border-zinc-800 text-center text-zinc-500 text-sm">
+              <div className="p-4 bg-[#141418] border-t border-zinc-800 text-center text-zinc-500 text-sm shrink-0">
                 Tiket ini telah ditutup. Anda tidak dapat mengirim pesan balasan lagi.
               </div>
             ) : (
-              <form onSubmit={handleSendReply} className="p-4 bg-[#141418] border-t border-zinc-800/80 space-y-3">
+              <form onSubmit={handleSendReply} className="p-4 bg-[#141418] border-t border-zinc-800/80 space-y-3 shrink-0">
                 {replyPreview && (
                   <div className="relative inline-block bg-zinc-900 p-2 rounded-xl border border-zinc-800">
                     <img src={replyPreview} alt="Preview" className="h-20 w-auto rounded-lg object-cover" />
@@ -355,101 +676,8 @@ export default function Tickets() {
               </form>
             )}
           </div>
-        ) : (
-          /* Daftar Tiket */
-          <div className="bg-[#101010] border border-zinc-800/80 rounded-2xl overflow-hidden shadow-xl">
-            <div className="p-6 border-b border-zinc-800/80 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <Shield className="w-5 h-5 text-primary" /> Daftar Tiket Anda
-              </h2>
-              <button 
-                onClick={fetchTickets}
-                className="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition"
-                title="Refresh Daftar"
-              >
-                <RefreshCw className="w-4 h-4" />
-              </button>
-            </div>
-
-            {loading ? (
-              <div className="p-6">
-                <SkeletonTable rows={4} columns={5} className="border border-zinc-800/80 rounded-xl" />
-              </div>
-            ) : tickets.length === 0 ? (
-              <div className="text-center py-16 px-4 space-y-3">
-                <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-zinc-500">
-                  <HelpCircle className="w-8 h-8" />
-                </div>
-                <h3 className="font-bold text-white text-base">Belum Ada Tiket Bantuan</h3>
-                <p className="text-sm text-zinc-400 max-w-sm mx-auto">
-                  Jika Anda mengalami masalah teknis server atau pembayaran, silakan buat tiket baru agar Admin dapat membantu.
-                </p>
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white font-bold text-sm rounded-lg transition"
-                >
-                  <Plus className="w-4 h-4" /> Buat Tiket Sekarang
-                </button>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-zinc-800 bg-zinc-900/50 text-xs text-zinc-400 uppercase font-bold tracking-wider">
-                      <th className="py-3.5 px-6">ID / Judul Kendala</th>
-                      <th className="py-3.5 px-6">Kategori</th>
-                      <th className="py-3.5 px-6">Server Terkait</th>
-                      <th className="py-3.5 px-6">Pembaruan Terakhir</th>
-                      <th className="py-3.5 px-6">Status</th>
-                      <th className="py-3.5 px-6 text-right">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-800/60 text-sm">
-                    {tickets.map((t) => (
-                      <tr 
-                        key={t.id} 
-                        onClick={() => handleSelectTicket(t)}
-                        className="hover:bg-zinc-900/50 transition-colors cursor-pointer group"
-                      >
-                        <td className="py-4 px-6">
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-xs text-zinc-500 font-bold">#{t.id}</span>
-                            <span className="font-bold text-white group-hover:text-primary transition-colors">{t.subject}</span>
-                            {t.attachment && <ImageIcon className="w-3.5 h-3.5 text-zinc-500 shrink-0" title="Ada lampiran gambar" />}
-                          </div>
-                        </td>
-                        <td className="py-4 px-6 text-zinc-300 font-medium">
-                          {getCategoryLabel(t.category)}
-                        </td>
-                        <td className="py-4 px-6">
-                          {t.serverName ? (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-xs font-semibold text-zinc-300">
-                              <Server className="w-3 h-3 text-primary" /> {t.serverName}
-                            </span>
-                          ) : (
-                            <span className="text-zinc-500 text-xs">-</span>
-                          )}
-                        </td>
-                        <td className="py-4 px-6 text-xs text-zinc-400">
-                          {t.updatedAt ? new Date(t.updatedAt).toLocaleString('id-ID') : '-'}
-                        </td>
-                        <td className="py-4 px-6">
-                          {getStatusBadge(t.status)}
-                        </td>
-                        <td className="py-4 px-6 text-right">
-                          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-zinc-800 group-hover:bg-primary group-hover:text-white text-zinc-300 text-xs font-bold transition">
-                            Buka Chat <Eye className="w-3.5 h-3.5" />
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-      </main>
+        </>
+      )}
 
       {/* Modal Buat Tiket Baru */}
       {showCreateModal && (
@@ -582,11 +810,11 @@ export default function Tickets() {
       {/* Lightbox Modal untuk Fullscreen Image Preview */}
       {lightboxImg && (
         <div 
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in"
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in"
           onClick={() => setLightboxImg(null)}
         >
-          <div className="relative max-w-5xl max-h-[90vh] flex items-center justify-center">
-            <img src={lightboxImg} alt="Preview Fullscreen" className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl border border-zinc-800" />
+          <div className="relative max-w-5xl max-h-[90vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <img src={lightboxImg} alt="Preview Fullscreen" className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl border border-zinc-700" />
             <button 
               onClick={() => setLightboxImg(null)}
               className="absolute -top-4 -right-4 p-2 bg-zinc-900 border border-zinc-700 hover:bg-red-500 text-white rounded-full shadow-lg transition"

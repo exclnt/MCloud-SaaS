@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { Shield, Server, Users, CreditCard, Activity, RefreshCw, Share2, MessageSquare, DollarSign, X, PanelLeft, LogOut } from 'lucide-react';
-import Navbar from '../../components/Navbar';
+import AdminNavbar from '../../components/admin/AdminNavbar';
 import Footer from '../../components/Footer';
 import ConfirmModal from '../../components/ConfirmModal';
 import TransactionReceiptModal from '../../components/TransactionReceiptModal';
@@ -120,7 +120,7 @@ function AdminLayoutContent() {
 
   return (
     <div className="h-[100dvh] bg-[#0a0a0a] text-zinc-300 font-sans flex flex-col overflow-hidden">
-      <Navbar />
+      <AdminNavbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
       <div className="flex flex-1 overflow-hidden relative">
         {/* Mobile Sidebar Overlay */}

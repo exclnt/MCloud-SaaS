@@ -1,8 +1,10 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { DataLoading } from './components/DataLoading';
 import SupportWidget from './components/SupportWidget';
+import Maintenance from './pages/Maintenance';
+import { api } from './services/api';
 
 // Lazy loading halaman dan layout untuk optimasi ukuran bundle dan waktu muat (Code-Splitting)
 const Landing = lazy(() => import('./pages/Landing'));
@@ -35,6 +37,8 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 const DocsLayout = lazy(() => import('./components/DocsLayout'));
 const DocsHome = lazy(() => import('./pages/DocsHome'));
 const DocsArticle = lazy(() => import('./pages/DocsArticle'));
+const FaqPage = lazy(() => import('./pages/FaqPage'));
+const ChangelogPage = lazy(() => import('./pages/ChangelogPage'));
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -46,6 +50,21 @@ const AdminRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   const role = localStorage.getItem('role');
   if (!token || role !== 'admin') return <Navigate to="/dashboard" />;
+  return children;
+};
+
+const GuestRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  const location = useLocation();
+  if (token) {
+    const searchParams = new URLSearchParams(location.search);
+    const redirect = searchParams.get('redirect');
+    const plan = searchParams.get('plan');
+    if (redirect === 'checkout') {
+      return <Navigate to={`/checkout?plan=${plan || 'slime'}`} replace />;
+    }
+    return <Navigate to="/dashboard" replace />;
+  }
   return children;
 };
 
@@ -73,14 +92,45 @@ function LoadingScreen({ onComplete }) {
   );
 }
 
+const MaintenanceGuard = ({ children, settings, setSettings }) => {
+  const location = useLocation();
+  
+  useEffect(() => {
+    api.getSettings().then(data => setSettings(data)).catch(() => {});
+  }, [location.pathname]);
+
+  const isMaintenance = settings?.maintenance_mode === 'true';
+  const isAdmin = localStorage.getItem('role') === 'admin';
+  const isLoginPage = location.pathname === '/login';
+
+  if (isMaintenance && !isAdmin && !isLoginPage) {
+    return <Maintenance settings={settings} />;
+  }
+  return children;
+};
+
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+  const [settings, setSettings] = useState(null);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 640);
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    
+    const fetchSettings = () => {
+      api.getSettings().then(data => setSettings(data)).catch(() => {});
+    };
+    
+    fetchSettings();
+    const interval = setInterval(fetchSettings, 3000);
+    window.addEventListener('settingsUpdated', fetchSettings);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearInterval(interval);
+      window.removeEventListener('settingsUpdated', fetchSettings);
+    };
   }, []);
 
   return (
@@ -91,6 +141,7 @@ export default function App() {
       />
       {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
       <BrowserRouter>
+        <MaintenanceGuard settings={settings} setSettings={setSettings}>
         <Suspense fallback={
           <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6">
             <DataLoading text="Memuat halaman..." size="lg" />
@@ -98,8 +149,16 @@ export default function App() {
         }>
           <Routes>
             <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Auth />} />
-            <Route path="/register" element={<Auth />} />
+            <Route path="/login" element={
+              <GuestRoute>
+                <Auth />
+              </GuestRoute>
+            } />
+            <Route path="/register" element={
+              <GuestRoute>
+                <Auth />
+              </GuestRoute>
+            } />
             
             <Route path="/dashboard" element={
               <ProtectedRoute>
@@ -164,10 +223,13 @@ export default function App() {
 
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/faq" element={<FaqPage />} />
+            <Route path="/changelog" element={<ChangelogPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
         <SupportWidget />
+        </MaintenanceGuard>
       </BrowserRouter>
     </>
   );

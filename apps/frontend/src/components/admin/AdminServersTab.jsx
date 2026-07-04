@@ -141,7 +141,7 @@ export default function AdminServersTab({
                     onClick={() =>
                       handleExtendServer(s.id, "permanent")
                     }
-                    className="px-2 py-1 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-xs rounded border border-purple-500/20 transition-colors font-semibold"
+                    className="px-2 py-1 bg-zinc-500/10 hover:bg-zinc-500/20 text-zinc-200 text-xs rounded border border-zinc-500/20 transition-colors font-semibold"
                     title="Jadikan Permanen"
                   >
                     Permanen

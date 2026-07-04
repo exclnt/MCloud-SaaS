@@ -1,10 +1,17 @@
 import http from 'node:http';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import dotenv from 'dotenv';
 import { parseJSON } from './utils/parser.js';
 import { snap, coreApi } from './config/midtrans.js';
 import { db } from '../../../database/db.js';
 import { transactions, users, servers, plans, activity_logs, settings } from '../../../database/schema.js';
 import { verifyToken, generateToken } from '../../auth-service/src/utils/jwt.js';
 import { eq, desc } from 'drizzle-orm';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 function logActivity(userId, action, details = null) {
   try {
@@ -58,21 +65,26 @@ function getResourcePoolStats() {
   return { totalRamMB, usedRamMB, availableRamMB };
 }
 
-const PORT = 3002;
+const PORT = parseInt(process.env.PAYMENT_SERVICE_PORT || 3002);
+const HOST = process.env.PAYMENT_SERVICE_HOST || 'localhost';
 
 const authMiddleware = (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    res.statusCode = 401;
-    res.end(JSON.stringify({ error: 'Unauthorized' }));
+    if (!res.writableEnded && !res.headersSent) {
+      res.statusCode = 401;
+      res.end(JSON.stringify({ error: 'Unauthorized' }));
+    }
     return null;
   }
   
   const token = authHeader.split(' ')[1];
   const user = verifyToken(token);
   if (!user) {
-    res.statusCode = 401;
-    res.end(JSON.stringify({ error: 'Invalid or expired token' }));
+    if (!res.writableEnded && !res.headersSent) {
+      res.statusCode = 401;
+      res.end(JSON.stringify({ error: 'Invalid or expired token' }));
+    }
     return null;
   }
   return user;
@@ -121,8 +133,8 @@ const triggerProvisioning = (userId, username, transactionId, configString) => {
   const payload = JSON.stringify({ name: `Bedrock_trx_${transactionId}`, ...baseConfig });
   
   const options = {
-    hostname: 'localhost',
-    port: 3003,
+    hostname: process.env.PROVISIONING_SERVICE_HOST || 'localhost',
+    port: parseInt(process.env.PROVISIONING_SERVICE_PORT || 3003),
     path: '/create',
     method: 'POST',
     headers: {
@@ -175,6 +187,17 @@ const server = http.createServer(async (req, res) => {
   
   const url = req.url;
 
+  if (req.method === 'GET' && (url === '/health' || url === '/api/payments/health')) {
+    res.statusCode = 200;
+    return res.end(JSON.stringify({
+      status: 'ONLINE',
+      service: 'payment-service',
+      port: 3002,
+      uptime: process.uptime(),
+      timestamp: Date.now()
+    }));
+  }
+
   if (req.method === 'POST' && url === '/checkout') {
     const user = authMiddleware(req, res);
     if (!user) return;
@@ -206,7 +229,7 @@ const server = http.createServer(async (req, res) => {
         status: 'pending'
       }).returning().get();
 
-      const origin = req.headers.origin || 'http://localhost:5173';
+      const origin = req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5173';
       const orderId = `MCLOUD-${trx.id}-${Date.now()}`;
       const parameter = {
         transaction_details: {
@@ -428,7 +451,8 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'GET' && url === '/admin/resource-pool') {
     const user = authMiddleware(req, res);
-    if (!user || user.role !== 'admin') {
+    if (!user) return;
+    if (user.role !== 'admin') {
       res.statusCode = 403;
       return res.end(JSON.stringify({ error: 'Forbidden' }));
     }
@@ -445,7 +469,8 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'PUT' && url === '/admin/resource-pool') {
     const user = authMiddleware(req, res);
-    if (!user || user.role !== 'admin') {
+    if (!user) return;
+    if (user.role !== 'admin') {
       res.statusCode = 403;
       return res.end(JSON.stringify({ error: 'Forbidden' }));
     }
@@ -478,7 +503,8 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'PUT' && url.match(/^\/admin\/plans\/(\d+)$/)) {
     const user = authMiddleware(req, res);
-    if (!user || user.role !== 'admin') {
+    if (!user) return;
+    if (user.role !== 'admin') {
       res.statusCode = 403;
       return res.end(JSON.stringify({ error: 'Forbidden' }));
     }
@@ -540,7 +566,8 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'GET' && url === '/admin/transactions') {
     const user = authMiddleware(req, res);
-    if (!user || user.role !== 'admin') {
+    if (!user) return;
+    if (user.role !== 'admin') {
       res.statusCode = 403;
       return res.end(JSON.stringify({ error: 'Forbidden' }));
     }
@@ -575,7 +602,11 @@ const server = http.createServer(async (req, res) => {
         social_whatsapp: 'https://wa.me/6281234567890',
         social_instagram: 'https://instagram.com/mcloud.id',
         social_twitter: 'https://x.com/mcloud_id',
-        social_email: 'support@mcloud.id'
+        social_email: 'support@mcloud.id',
+        maintenance_mode: 'false',
+        maintenance_title: 'Pemeliharaan Sistem MCloud',
+        maintenance_message: 'Kami sedang melakukan pemeliharaan rutin untuk meningkatkan performa dan stabilitas server. Silakan kembali dalam beberapa saat.',
+        maintenance_eta: 'Segera'
       };
       for (const item of allSettings) {
         settingsMap[item.key] = item.value;
@@ -590,7 +621,8 @@ const server = http.createServer(async (req, res) => {
 
   if ((req.method === 'PUT' || req.method === 'POST') && url === '/admin/settings') {
     const user = authMiddleware(req, res);
-    if (!user || user.role !== 'admin') {
+    if (!user) return;
+    if (user.role !== 'admin') {
       res.statusCode = 403;
       return res.end(JSON.stringify({ error: 'Forbidden' }));
     }
@@ -607,8 +639,13 @@ const server = http.createServer(async (req, res) => {
         }
       }
       logActivity(user.id, 'update_settings', body);
+      const allSettings = db.select().from(settings).all();
+      const settingsMap = {};
+      for (const item of allSettings) {
+        settingsMap[item.key] = item.value;
+      }
       res.statusCode = 200;
-      return res.end(JSON.stringify({ message: 'Settings updated successfully' }));
+      return res.end(JSON.stringify({ message: 'Settings updated successfully', settings: settingsMap }));
     } catch (e) {
       res.statusCode = 500;
       return res.end(JSON.stringify({ error: e.message }));
@@ -619,6 +656,6 @@ const server = http.createServer(async (req, res) => {
   res.end(JSON.stringify({ error: 'Not Found' }));
 });
 
-server.listen(PORT, () => {
-  console.log(`Payment Service is running on http://localhost:${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`Payment Service is running on http://${HOST}:${PORT}`);
 });

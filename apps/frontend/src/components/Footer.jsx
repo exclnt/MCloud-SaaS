@@ -170,6 +170,14 @@ export default function Footer() {
                     Modpack Installer
                   </Link>
                 </li>
+                <li>
+                  <Link
+                    to="/changelog"
+                    className="hover:text-zinc-400 transition-colors flex items-center gap-1"
+                  >
+                    Changelog <span className="text-[9px] px-1.5 py-0.2 bg-zinc-500/20 text-zinc-400 rounded font-bold">v1.5.0</span>
+                  </Link>
+                </li>
               </ul>
             </div>
 
@@ -226,6 +234,14 @@ export default function Footer() {
                     className="hover:text-white transition-colors"
                   >
                     Panduan & Tutorial
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/faq"
+                    className="hover:text-amber-400 transition-colors"
+                  >
+                    Tanya Jawab (FAQ)
                   </Link>
                 </li>
               </ul>

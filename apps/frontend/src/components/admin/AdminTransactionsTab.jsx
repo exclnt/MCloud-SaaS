@@ -1,5 +1,6 @@
 import React from 'react';
 import { DollarSign, Activity, CheckCircle, Shield, Search, X, Eye } from 'lucide-react';
+import AdminStatCard from './AdminStatCard';
 
 export default function AdminTransactionsTab({
   totalRevenueIdr,
@@ -21,52 +22,31 @@ export default function AdminTransactionsTab({
   return (
     <div className="animate-fade-in">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-        <div className="bg-[#121212] border border-zinc-800/80 rounded-xl p-5 hover:border-zinc-700/80 transition">
-          <div className="flex items-center gap-2 text-zinc-400 mb-2 text-xs font-bold uppercase tracking-wider">
-            <DollarSign className="w-4 h-4 text-emerald-400" /> Total Pendapatan
-          </div>
-          <div className="text-2xl font-bold  font-mono">
-            Rp {totalRevenueIdr.toLocaleString("id-ID")}
-          </div>
-          <div className="text-xs text-zinc-500 mt-1">
-            Pembayaran sukses Midtrans
-          </div>
-        </div>
-        <div className="bg-[#121212] border border-zinc-800/80 rounded-xl p-5 hover:border-zinc-700/80 transition">
-          <div className="flex items-center gap-2 text-zinc-400 mb-2 text-xs font-bold uppercase tracking-wider">
-            <Activity className="w-4 h-4 text-blue-400" /> Total Transaksi
-          </div>
-          <div className="text-2xl font-bold text-white">
-            {transactions.length}
-          </div>
-          <div className="text-xs text-zinc-500 mt-1">
-            Semua riwayat pesanan
-          </div>
-        </div>
-        <div className="bg-[#121212] border border-zinc-800/80 rounded-xl p-5 hover:border-zinc-700/80 transition">
-          <div className="flex items-center gap-2 text-zinc-400 mb-2 text-xs font-bold uppercase tracking-wider">
-            <CheckCircle className="w-4 h-4 text-emerald-400" /> Transaksi Berhasil
-          </div>
-          <div className="text-2xl font-bold text-white">
-            {successTrxCount}
-          </div>
-          <div className="text-xs text-zinc-500 mt-1">
-            Status success / dibayar
-          </div>
-        </div>
-        <div className="bg-[#121212] border border-zinc-800/80 rounded-xl p-5 hover:border-zinc-700/80 transition">
-          <div className="flex items-center gap-2 text-zinc-400 mb-2 text-xs font-bold uppercase tracking-wider">
-            <Shield className="w-4 h-4 text-purple-400" /> Admin Manual
-          </div>
-          <div className="text-2xl font-bold 
-          ">
-            {adminManualTrxCount}
-          </div>
-          <div className="text-xs text-zinc-500 mt-1">
-            Aksi perpanjangan / pembuatan admin
-          </div>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <AdminStatCard
+          title="Total Pendapatan"
+          icon={<DollarSign className="w-4 h-4 text-emerald-400" />}
+          value={`Rp ${totalRevenueIdr.toLocaleString("id-ID")}`}
+          subtitle="Pembayaran sukses Midtrans"
+        />
+        <AdminStatCard
+          title="Total Transaksi"
+          icon={<Activity className="w-4 h-4 text-blue-400" />}
+          value={transactions.length}
+          subtitle="Semua riwayat pesanan"
+        />
+        <AdminStatCard
+          title="Transaksi Berhasil"
+          icon={<CheckCircle className="w-4 h-4 text-emerald-400" />}
+          value={successTrxCount}
+          subtitle="Status success / dibayar"
+        />
+        <AdminStatCard
+          title="Admin Manual"
+          icon={<Shield className="w-4 h-4 text-purple-400" />}
+          value={adminManualTrxCount}
+          subtitle="Aksi perpanjangan / pembuatan admin"
+        />
       </div>
 
       {/* Search & List */}

@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, Search, ArrowRight, Play, Server, Puzzle } from 'lucide-react';
+import { BookOpen, Search, ArrowRight, Play, Server, Puzzle, CreditCard, Shield } from 'lucide-react';
 import { docsCategories } from '../data/docsContent';
 
 const IconMap = {
   Play: Play,
   Server: Server,
   Puzzle: Puzzle,
+  CreditCard: CreditCard,
+  Shield: Shield,
 };
 
 export default function DocsHome() {

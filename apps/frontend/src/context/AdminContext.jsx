@@ -56,6 +56,9 @@ export const AdminProvider = ({ children }) => {
   const [ticketAttachment, setTicketAttachment] = useState(null);
   const [ticketPreview, setTicketPreview] = useState(null);
   const [ticketFilter, setTicketFilter] = useState('all');
+  const [ticketSearchQuery, setTicketSearchQuery] = useState('');
+  const [ticketCurrentPage, setTicketCurrentPage] = useState(1);
+  const [ticketsPerPage, setTicketsPerPage] = useState(10);
   const [sendingTicketReply, setSendingTicketReply] = useState(false);
   const [lightboxImg, setLightboxImg] = useState(null);
 
@@ -93,7 +96,11 @@ export const AdminProvider = ({ children }) => {
     social_whatsapp: 'https://wa.me/6281234567890',
     social_instagram: 'https://instagram.com/mcloud.id',
     social_twitter: 'https://x.com/mcloud_id',
-    social_email: 'support@mcloud.id'
+    social_email: 'support@mcloud.id',
+    maintenance_mode: 'false',
+    maintenance_title: 'Pemeliharaan Sistem MCloud',
+    maintenance_message: 'Kami sedang melakukan pemeliharaan rutin untuk meningkatkan performa dan stabilitas server. Silakan kembali dalam beberapa saat.',
+    maintenance_eta: 'Segera'
   });
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
@@ -101,9 +108,13 @@ export const AdminProvider = ({ children }) => {
     if (e && e.preventDefault) e.preventDefault();
     setIsSavingSettings(true);
     try {
-      await api.updateSettings(socialSettings);
-      toast.success('Pengaturan sosial media berhasil disimpan!');
+      const res = await api.updateSettings(socialSettings);
+      if (res && res.settings) {
+        setSocialSettings(prev => ({ ...prev, ...res.settings }));
+      }
+      toast.success('Pengaturan sistem berhasil disimpan!');
       fetchData();
+      window.dispatchEvent(new Event('settingsUpdated'));
     } catch (err) {
       toast.error('Gagal menyimpan pengaturan: ' + err.message);
     }
@@ -136,11 +147,16 @@ export const AdminProvider = ({ children }) => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [plansRes, poolRes, settingsRes] = await Promise.all([
+      // Always fetch core system state (servers, tickets, transactions, plans, settings) to sync Admin Navbar Notifications across all pages
+      const [plansRes, poolRes, settingsRes, srvsRes, ticketsRes, trxRes] = await Promise.all([
         api.getPlans().catch(() => []),
         api.getResourcePool().catch(() => null),
-        api.getSettings().catch(() => null)
+        api.getSettings().catch(() => null),
+        api.getAllServers().catch(() => []),
+        api.getAdminTickets().catch(() => []),
+        api.getAdminTransactions().catch(() => [])
       ]);
+
       if (plansRes && plansRes.length > 0) setPlans(plansRes);
       if (poolRes) {
         setResourcePool(poolRes);
@@ -152,51 +168,30 @@ export const AdminProvider = ({ children }) => {
       if (settingsRes) {
         setSocialSettings(prev => ({ ...prev, ...settingsRes }));
       }
+      if (srvsRes) setServers(srvsRes);
+      if (ticketsRes) setTickets(ticketsRes || []);
+      if (trxRes) setTransactions(trxRes || []);
 
       if (activeTab === 'overview') {
-        const [srvs, resUsers, resTrx] = await Promise.all([
-          api.getAllServers(),
+        const [resUsers, resLogs] = await Promise.all([
           api.getAllUsers(),
-          api.getAdminTransactions().catch(() => [])
+          api.getActivityLogs().catch(() => ({ logs: [] }))
         ]);
-        setServers(srvs);
-        setUsers(resUsers.users);
-        setTransactions(resTrx);
-        const totalRev = resTrx.filter(t => t.status === 'success').reduce((acc, t) => acc + (t.amount || 0), 0);
+        setUsers(resUsers?.users || []);
+        setLogs(resLogs?.logs || []);
+        const totalRev = (trxRes || []).filter(t => t.status === 'success').reduce((acc, t) => acc + (t.amount || 0), 0);
         setStats({
-          totalServers: srvs.length,
-          activeServers: srvs.filter(s => s.status === 'running').length,
-          totalUsers: resUsers.users.length,
+          totalServers: (srvsRes || []).length,
+          activeServers: (srvsRes || []).filter(s => s.status === 'running').length,
+          totalUsers: (resUsers?.users || []).length,
           totalRevenue: totalRev
         });
-      } else if (activeTab === 'servers') {
-        const srvs = await api.getAllServers();
-        setServers(srvs);
       } else if (activeTab === 'users') {
         const res = await api.getAllUsers();
-        setUsers(res.users);
-      } else if (activeTab === 'pricing') {
-        const [resPlans, resPool] = await Promise.all([
-          api.getPlans(),
-          api.getResourcePool().catch(() => null)
-        ]);
-        setPlans(resPlans);
-        if (resPool) {
-          setResourcePool(resPool);
-          setPoolInput(String(resPool.totalRamMB || 0));
-        }
+        setUsers(res?.users || []);
       } else if (activeTab === 'logs') {
         const res = await api.getActivityLogs();
-        setLogs(res.logs);
-      } else if (activeTab === 'transactions') {
-        const res = await api.getAdminTransactions();
-        setTransactions(res);
-      } else if (activeTab === 'settings') {
-        const res = await api.getSettings().catch(() => null);
-        if (res) setSocialSettings(prev => ({ ...prev, ...res }));
-      } else if (activeTab === 'tickets') {
-        const res = await api.getAdminTickets();
-        setTickets(res || []);
+        setLogs(res?.logs || []);
       }
     } catch (e) {
       toast.error('Failed to fetch data: ' + e.message);
@@ -218,6 +213,46 @@ export const AdminProvider = ({ children }) => {
     }, 1000);
     return () => clearInterval(ticker);
   }, []);
+
+  // Realtime background sync for global admin data (tickets, servers, transactions)
+  useEffect(() => {
+    const bgSync = setInterval(async () => {
+      try {
+        const [srvsRes, ticketsRes, trxRes] = await Promise.all([
+          api.getAllServers().catch(() => null),
+          api.getAdminTickets().catch(() => null),
+          api.getAdminTransactions().catch(() => null)
+        ]);
+        if (srvsRes) setServers(srvsRes);
+        if (ticketsRes) setTickets(ticketsRes);
+        if (trxRes) setTransactions(trxRes);
+      } catch (e) {}
+    }, 5000);
+    return () => clearInterval(bgSync);
+  }, []);
+
+  // Realtime polling for active selected ticket chat
+  useEffect(() => {
+    if (!selectedTicket || !selectedTicket.id) return;
+    const chatPoll = setInterval(async () => {
+      try {
+        const res = await api.getTicketById(selectedTicket.id);
+        if (res && res.messages) {
+          setTicketMessages(prev => {
+            if (res.messages.length !== prev.length || JSON.stringify(res.messages) !== JSON.stringify(prev)) {
+              return res.messages;
+            }
+            return prev;
+          });
+        }
+        if (res && res.ticket) {
+          setSelectedTicket(prev => prev && prev.id === res.ticket.id ? { ...prev, ...res.ticket } : prev);
+          setTickets(prev => prev.map(t => t.id === res.ticket.id ? { ...t, ...res.ticket } : t));
+        }
+      } catch (e) {}
+    }, 2500);
+    return () => clearInterval(chatPoll);
+  }, [selectedTicket?.id]);
 
   const handleServerAction = (port, action) => {
     if (action === 'stop') {
@@ -425,6 +460,21 @@ export const AdminProvider = ({ children }) => {
   const totalLogPages = Math.ceil(filteredLogs.length / logsPerPage) || 1;
   const paginatedLogs = filteredLogs.slice((logCurrentPage - 1) * logsPerPage, logCurrentPage * logsPerPage);
 
+  const filteredTickets = tickets.filter(t => {
+    const matchStatus = ticketFilter === 'all' || t.status === ticketFilter;
+    if (!matchStatus) return false;
+    if (!ticketSearchQuery) return true;
+    const q = ticketSearchQuery.toLowerCase();
+    return (t.subject || '').toLowerCase().includes(q) ||
+           (t.category || '').toLowerCase().includes(q) ||
+           (t.username || '').toLowerCase().includes(q) ||
+           (t.email || '').toLowerCase().includes(q) ||
+           (t.serverName || '').toLowerCase().includes(q) ||
+           String(t.id).includes(q);
+  });
+  const totalTicketPages = Math.ceil(filteredTickets.length / ticketsPerPage) || 1;
+  const paginatedTickets = filteredTickets.slice((ticketCurrentPage - 1) * ticketsPerPage, ticketCurrentPage * ticketsPerPage);
+
   const enrichedTransactions = transactions.map(t => {
     if (t.orderId && t.planName) return t;
     let cfg = {};
@@ -497,7 +547,7 @@ export const AdminProvider = ({ children }) => {
         </div>
       </div>
 
-      {totalPages > 1 && (
+      {totalPages >= 1 && (
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => setPage(p => Math.max(1, p - 1))}
@@ -630,6 +680,12 @@ export const AdminProvider = ({ children }) => {
     setTicketPreview,
     ticketFilter,
     setTicketFilter,
+    ticketSearchQuery,
+    setTicketSearchQuery,
+    ticketCurrentPage,
+    setTicketCurrentPage,
+    ticketsPerPage,
+    setTicketsPerPage,
     sendingTicketReply,
     setSendingTicketReply,
     lightboxImg,
@@ -696,6 +752,9 @@ export const AdminProvider = ({ children }) => {
     filteredLogs,
     totalLogPages,
     paginatedLogs,
+    filteredTickets,
+    totalTicketPages,
+    paginatedTickets,
     enrichedTransactions,
     filteredTransactions,
     totalTrxPages,

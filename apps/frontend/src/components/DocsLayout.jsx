@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { BookOpen, Menu, X, Search, ChevronRight, ChevronLeft, Play, Server, Puzzle } from 'lucide-react';
+import { BookOpen, Menu, X, Search, ChevronRight, ChevronDown, ChevronLeft, Play, Server, Puzzle, CreditCard, Shield } from 'lucide-react';
 import DocsNavbar from './DocsNavbar';
 import Footer from './Footer';
 import { docsCategories } from '../data/docsContent';
@@ -9,13 +9,33 @@ const IconMap = {
   Play: Play,
   Server: Server,
   Puzzle: Puzzle,
+  CreditCard: CreditCard,
+  Shield: Shield,
 };
 
 export default function DocsLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [openCategories, setOpenCategories] = useState(() => {
+    const initial = {};
+    docsCategories.forEach((cat, idx) => {
+      initial[cat.id] = idx === 0;
+    });
+    return initial;
+  });
   const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const activeCat = docsCategories.find(cat => location.pathname.includes(`/docs/${cat.id}`));
+    if (activeCat) {
+      setOpenCategories(prev => ({ ...prev, [activeCat.id]: true }));
+    }
+  }, [location.pathname]);
+
+  const toggleCategory = (catId) => {
+    setOpenCategories(prev => ({ ...prev, [catId]: !prev[catId] }));
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -73,6 +93,15 @@ export default function DocsLayout() {
               </button>
             </div>
 
+            <div className="mb-6">
+              <button 
+                onClick={() => navigate('/')} 
+                className="text-sm text-zinc-400 hover:text-primary transition flex items-center gap-1.5 font-medium group"
+              >
+                <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" /> Kembali
+              </button>
+            </div>
+
             <form onSubmit={handleSearch} className="mb-8 relative">
               <input 
                 type="text" 
@@ -87,28 +116,44 @@ export default function DocsLayout() {
             <div className="space-y-6 flex-1">
               {filteredCategories.length > 0 ? filteredCategories.map((cat) => {
                 const CatIcon = IconMap[cat.icon] || BookOpen;
+                const isSearching = searchQuery.trim() !== '';
+                const isOpen = isSearching || !!openCategories[cat.id];
+
                 return (
                   <div key={cat.id}>
-                    <h3 className="flex items-center gap-2 font-bold text-white mb-3 text-sm">
-                      <CatIcon className="w-4 h-4 text-primary" /> {cat.title}
-                    </h3>
-                    <ul className="space-y-1.5 pl-6 border-l border-zinc-800/60 ml-2">
-                      {cat.articles.map(art => {
-                        const path = `/docs/${cat.id}/${art.slug}`;
-                        const isActive = location.pathname === path;
-                        return (
-                          <li key={art.slug}>
-                            <Link 
-                              to={path}
-                              onClick={() => setSidebarOpen(false)}
-                              className={`block text-sm py-1.5 px-3 rounded-md transition-colors ${isActive ? 'bg-primary/10 text-primary font-medium border border-primary/20 -ml-[1px]' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50 -ml-[1px] border border-transparent'}`}
-                            >
-                              {art.title}
-                            </Link>
-                          </li>
-                        );
-                      })}
-                    </ul>
+                    <button
+                      type="button"
+                      onClick={() => toggleCategory(cat.id)}
+                      className="w-full flex items-center justify-between gap-2 font-bold text-white mb-3 text-sm hover:text-primary transition-colors text-left group"
+                    >
+                      <span className="flex items-center gap-2 min-w-0">
+                        <CatIcon className="w-4 h-4 text-primary shrink-0" />
+                        <span className="truncate">{cat.title}</span>
+                      </span>
+                      <span className="text-zinc-500 group-hover:text-zinc-300 transition-colors shrink-0 ml-1">
+                        {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                      </span>
+                    </button>
+
+                    {isOpen && (
+                      <ul className="space-y-1.5 pl-6 border-l border-zinc-800/60 ml-2">
+                        {cat.articles.map(art => {
+                          const path = `/docs/${cat.id}/${art.slug}`;
+                          const isActive = location.pathname === path;
+                          return (
+                            <li key={art.slug}>
+                              <Link 
+                                to={path}
+                                onClick={() => setSidebarOpen(false)}
+                                className={`block text-sm py-1.5 px-3 rounded-md transition-colors ${isActive ? 'bg-primary/10 text-primary font-medium border border-primary/20 -ml-[1px]' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50 -ml-[1px] border border-transparent'}`}
+                              >
+                                {art.title}
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
                   </div>
                 );
               }) : (
@@ -116,15 +161,6 @@ export default function DocsLayout() {
                   <p className="text-zinc-500 text-sm">Tidak ada yang cocok.</p>
                 </div>
               )}
-            </div>
-            
-            <div className="pt-6 border-t border-zinc-800/60 mt-6">
-              <button 
-                onClick={() => navigate('/')} 
-                className="text-sm text-zinc-500 hover:text-primary transition flex items-center gap-1"
-              >
-                <ChevronLeft className="w-4 h-4" /> Kembali
-              </button>
             </div>
           </div>
         </aside>

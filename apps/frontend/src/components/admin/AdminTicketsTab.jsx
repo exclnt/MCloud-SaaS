@@ -1,10 +1,20 @@
 import React, { useRef, useEffect } from 'react';
-import { MessageSquare, Server, Clock, RefreshCw, CheckCircle2, X, Eye, Paperclip, Send, Loader2 } from 'lucide-react';
+import { MessageSquare, Server, Clock, RefreshCw, CheckCircle2, X, Eye, Paperclip, Send, Loader2, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import CustomSelect from '../CustomSelect';
 
 export default function AdminTicketsTab({
-  tickets,
+  tickets = [],
+  filteredTickets = [],
+  paginatedTickets = [],
+  ticketSearchQuery = '',
+  setTicketSearchQuery,
+  ticketCurrentPage = 1,
+  setTicketCurrentPage,
+  totalTicketPages = 1,
+  ticketsPerPage = 10,
+  setTicketsPerPage,
+  renderPaginationFooter,
   selectedTicket,
   setSelectedTicket,
   ticketFilter,
@@ -106,27 +116,57 @@ export default function AdminTicketsTab({
 
   return (
     <div className="space-y-6 animate-fade-in py-2 relative">
-      {/* Filter Bar Tanpa Card */}
-      <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-zinc-800/60">
-        {[
-          { id: 'all', label: 'Semua' },
-          { id: 'open', label: 'Menunggu Admin' },
-          { id: 'in_progress', label: 'Diproses' },
-          { id: 'resolved', label: 'Selesai' },
-          { id: 'closed', label: 'Ditutup' }
-        ].map(filter => (
-          <button
-            key={filter.id}
-            onClick={() => setTicketFilter(filter.id)}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
-              ticketFilter === filter.id 
-                ? 'bg-white text-black shadow-md' 
-                : 'bg-zinc-900/60 border border-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-800'
-            }`}
-          >
-            {filter.label}
-          </button>
-        ))}
+      {/* Filter & Search Bar Tanpa Card */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800/60">
+        <div className="flex flex-wrap items-center gap-2">
+          {[
+            { id: 'all', label: 'Semua' },
+            { id: 'open', label: 'Menunggu Admin' },
+            { id: 'in_progress', label: 'Diproses' },
+            { id: 'resolved', label: 'Selesai' },
+            { id: 'closed', label: 'Ditutup' }
+          ].map(filter => (
+            <button
+              key={filter.id}
+              onClick={() => {
+                setTicketFilter(filter.id);
+                if (setTicketCurrentPage) setTicketCurrentPage(1);
+              }}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
+                ticketFilter === filter.id 
+                  ? 'bg-white text-black shadow-md' 
+                  : 'bg-zinc-900/60 border border-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-800'
+              }`}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative w-full sm:w-64">
+          <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Cari ID, subjek, user..."
+            value={ticketSearchQuery || ''}
+            onChange={(e) => {
+              if (setTicketSearchQuery) setTicketSearchQuery(e.target.value);
+              if (setTicketCurrentPage) setTicketCurrentPage(1);
+            }}
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-8 py-2 text-xs text-white placeholder-zinc-500 outline-none focus:border-white transition-colors"
+          />
+          {ticketSearchQuery && (
+            <button
+              onClick={() => {
+                if (setTicketSearchQuery) setTicketSearchQuery('');
+                if (setTicketCurrentPage) setTicketCurrentPage(1);
+              }}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Tabel Flat Tanpa Card Container */}
@@ -146,52 +186,61 @@ export default function AdminTicketsTab({
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800/40 text-sm">
-            {tickets.filter(t => ticketFilter === 'all' || t.status === ticketFilter).length === 0 ? (
+            {(filteredTickets || []).length === 0 ? (
               <tr>
                 <td colSpan="9" className="py-12 text-center text-zinc-500 text-sm">
-                  Tidak ada tiket yang ditemukan untuk filter "{ticketFilter === 'all' ? 'Semua' : ticketFilter}".
+                  Tidak ada tiket yang cocok dengan filter atau kata kunci pencarian Anda.
                 </td>
               </tr>
             ) : (
-              tickets
-                .filter(t => ticketFilter === 'all' || t.status === ticketFilter)
-                .map(t => (
-                  <tr key={t.id} className="hover:bg-zinc-900/30 transition">
-                    <td className="py-4 px-4 font-mono text-xs font-bold text-zinc-500">#{t.id}</td>
-                    <td className="py-4 px-4">
-                      <div className="font-bold text-white">{t.username}</div>
-                      <div className="text-xs text-zinc-500">{t.email}</div>
-                    </td>
-                    <td className="py-4 px-4 font-semibold text-white max-w-xs truncate">{t.subject}</td>
-                    <td className="py-4 px-4 text-xs text-zinc-300">{getCategoryLabel(t.category)}</td>
-                    <td className="py-4 px-4">{getPriorityBadge(t.priority)}</td>
-                    <td className="py-4 px-4">
-                      {t.serverName ? (
-                        <span className="inline-flex items-center gap-1 text-xs text-zinc-300 bg-zinc-900/60 px-2 py-1 rounded border border-zinc-800/80">
-                          <Server className="w-3 h-3 text-primary" /> {t.serverName} ({t.serverPort})
-                        </span>
-                      ) : (
-                        <span className="text-xs text-zinc-600">-</span>
-                      )}
-                    </td>
-                    <td className="py-4 px-4">{getStatusBadge(t.status)}</td>
-                    <td className="py-4 px-4 text-xs text-zinc-500">
-                      {t.updatedAt ? new Date(t.updatedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '-'}
-                    </td>
-                    <td className="py-4 px-4 text-right">
-                      <button
-                        onClick={() => handleSelectAdminTicket(t)}
-                        className="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold rounded-lg transition border border-zinc-700 flex items-center gap-1.5 ml-auto"
-                      >
-                        <MessageSquare className="w-3.5 h-3.5 text-sky-400" /> Buka Chat
-                      </button>
-                    </td>
-                  </tr>
-                ))
+              (paginatedTickets || []).map(t => (
+                <tr key={t.id} className="hover:bg-zinc-900/30 transition">
+                  <td className="py-4 px-4 font-mono text-xs font-bold text-zinc-500">#{t.id}</td>
+                  <td className="py-4 px-4">
+                    <div className="font-bold text-white">{t.username}</div>
+                    <div className="text-xs text-zinc-500">{t.email}</div>
+                  </td>
+                  <td className="py-4 px-4 font-semibold text-white max-w-xs truncate">{t.subject}</td>
+                  <td className="py-4 px-4 text-xs text-zinc-300">{getCategoryLabel(t.category)}</td>
+                  <td className="py-4 px-4">{getPriorityBadge(t.priority)}</td>
+                  <td className="py-4 px-4">
+                    {t.serverName ? (
+                      <span className="inline-flex items-center gap-1 text-xs text-zinc-300 bg-zinc-900/60 px-2 py-1 rounded border border-zinc-800/80">
+                        <Server className="w-3 h-3 text-primary" /> {t.serverName} ({t.serverPort})
+                      </span>
+                    ) : (
+                      <span className="text-xs text-zinc-600">-</span>
+                    )}
+                  </td>
+                  <td className="py-4 px-4">{getStatusBadge(t.status)}</td>
+                  <td className="py-4 px-4 text-xs text-zinc-500">
+                    {t.updatedAt ? new Date(t.updatedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '-'}
+                  </td>
+                  <td className="py-4 px-4 text-right">
+                    <button
+                      onClick={() => handleSelectAdminTicket(t)}
+                      className="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold rounded-lg transition border border-zinc-700 flex items-center gap-1.5 ml-auto"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5 text-sky-400" /> Buka Chat
+                    </button>
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Footer */}
+      {renderPaginationFooter && renderPaginationFooter(
+        ticketCurrentPage,
+        totalTicketPages,
+        (filteredTickets || []).length,
+        ticketsPerPage,
+        setTicketCurrentPage,
+        setTicketsPerPage,
+        "tiket"
+      )}
 
       {/* Slide-over Sidebar untuk Obrolan Tiket */}
       {selectedTicket && (

@@ -8,6 +8,13 @@
       "when": 1782307282637,
       "tag": "0000_faithful_lifeguard",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1783129440569,
+      "tag": "0001_fine_shockwave",
+      "breakpoints": true
     }
   ]
 }

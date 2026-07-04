@@ -1,4 +1,4 @@
-const API_URL = '/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
@@ -228,6 +228,14 @@ export const api = {
     return data;
   },
   // Admin Endpoints
+  getSystemHealth: async () => {
+    const res = await fetch(`${API_URL}/admin/system-health`, {
+      headers: getAuthHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Gagal memeriksa status sistem');
+    return data;
+  },
   getAdminStats: async () => {
     const res = await fetch(`${API_URL}/admin/stats`, {
       headers: getAuthHeaders()
@@ -261,7 +269,9 @@ export const api = {
     return data;
   },
   getPlans: async () => {
-    const res = await fetch(`${API_URL}/plans`);
+    const res = await fetch(`${API_URL}/plans`, {
+      headers: getAuthHeaders()
+    });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
     return data;

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { User, Lock, Mail, Save, Shield, Loader2, DollarSign, Eye, X, Printer, Share2, Download, Check, Headphones, MessageSquare, ExternalLink, Sparkles } from 'lucide-react';
+import { User, Lock, Mail, Save, Shield, Loader2, DollarSign, Eye, X, Printer, Share2, Download, Check, Headphones, MessageSquare, ExternalLink, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { api } from '../services/api';
 import Navbar from '../components/Navbar';
@@ -8,6 +8,7 @@ import Footer from '../components/Footer';
 import ConfirmModal from '../components/ConfirmModal';
 import TransactionReceiptModal from '../components/TransactionReceiptModal';
 import { SkeletonTable } from '../components/DataLoading';
+import CustomSelect from '../components/CustomSelect';
 
 export default function ClientArea() {
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {}, isDanger: false, confirmText: 'Konfirmasi' });
@@ -29,6 +30,15 @@ export default function ClientArea() {
   const [loadingTx, setLoadingTx] = useState(true);
   const [transactions, setTransactions] = useState([]);
   const [showTrxDetailModal, setShowTrxDetailModal] = useState(null);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  const totalPages = Math.ceil(transactions.length / itemsPerPage) || 1;
+  const paginatedTransactions = transactions.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   useEffect(() => {
     document.title = 'Client Area - MCloud';
@@ -269,86 +279,156 @@ export default function ClientArea() {
                 {loadingTx ? (
                   <SkeletonTable rows={4} columns={5} className="border border-zinc-800/80 rounded-xl" />
                 ) : (
-                  <div className="bg-[#121212] border border-zinc-800/80 rounded-xl overflow-hidden">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="border-b border-zinc-800 bg-zinc-900/50 text-xs text-zinc-400 uppercase font-bold tracking-wider">
-                          <th className="py-3.5 px-4">ID / Tanggal</th>
-                          <th className="py-3.5 px-4">Keterangan / Layanan</th>
-                          <th className="py-3.5 px-4">Nominal</th>
-                          <th className="py-3.5 px-4">Status</th>
-                          <th className="py-3.5 px-4 text-right">Aksi</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-zinc-800/60 text-sm">
-                        {transactions.length > 0 ? (
-                          transactions.map((t) => {
-                            let parsedConfig = {};
-                            try {
-                              if (t.config) parsedConfig = JSON.parse(t.config);
-                            } catch (e) {}
-                            
-                            const descText = parsedConfig.note || parsedConfig.type || (t.snapToken ? 'Pembayaran Midtrans' : 'Transaksi Layanan');
-                            
-                            return (
-                              <tr key={t.id} className="hover:bg-zinc-900/40 transition-colors">
-                                <td className="py-3.5 px-4">
-                                  <div className="font-mono font-bold text-white">#{t.id}</div>
-                                  <div className="text-xs text-zinc-500 mt-0.5">
-                                    {t.createdAt ? new Date(t.createdAt).toLocaleString('id-ID') : '-'}
-                                  </div>
-                                </td>
-                                <td className="py-3.5 px-4">
-                                  <div className="text-zinc-200 font-medium">{descText}</div>
-                                  {parsedConfig.serverName && (
-                                    <div className="text-xs text-zinc-500 mt-0.5">Server: {parsedConfig.serverName}</div>
-                                  )}
-                                </td>
-                                <td className="py-3.5 px-4 font-mono font-bold text-zinc-200">
-                                  Rp {(t.amount || 0).toLocaleString('id-ID')}
-                                </td>
-                                <td className="py-3.5 px-4">
-                                  {t.status === 'success' && (
-                                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                      Success
-                                    </span>
-                                  )}
-                                  {t.status === 'admin_manual' && (
-                                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                                      Admin Manual
-                                    </span>
-                                  )}
-                                  {t.status === 'pending' && (
-                                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                                      Pending
-                                    </span>
-                                  )}
-                                  {!['success', 'admin_manual', 'pending'].includes(t.status) && (
-                                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-zinc-800 text-zinc-400">
-                                      {t.status}
-                                    </span>
-                                  )}
-                                </td>
-                                <td className="py-3.5 px-4 text-right">
-                                  <button
-                                    onClick={() => setShowTrxDetailModal(t)}
-                                    className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 ml-auto"
-                                  >
-                                    <Eye className="w-3.5 h-3.5" /> Struk / Detail
-                                  </button>
-                                </td>
-                              </tr>
-                            );
-                          })
-                        ) : (
-                          <tr>
-                            <td colSpan="5" className="py-12 text-center text-zinc-500">
-                              Belum ada riwayat transaksi ditemukan.
-                            </td>
+                  <div>
+                    <div className="bg-[#121212] border border-zinc-800/80 rounded-xl overflow-hidden">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="border-b border-zinc-800 bg-zinc-900/50 text-xs text-zinc-400 uppercase font-bold tracking-wider">
+                            <th className="py-3.5 px-4">ID / Tanggal</th>
+                            <th className="py-3.5 px-4">Keterangan / Layanan</th>
+                            <th className="py-3.5 px-4">Nominal</th>
+                            <th className="py-3.5 px-4">Status</th>
+                            <th className="py-3.5 px-4 text-right">Aksi</th>
                           </tr>
-                        )}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-800/60 text-sm">
+                          {paginatedTransactions.length > 0 ? (
+                            paginatedTransactions.map((t) => {
+                              let parsedConfig = {};
+                              try {
+                                if (t.config) parsedConfig = JSON.parse(t.config);
+                              } catch (e) {}
+                              
+                              const descText = parsedConfig.note || parsedConfig.type || (t.snapToken ? 'Pembayaran Midtrans' : 'Transaksi Layanan');
+                              
+                              return (
+                                <tr key={t.id} className="hover:bg-zinc-900/40 transition-colors">
+                                  <td className="py-3.5 px-4">
+                                    <div className="font-mono font-bold text-white">#{t.id}</div>
+                                    <div className="text-xs text-zinc-500 mt-0.5">
+                                      {t.createdAt ? new Date(t.createdAt).toLocaleString('id-ID') : '-'}
+                                    </div>
+                                  </td>
+                                  <td className="py-3.5 px-4">
+                                    <div className="text-zinc-200 font-medium">{descText}</div>
+                                    {parsedConfig.serverName && (
+                                      <div className="text-xs text-zinc-500 mt-0.5">Server: {parsedConfig.serverName}</div>
+                                    )}
+                                  </td>
+                                  <td className="py-3.5 px-4 font-mono font-bold text-zinc-200">
+                                    Rp {(t.amount || 0).toLocaleString('id-ID')}
+                                  </td>
+                                  <td className="py-3.5 px-4">
+                                    {t.status === 'success' && (
+                                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                        Success
+                                      </span>
+                                    )}
+                                    {t.status === 'admin_manual' && (
+                                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                        Admin Manual
+                                      </span>
+                                    )}
+                                    {t.status === 'pending' && (
+                                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                        Pending
+                                      </span>
+                                    )}
+                                    {!['success', 'admin_manual', 'pending'].includes(t.status) && (
+                                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-zinc-800 text-zinc-400">
+                                        {t.status}
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="py-3.5 px-4 text-right">
+                                    <button
+                                      onClick={() => setShowTrxDetailModal(t)}
+                                      className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 ml-auto"
+                                    >
+                                      <Eye className="w-3.5 h-3.5" /> Struk / Detail
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          ) : (
+                            <tr>
+                              <td colSpan="5" className="py-12 text-center text-zinc-500">
+                                Belum ada riwayat transaksi ditemukan.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 pt-4 border-t border-zinc-800/80 text-xs text-zinc-400">
+                      <div className="flex items-center gap-3">
+                        <span>
+                          Menampilkan <strong className="text-white">{transactions.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}</strong> - <strong className="text-white">{Math.min(currentPage * itemsPerPage, transactions.length)}</strong> dari <strong className="text-white">{transactions.length}</strong> transaksi
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-zinc-500">Per halaman:</span>
+                          <CustomSelect 
+                            size="sm"
+                            className="!w-20"
+                            value={itemsPerPage} 
+                            onChange={(e) => {
+                              setItemsPerPage(Number(e.target.value));
+                              setCurrentPage(1);
+                            }}
+                          >
+                            <option value={5}>5</option>
+                            <option value={10}>10</option>
+                            <option value={25}>25</option>
+                            <option value={50}>50</option>
+                          </CustomSelect>
+                        </div>
+                      </div>
+
+                      {totalPages >= 1 && (
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                            title="Halaman Sebelumnya"
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </button>
+                          
+                          {Array.from({ length: totalPages }, (_, i) => i + 1)
+                            .filter(page => page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1))
+                            .map((page, index, array) => (
+                              <React.Fragment key={page}>
+                                {index > 0 && array[index - 1] !== page - 1 && (
+                                  <span className="px-2 text-zinc-600">...</span>
+                                )}
+                                <button
+                                  onClick={() => setCurrentPage(page)}
+                                  className={`px-3 py-1.5 rounded-md font-bold transition-colors ${
+                                    currentPage === page
+                                      ? 'bg-white text-black shadow-lg'
+                                      : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800'
+                                  }`}
+                                >
+                                  {page}
+                                </button>
+                              </React.Fragment>
+                            ))
+                          }
+
+                          <button
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                            className="p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                            title="Halaman Berikutnya"
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

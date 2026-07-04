@@ -1,10 +1,17 @@
 import http from 'node:http';
 import bcrypt from 'bcrypt';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import dotenv from 'dotenv';
 import { eq } from 'drizzle-orm';
 import { db } from '../../../database/db.js';
-import { users, activity_logs, transactions, servers } from '../../../database/schema.js';
+import { users, activity_logs, transactions, servers, settings } from '../../../database/schema.js';
 import { parseJSON } from './utils/parser.js';
 import { generateToken, verifyToken } from './utils/jwt.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 function logActivity(userId, action, details = null) {
   try {
@@ -18,13 +25,31 @@ function logActivity(userId, action, details = null) {
   }
 }
 
-const PORT = 3001;
+const PORT = parseInt(process.env.AUTH_SERVICE_PORT || 3001);
+const HOST = process.env.AUTH_SERVICE_HOST || 'localhost';
 
 const server = http.createServer(async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
 
+  if (req.method === 'GET' && (req.url === '/health' || req.url === '/api/auth/health')) {
+    res.statusCode = 200;
+    return res.end(JSON.stringify({
+      status: 'ONLINE',
+      service: 'auth-service',
+      port: PORT,
+      uptime: process.uptime(),
+      timestamp: Date.now()
+    }));
+  }
+
   if (req.method === 'POST' && req.url === '/register') {
     try {
+      const modeObj = db.select().from(settings).where(eq(settings.key, 'maintenance_mode')).get();
+      if (modeObj && modeObj.value === 'true') {
+        res.statusCode = 503;
+        return res.end(JSON.stringify({ error: 'Sistem sedang dalam mode pemeliharaan. Pendaftaran akun baru ditutup sementara.' }));
+      }
+
       const body = await parseJSON(req);
       const { email, username, password } = body;
 
@@ -75,6 +100,12 @@ const server = http.createServer(async (req, res) => {
       if (!isMatch) {
         res.statusCode = 401;
         return res.end(JSON.stringify({ error: 'Invalid credentials' }));
+      }
+
+      const modeObj = db.select().from(settings).where(eq(settings.key, 'maintenance_mode')).get();
+      if (modeObj && modeObj.value === 'true' && user.role !== 'admin') {
+        res.statusCode = 503;
+        return res.end(JSON.stringify({ error: 'Sistem sedang dalam mode pemeliharaan. Akses login saat ini HANYA terbuka untuk Administrator Sistem.' }));
       }
 
       logActivity(user.id, 'login');
@@ -272,7 +303,8 @@ const server = http.createServer(async (req, res) => {
     }
     try {
       try {
-        await fetch(`http://localhost:3003/admin/users/${targetId}/cleanup`, {
+        const provisioningUrl = process.env.PROVISIONING_SERVICE_URL || 'http://localhost:3003';
+        await fetch(`${provisioningUrl}/admin/users/${targetId}/cleanup`, {
           method: 'POST',
           headers: { Authorization: authHeader }
         });
@@ -297,6 +329,6 @@ const server = http.createServer(async (req, res) => {
   res.end(JSON.stringify({ error: 'Not Found' }));
 });
 
-server.listen(PORT, () => {
-  console.log(`Auth Service is running on http://localhost:${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`Auth Service is running on http://${HOST}:${PORT}`);
 });

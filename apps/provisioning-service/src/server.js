@@ -1,10 +1,17 @@
 import http from 'node:http';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import dotenv from 'dotenv';
 import { parseJSON } from './utils/parser.js';
 import { verifyToken } from '../../auth-service/src/utils/jwt.js';
 import { createContainer, startContainer, stopContainer, restartContainer, deleteContainer, deleteUserContainers, extendServer, syncServerStatuses, getServerLogs, getServerStats, rebuildContainer } from './services/dockerService.js';
 import { db } from '../../../database/db.js';
 import { servers, users, activity_logs, transactions, tickets, ticket_messages } from '../../../database/schema.js';
 import { eq, desc } from 'drizzle-orm';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 function logActivity(userId, action, details = null) {
   try {
@@ -22,13 +29,16 @@ import fs from 'node:fs';
 
 const upload = multer({ dest: '/tmp/' });
 
-const PORT = 3003;
+const PORT = parseInt(process.env.PROVISIONING_SERVICE_PORT || 3003);
+const HOST = process.env.PROVISIONING_SERVICE_HOST || 'localhost';
 
 const authMiddleware = (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    res.statusCode = 401;
-    res.end(JSON.stringify({ error: 'Unauthorized' }));
+    if (!res.writableEnded && !res.headersSent) {
+      res.statusCode = 401;
+      res.end(JSON.stringify({ error: 'Unauthorized' }));
+    }
     return null;
   }
 
@@ -36,8 +46,10 @@ const authMiddleware = (req, res) => {
   const token = authHeader.split(' ')[1];
   const user = verifyToken(token);
   if (!user) {
-    res.statusCode = 401;
-    res.end(JSON.stringify({ error: 'Invalid or expired token' }));
+    if (!res.writableEnded && !res.headersSent) {
+      res.statusCode = 401;
+      res.end(JSON.stringify({ error: 'Invalid or expired token' }));
+    }
     return null;
   }
   return user;
@@ -47,6 +59,17 @@ const server = http.createServer(async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
 
   const url = req.url.split('?')[0];
+
+  if (req.method === 'GET' && (url === '/health' || url === '/api/servers/health' || url === '/api/tickets/health')) {
+    res.statusCode = 200;
+    return res.end(JSON.stringify({
+      status: 'ONLINE',
+      service: 'provisioning-service',
+      port: 3003,
+      uptime: process.uptime(),
+      timestamp: Date.now()
+    }));
+  }
 
   if (req.method === 'GET' && url === '/') {
     const user = authMiddleware(req, res);
@@ -65,7 +88,8 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'GET' && url === '/admin/servers') {
     const user = authMiddleware(req, res);
-    if (!user || user.role !== 'admin') {
+    if (!user) return;
+    if (user.role !== 'admin') {
       res.statusCode = 403;
       return res.end(JSON.stringify({ error: 'Forbidden' }));
     }
@@ -94,7 +118,8 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'POST' && url === '/admin/servers/create') {
     const user = authMiddleware(req, res);
-    if (!user || user.role !== 'admin') {
+    if (!user) return;
+    if (user.role !== 'admin') {
       res.statusCode = 403;
       return res.end(JSON.stringify({ error: 'Forbidden' }));
     }
@@ -156,7 +181,8 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'PUT' && url.match(/^\/admin\/servers\/(\d+)\/extend$/)) {
     const user = authMiddleware(req, res);
-    if (!user || user.role !== 'admin') {
+    if (!user) return;
+    if (user.role !== 'admin') {
       res.statusCode = 403;
       return res.end(JSON.stringify({ error: 'Forbidden' }));
     }
@@ -213,7 +239,8 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'POST' && url.match(/^\/admin\/(?:users|servers\/user)\/(\d+)\/cleanup$/)) {
     const user = authMiddleware(req, res);
-    if (!user || user.role !== 'admin') {
+    if (!user) return;
+    if (user.role !== 'admin') {
       res.statusCode = 403;
       return res.end(JSON.stringify({ error: 'Forbidden' }));
     }
@@ -233,7 +260,8 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'GET' && url === '/admin/logs') {
     const user = authMiddleware(req, res);
-    if (!user || user.role !== 'admin') {
+    if (!user) return;
+    if (user.role !== 'admin') {
       res.statusCode = 403;
       return res.end(JSON.stringify({ error: 'Forbidden' }));
     }
@@ -701,9 +729,9 @@ const server = http.createServer(async (req, res) => {
       }).returning().get();
 
       let newStatus = ticket.status;
-      if (user.role === 'admin' && ticket.status === 'open') {
+      if (user.role === 'admin' && (ticket.status === 'open' || !ticket.status)) {
         newStatus = 'in_progress';
-      } else if (user.role !== 'admin' && (ticket.status === 'resolved' || ticket.status === 'closed')) {
+      } else if (user.role !== 'admin') {
         newStatus = 'open';
       }
 
@@ -759,7 +787,8 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'GET' && url === '/admin/tickets') {
     const user = authMiddleware(req, res);
-    if (!user || user.role !== 'admin') {
+    if (!user) return;
+    if (user.role !== 'admin') {
       res.statusCode = 403;
       return res.end(JSON.stringify({ error: 'Forbidden' }));
     }
@@ -819,6 +848,6 @@ setInterval(async () => {
   }
 }, 10000); // Check every 10 seconds
 
-server.listen(PORT, () => {
-  console.log(`Provisioning Service is running on http://localhost:${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`Provisioning Service is running on http://${HOST}:${PORT}`);
 });

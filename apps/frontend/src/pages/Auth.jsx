@@ -22,14 +22,29 @@ export default function Auth() {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [maintenanceSettings, setMaintenanceSettings] = useState(null);
   
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      const redirect = searchParams.get('redirect');
+      const plan = searchParams.get('plan');
+      if (redirect === 'checkout') {
+        navigate(`/checkout?plan=${plan || 'slime'}`, { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
+      return;
+    }
     setIsMounted(true);
     setIsLogin(location.pathname === '/login');
     document.title = location.pathname === '/login' ? 'Masuk - MCloud' : 'Daftar - MCloud';
     setError('');
     setSuccess('');
-  }, [location.pathname]);
+    api.getSettings().then(data => setMaintenanceSettings(data)).catch(() => {});
+  }, [location.pathname, navigate, searchParams]);
+
+  const isMaintenance = maintenanceSettings?.maintenance_mode === 'true';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,6 +52,9 @@ export default function Auth() {
     setSuccess('');
     setLoading(true);
     try {
+      if (isMaintenance && !isLogin) {
+        throw new Error('Sistem sedang dalam mode pemeliharaan. Pendaftaran akun baru ditutup sementara.');
+      }
       let userRole = 'user';
       if (isLogin) {
         const data = await api.login(username, password);
@@ -119,6 +137,16 @@ export default function Auth() {
             <h2 className="text-3xl font-extrabold mb-2 text-white">Buat Akun</h2>
             <p className="text-sm text-zinc-400 mb-6">Bergabunglah dengan MCloud untuk hosting duniamu.</p>
             
+            {isMaintenance && (
+              <div className="bg-amber-500/10 border border-amber-500/30 text-amber-300 p-3.5 rounded-xl mb-6 text-xs sm:text-sm flex items-start gap-2.5 shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping mt-1 shrink-0"></span>
+                <div>
+                  <span className="font-bold text-amber-200 block mb-0.5">MODE PEMELIHARAAN AKTIF</span>
+                  Pendaftaran akun baru ditutup sementara selama masa pemeliharaan sistem.
+                </div>
+              </div>
+            )}
+
             {error && !isLogin && <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-3 rounded-xl mb-6 text-sm">{error}</div>}
             {success && !isLogin && <div className="bg-emerald-500/10 border border-emerald-500/50 text-emerald-400 p-3 rounded-xl mb-6 text-sm flex items-center gap-2"><CheckCircle2 className="w-4 h-4"/> {success}</div>}
             
@@ -215,6 +243,16 @@ export default function Auth() {
             <h2 className="text-3xl font-extrabold mb-2 text-white">Selamat Datang</h2>
             <p className="text-sm text-zinc-400 mb-6">Masuk untuk mengelola servermu.</p>
             
+            {isMaintenance && (
+              <div className="bg-amber-500/10 border border-amber-500/30 text-amber-300 p-3.5 rounded-xl mb-6 text-xs sm:text-sm flex items-start gap-2.5 shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping mt-1 shrink-0"></span>
+                <div>
+                  <span className="font-bold text-amber-200 block mb-0.5">MODE PEMELIHARAAN AKTIF</span>
+                  Login pengguna umum ditutup sementara. Akses saat ini HANYA terbuka untuk Administrator Sistem.
+                </div>
+              </div>
+            )}
+
             {error && isLogin && <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-3 rounded-xl mb-6 text-sm">{error}</div>}
             {success && isLogin && <div className="bg-emerald-500/10 border border-emerald-500/50 text-emerald-400 p-3 rounded-xl mb-6 text-sm flex items-center gap-2"><CheckCircle2 className="w-4 h-4"/> {success}</div>}
             

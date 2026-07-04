@@ -3,9 +3,11 @@
 ```text
 bedrock-saas/
 ├── AGENT.md
+├── README.md                     # Root README (Project Overview & Quick Start)
 ├── package.json                  # Root package.json (Runner 'npm run dev')
 ├── docs/ 
 │   ├── PRD.md
+│   ├── SETUP.md
 │   ├── STRUCTURE_PROJEK.md
 │   └── TODO_SDLC.md
 │
