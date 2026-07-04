@@ -153,7 +153,8 @@ Akses dasbor administrator dengan login menggunakan akun default:
 
 Untuk panduan teknis yang lebih mendalam seputar arsitektur, spesifikasi produk, dan petunjuk instalasi lengkap, silakan merujuk pada direktori dokumentasi di folder `docs/`:
 
-- **[🔧 Panduan Instalasi & Setup Lengkap](file:///home/shinomiya/coding/projek/mcloud/docs/SETUP.md)** — Instruksi detail instalasi, konfigurasi Docker, spesifikasi environment, dan penyelesaian masalah (*troubleshooting*).
+- **[🛡️ Panduan Deployment Production](file:///home/shinomiya/coding/projek/mcloud/docs/PRODUCTION_SETUP.md)** — Panduan resmi implementasi di server live (VPS/Cloud) lengkap dengan konfigurasi Docker, Nginx Reverse Proxy (SSL & WebSocket), PM2 Cluster, dan Midtrans Snap Production.
+- **[🔧 Panduan Instalasi Lokal (Development)](file:///home/shinomiya/coding/projek/mcloud/docs/SETUP.md)** — Instruksi detail instalasi di lingkungan pengembangan lokal, spesifikasi environment, dan penyelesaian masalah (*troubleshooting*).
 - **[📂 Arsitektur & Struktur Direktori](file:///home/shinomiya/coding/projek/mcloud/docs/STRUKTURE_PROJEK.md)** — Peta struktur direktori monorepo dan pemetaan berkas kode sumber.
 - **[📄 Product Requirement Document (PRD)](file:///home/shinomiya/coding/projek/mcloud/docs/PRD.md)** — Spesifikasi produk, alur pengguna, model bisnis, dan skenario penggunaan aplikasi.
 - **[✅ Roadmap & SDLC Checklist](file:///home/shinomiya/coding/projek/mcloud/docs/TODO_SDLC.md)** — Daftar rencana pengembangan fitur, tahapan siklus hidup perangkat lunak, dan status implementasi.
