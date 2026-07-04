@@ -100,6 +100,37 @@ export const api = {
     if (!res.ok) throw new Error(data.error);
     return data;
   },
+  getPaymentConfig: async () => {
+    const res = await fetch(`${API_URL}/payments/config`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to fetch payment config');
+    return data;
+  },
+  loadSnap: async () => {
+    if (window.snap) return window.snap;
+    const config = await api.getPaymentConfig();
+    return new Promise((resolve, reject) => {
+      const existingScript = document.querySelector(`script[src="${config.snapUrl}"]`);
+      if (existingScript) {
+        if (window.snap) return resolve(window.snap);
+        existingScript.addEventListener('load', () => resolve(window.snap));
+        return;
+      }
+      // Remove any old snap script if environment changed
+      const oldScript = document.querySelector('script[src*="midtrans.com/snap/snap.js"]');
+      if (oldScript) oldScript.remove();
+
+      const script = document.createElement('script');
+      script.src = config.snapUrl;
+      script.setAttribute('data-client-key', config.clientKey);
+      script.onload = () => resolve(window.snap);
+      script.onerror = () => reject(new Error('Gagal memuat Midtrans Snap'));
+      document.body.appendChild(script);
+    });
+  },
   checkout: async (amount, config = {}) => {
     const res = await fetch(`${API_URL}/payments/checkout`, {
       method: 'POST',

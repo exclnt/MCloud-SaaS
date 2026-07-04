@@ -59,10 +59,7 @@ export default function Checkout() {
       } catch(e) {}
     }
 
-    const script = document.createElement("script");
-    script.src = "https://app.sandbox.midtrans.com/snap/snap.js";
-    script.setAttribute("data-client-key", "SB-Mid-client-YOUR_CLIENT_KEY");
-    document.body.appendChild(script);
+    api.loadSnap().catch(err => console.error("Gagal load snap:", err));
     
     api.getPlans().then(plans => {
       const dbPlan = plans.find(p => p.name.toLowerCase() === planKey);
@@ -125,7 +122,8 @@ export default function Checkout() {
 
       const data = await api.checkout(selectedPlan.price, payloadConfig);
 
-      window.snap.pay(data.token, {
+      const snapInstance = await api.loadSnap();
+      snapInstance.pay(data.token, {
         onSuccess: function (result) {
           toast.success("Pembayaran berhasil!");
           navigate(`/transaction/${data.transactionId}`);

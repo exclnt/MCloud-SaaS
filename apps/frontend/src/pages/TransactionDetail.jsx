@@ -130,9 +130,10 @@ export default function TransactionDetail() {
                   <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end border-t sm:border-t-0 border-zinc-800 pt-3 sm:pt-0">
                     {transaction.snapToken && (
                       <button
-                        onClick={() => {
-                          if (window.snap) {
-                            window.snap.pay(transaction.snapToken, {
+                        onClick={async () => {
+                          try {
+                            const snap = await api.loadSnap();
+                            snap.pay(transaction.snapToken, {
                               onSuccess: () => {
                                 toast.success("Pembayaran berhasil!");
                                 fetchTransactionDetail();
@@ -149,8 +150,8 @@ export default function TransactionDetail() {
                                 fetchTransactionDetail();
                               }
                             });
-                          } else {
-                            toast.error("Sistem Midtrans Snap belum siap");
+                          } catch (err) {
+                            toast.error("Gagal memuat sistem Midtrans Snap");
                           }
                         }}
                         className="px-3.5 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-extrabold rounded-xl transition-all flex items-center gap-1.5 shadow-lg shadow-primary/20 active:scale-95"

@@ -1,8 +1,8 @@
 /**
- * PM2 Ecosystem Configuration for MCloud SaaS (Production Environment)
+ * PM2 Ecosystem Configuration for MCloud SaaS (Production Environment - CommonJS version)
  * 
  * Usage:
- *   1. Start all services  : pm2 start ecosystem.config.js
+ *   1. Start all services  : pm2 start ecosystem.config.cjs (or ecosystem.config.js)
  *   2. Save for autostart  : pm2 save && pm2 startup
  *   3. View live logs      : pm2 logs
  *   4. Monitor resource    : pm2 monit

@@ -199,7 +199,7 @@ const server = http.createServer(async (req, res) => {
     return res.end(JSON.stringify(maintenanceBlock));
   }
 
-  if (req.method === 'GET' && req.url === '/api/admin/system-health') {
+  if ((req.method === 'GET' || req.method === 'HEAD') && (req.url === '/api/admin/system-health' || req.url === '/api/health' || req.url === '/health')) {
     res.setHeader('Content-Type', 'application/json');
     const [authHealth, paymentHealth, provisioningHealth, frontendHealth, dockerHealth] = await Promise.all([
       pingService('Auth Service', authPort),

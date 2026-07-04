@@ -198,6 +198,17 @@ const server = http.createServer(async (req, res) => {
     }));
   }
 
+  if (req.method === 'GET' && (url === '/config' || url === '/api/payments/config')) {
+    const isProd = process.env.MIDTRANS_IS_PRODUCTION === 'true';
+    const clientKey = (process.env.MIDTRANS_CLIENT_KEY || 'Mid-client-YOUR_CLIENT_KEY').trim();
+    res.statusCode = 200;
+    return res.end(JSON.stringify({
+      isProduction: isProd,
+      clientKey: clientKey,
+      snapUrl: isProd ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js'
+    }));
+  }
+
   if (req.method === 'POST' && url === '/checkout') {
     const user = authMiddleware(req, res);
     if (!user) return;
@@ -363,8 +374,8 @@ const server = http.createServer(async (req, res) => {
       
       const trxIdMatch = orderId.match(/^MCLOUD-(\d+)-/);
       if (!trxIdMatch) {
-        res.statusCode = 400;
-        return res.end(JSON.stringify({ error: 'Invalid order_id format' }));
+        res.statusCode = 200;
+        return res.end(JSON.stringify({ status: 'success', message: 'Midtrans test notification / non-MCloud order acknowledged' }));
       }
       
       const trxId = parseInt(trxIdMatch[1]);

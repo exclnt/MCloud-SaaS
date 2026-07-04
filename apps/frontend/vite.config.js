@@ -20,6 +20,13 @@ export default defineConfig(({ mode }) => {
       proxy: {
         '/api': gatewayUrl
       }
+    },
+    preview: {
+      allowedHosts: true,
+      port: 4173,
+      proxy: {
+        '/api': gatewayUrl
+      }
     }
   };
 });

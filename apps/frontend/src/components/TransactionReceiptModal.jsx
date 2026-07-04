@@ -134,9 +134,10 @@ export default function TransactionReceiptModal({ transaction, onClose, isPage =
                 <>
                   {transaction.snapToken && (
                     <button
-                      onClick={() => {
-                        if (window.snap) {
-                          window.snap.pay(transaction.snapToken, {
+                      onClick={async () => {
+                        try {
+                          const snap = await api.loadSnap();
+                          snap.pay(transaction.snapToken, {
                             onSuccess: () => {
                               toast.success("Pembayaran berhasil!");
                               window.location.reload();
@@ -153,8 +154,8 @@ export default function TransactionReceiptModal({ transaction, onClose, isPage =
                               window.location.reload();
                             }
                           });
-                        } else {
-                          toast.error("Sistem Midtrans Snap belum siap");
+                        } catch (err) {
+                          toast.error("Gagal memuat sistem Midtrans Snap");
                         }
                       }}
                       className="px-3 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-extrabold rounded-xl transition-all flex items-center gap-1 shadow-lg shadow-primary/20 active:scale-95"
