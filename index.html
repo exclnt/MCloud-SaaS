@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MCloud SaaS • Project Documentation</title>
+  <meta name="description" content="Comprehensive documentation for MCloud SaaS – Minecraft Bedrock hosting platform. Hosted on GitHub Pages." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="hero">
+    <h1>MCloud SaaS</h1>
+    <p class="tagline">A production‑ready Minecraft Bedrock hosting platform</p>
+    <nav class="nav">
+      <a href="#overview">Overview</a>
+      <a href="#setup">Setup</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#contribute">Contribute</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="overview" class="section">
+      <h2>Overview</h2>
+      <p>
+        MCloud SaaS provides one‑click provisioning of Minecraft Bedrock servers, integrated payment via Midtrans, and an admin dashboard with real‑time console access.
+        The platform runs as four Docker‑containerised micro‑services orchestrated by PM2.
+      </p>
+    </section>
+
+    <section id="setup" class="section">
+      <h2>Setup & Deployment</h2>
+      <p>Follow the <a href="docs/PRODUCTION_SETUP.md" target="_blank">Production Setup Guide</a> for a step‑by‑step deployment on a VPS or cloud server.</p>
+    </section>
+
+    <section id="architecture" class="section">
+      <h2>Architecture</h2>
+      <img src="architecture.svg" alt="Architecture diagram" class="responsive-img" />
+      <p>Four services (Gateway, Auth, Payment, Provisioning) exposed behind an Nginx reverse‑proxy with SSL.</p>
+    </section>
+
+    <section id="contribute" class="section">
+      <h2>Contribute</h2>
+      <p>Read our <a href="CONTRIBUTING.md" target="_blank">Contributing Guidelines</a> and start coding!</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>© 2026 Shinomiya – <a href="https://github.com/your‑username/mcloud-saas" target="_blank">GitHub Repository</a></p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
