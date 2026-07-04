@@ -1,7 +1,7 @@
 
 ---
 
-## 📑 Product Requirements Document (PRD) - Local Microservices MVP
+## Product Requirements Document (PRD) - Local Microservices MVP
 
 **Nama Produk:** BedrockHost SaaS (Local MVP)
 **Platform:** Web-based Dashboard (Akses via `localhost`)
@@ -53,7 +53,7 @@ Membangun dan menguji sistem otomatisasi (provisioning) hosting Minecraft Bedroc
 
 ---
 
-## 🖥️ Contoh Tampilan Informasi Server di Dashboard Lokal
+## Contoh Tampilan Informasi Server di Dashboard Lokal
 
 > **Server Name:** Lokal SMP
 > **Status:** Running

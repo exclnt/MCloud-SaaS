@@ -1,13 +1,13 @@
-# 🚀 MCloud SaaS - Setup & Installation Documentation (Development)
+# MCloud SaaS - Setup & Installation Documentation (Development)
 
-> 💡 **Ingin melakukan deployment ke server Live (VPS/Cloud) dengan Nginx, SSL, PM2 Cluster, dan Midtrans Production?**  
-> Silakan ikuti panduan resmi di: **[🛡️ Panduan Deployment Production (PRODUCTION_SETUP.md)](file:///home/shinomiya/coding/projek/mcloud/docs/PRODUCTION_SETUP.md)**.
+> **Ingin melakukan deployment ke server Live (VPS/Cloud) dengan Nginx, SSL, PM2 Cluster, dan Midtrans Production?** 
+> Silakan ikuti panduan resmi di: **[Panduan Deployment Production (PRODUCTION_SETUP.md)](file:///home/shinomiya/coding/projek/mcloud/docs/PRODUCTION_SETUP.md)**.
 
 Dokumen ini berisi panduan lengkap langkah demi langkah untuk melakukan instalasi, konfigurasi environment, inisialisasi database, serta menjalankan ekosistem mikroservis **MCloud SaaS** di lingkungan pengembangan lokal (*local development*).
 
 ---
 
-## 📋 Daftar Isi
+## Daftar Isi
 1. [Prasyarat Sistem](#1-prasyarat-sistem)
 2. [Arsitektur & Pemetaan Port](#2-arsitektur--pemetaan-port)
 3. [Langkah Instalasi](#3-langkah-instalasi)
@@ -49,28 +49,28 @@ MCloud menggunakan arsitektur monorepo mikroservis berbasis native `node:http` (
 ## 3. Langkah Instalasi
 
 1. **Clone Repositori Projek**
-   ```bash
-   git clone <url-repository-anda>
-   cd mcloud
-   ```
+ ```bash
+ git clone <url-repository-anda>
+ cd mcloud
+ ```
 
 2. **Instalasi Dependensi Root (Backend & Drizzle ORM)**
-   Jalankan perintah berikut di folder akar (*root*) projek untuk menginstal dependensi backend dan *tooling* monorepo:
-   ```bash
-   npm install
-   ```
+ Jalankan perintah berikut di folder akar (*root*) projek untuk menginstal dependensi backend dan *tooling* monorepo:
+ ```bash
+ npm install
+ ```
 
 3. **Instalasi Dependensi Frontend**
-   Masuk ke folder frontend atau gunakan flag `--prefix` untuk menginstal dependensi React:
-   ```bash
-   npm install --prefix apps/frontend
-   ```
-   *Alternatif:*
-   ```bash
-   cd apps/frontend
-   npm install
-   cd ../..
-   ```
+ Masuk ke folder frontend atau gunakan flag `--prefix` untuk menginstal dependensi React:
+ ```bash
+ npm install --prefix apps/frontend
+ ```
+ *Alternatif:*
+ ```bash
+ cd apps/frontend
+ npm install
+ cd ../..
+ ```
 
 ---
 
@@ -79,58 +79,58 @@ MCloud menggunakan arsitektur monorepo mikroservis berbasis native `node:http` (
 Projek ini menggunakan file konfigurasi terpusat pada akar repositori (`/.env`).
 
 1. **Salin File Template Environment**
-   ```bash
-   cp .env.example .env
-   ```
+ ```bash
+ cp .env.example .env
+ ```
 
 2. **Penjelasan & Kustomisasi Variabel Lingkungan**
-   Buka file `.env` dengan editor teks dan sesuaikan nilainya:
+ Buka file `.env` dengan editor teks dan sesuaikan nilainya:
 
-   ```ini
-   # --- Application Environment ---
-   NODE_ENV=development
+ ```ini
+ # --- Application Environment ---
+ NODE_ENV=development
 
-   # --- Microservices Ports & Hosts ---
-   GATEWAY_HOST=localhost
-   GATEWAY_PORT=3000
-   GATEWAY_URL=http://localhost:3000
+ # --- Microservices Ports & Hosts ---
+ GATEWAY_HOST=localhost
+ GATEWAY_PORT=3000
+ GATEWAY_URL=http://localhost:3000
 
-   AUTH_SERVICE_HOST=localhost
-   AUTH_SERVICE_PORT=3001
-   AUTH_SERVICE_URL=http://localhost:3001
+ AUTH_SERVICE_HOST=localhost
+ AUTH_SERVICE_PORT=3001
+ AUTH_SERVICE_URL=http://localhost:3001
 
-   PAYMENT_SERVICE_HOST=localhost
-   PAYMENT_SERVICE_PORT=3002
-   PAYMENT_SERVICE_URL=http://localhost:3002
+ PAYMENT_SERVICE_HOST=localhost
+ PAYMENT_SERVICE_PORT=3002
+ PAYMENT_SERVICE_URL=http://localhost:3002
 
-   PROVISIONING_SERVICE_HOST=localhost
-   PROVISIONING_SERVICE_PORT=3003
-   PROVISIONING_SERVICE_URL=http://localhost:3003
+ PROVISIONING_SERVICE_HOST=localhost
+ PROVISIONING_SERVICE_PORT=3003
+ PROVISIONING_SERVICE_URL=http://localhost:3003
 
-   FRONTEND_HOST=localhost
-   FRONTEND_PORT=5173
-   FRONTEND_URL=http://localhost:5173
+ FRONTEND_HOST=localhost
+ FRONTEND_PORT=5173
+ FRONTEND_URL=http://localhost:5173
 
-   # --- Database Configuration ---
-   # Lokasi file SQLite akan disimpan secara lokal
-   DATABASE_URL=./database/sqlite.db
+ # --- Database Configuration ---
+ # Lokasi file SQLite akan disimpan secara lokal
+ DATABASE_URL=./database/sqlite.db
 
-   # --- Security & Authentication (JWT) ---
-   # Ganti dengan string rahasia yang kuat dan unik
-   JWT_SECRET=mcloud-secret-key-super-secure
-   JWT_EXPIRES_IN=24h
+ # --- Security & Authentication (JWT) ---
+ # Ganti dengan string rahasia yang kuat dan unik
+ JWT_SECRET=mcloud-secret-key-super-secure
+ JWT_EXPIRES_IN=24h
 
-   # --- Payment Gateway (Midtrans) ---
-   MIDTRANS_IS_PRODUCTION=false
-   MIDTRANS_SERVER_KEY=Mid-server-YOUR_SERVER_KEY
-   MIDTRANS_CLIENT_KEY=Mid-client-YOUR_CLIENT_KEY
+ # --- Payment Gateway (Midtrans) ---
+ MIDTRANS_IS_PRODUCTION=false
+ MIDTRANS_SERVER_KEY=Mid-server-YOUR_SERVER_KEY
+ MIDTRANS_CLIENT_KEY=Mid-client-YOUR_CLIENT_KEY
 
-   # --- Provisioning & Docker ---
-   # Akses socket Docker untuk komunikasi container lokal
-   # Pada Linux/macOS: unix:///var/run/docker.sock
-   # Pada Windows (Docker Desktop TCP): tcp://127.0.0.1:2375 atau unix:///var/run/docker.sock (WSL)
-   DOCKER_HOST=unix:///var/run/docker.sock
-   ```
+ # --- Provisioning & Docker ---
+ # Akses socket Docker untuk komunikasi container lokal
+ # Pada Linux/macOS: unix:///var/run/docker.sock
+ # Pada Windows (Docker Desktop TCP): tcp://127.0.0.1:2375 atau unix:///var/run/docker.sock (WSL)
+ DOCKER_HOST=unix:///var/run/docker.sock
+ ```
 
 ---
 
@@ -139,24 +139,24 @@ Projek ini menggunakan file konfigurasi terpusat pada akar repositori (`/.env`).
 MCloud menggunakan **SQLite** (`better-sqlite3`) yang dikelola menggunakan **Drizzle ORM**. File database akan dibuat secara otomatis di dalam folder `database/sqlite.db`.
 
 1. **Migrasi / Sinkronisasi Skema Database**
-   Untuk menyinkronkan definisi skema (`database/schema.js`) langsung ke database SQLite:
-   ```bash
-   npm run db:push
-   ```
-   *Atau jika ingin menjalankan script migrasi manual:*
-   ```bash
-   npm run db:migrate
-   ```
+ Untuk menyinkronkan definisi skema (`database/schema.js`) langsung ke database SQLite:
+ ```bash
+ npm run db:push
+ ```
+ *Atau jika ingin menjalankan script migrasi manual:*
+ ```bash
+ npm run db:migrate
+ ```
 
 2. **Seeding Data Dummy (Opsional untuk Testing/Development)**
-   Jika Anda membutuhkan data dummy untuk pengetesan tampilan (pengguna, server game, transaksi, dan riwayat aktivitas), jalankan:
-   ```bash
-   npm run db:seed:faker
-   ```
-   > **Catatan:** Untuk menghapus seluruh data yang ada dan melakukan reset ulang seeding dari awal, gunakan:
-   > ```bash
-   > npm run db:reset:seed
-   > ```
+ Jika Anda membutuhkan data dummy untuk pengetesan tampilan (pengguna, server game, transaksi, dan riwayat aktivitas), jalankan:
+ ```bash
+ npm run db:seed:faker
+ ```
+ > **Catatan:** Untuk menghapus seluruh data yang ada dan melakukan reset ulang seeding dari awal, gunakan:
+ > ```bash
+ > npm run db:reset:seed
+ > ```
 
 ---
 
@@ -174,7 +174,7 @@ node create_admin.js
 - **Password**: `0987654321`
 - **Role**: `admin`
 
-> 💡 **Tips Keamanan:** Segera ubah kata sandi admin default tersebut melalui panel profil aplikasi setelah Anda berhasil login pertama kali!
+> **Tips Keamanan:** Segera ubah kata sandi admin default tersebut melalui panel profil aplikasi setelah Anda berhasil login pertama kali!
 
 ---
 
@@ -229,16 +229,16 @@ curl http://localhost:3000/api/admin/system-health
 **Contoh Response Sukses:**
 ```json
 {
-  "status": "success",
-  "timestamp": 1751628000000,
-  "services": [
-    { "service": "API Gateway", "port": 3000, "status": "ONLINE", "latency": "1ms" },
-    { "service": "Auth Service", "port": 3001, "status": "ONLINE", "latency": "3ms" },
-    { "service": "Payment Service", "port": 3002, "status": "ONLINE", "latency": "4ms" },
-    { "service": "Provisioning Service", "port": 3003, "status": "ONLINE", "latency": "5ms" },
-    { "service": "Frontend Application", "port": 5173, "status": "ONLINE", "latency": "< 5ms" },
-    { "service": "Docker Engine Runtime", "port": "unix.sock", "status": "ONLINE", "note": "v27.0.3 (0/10 kontainer aktif)" }
-  ]
+ "status": "success",
+ "timestamp": 1751628000000,
+ "services": [
+ { "service": "API Gateway", "port": 3000, "status": "ONLINE", "latency": "1ms" },
+ { "service": "Auth Service", "port": 3001, "status": "ONLINE", "latency": "3ms" },
+ { "service": "Payment Service", "port": 3002, "status": "ONLINE", "latency": "4ms" },
+ { "service": "Provisioning Service", "port": 3003, "status": "ONLINE", "latency": "5ms" },
+ { "service": "Frontend Application", "port": 5173, "status": "ONLINE", "latency": "< 5ms" },
+ { "service": "Docker Engine Runtime", "port": "unix.sock", "status": "ONLINE", "note": "v27.0.3 (0/10 kontainer aktif)" }
+ ]
 }
 ```
 
@@ -246,22 +246,22 @@ curl http://localhost:3000/api/admin/system-health
 
 ## 9. Troubleshooting Umum
 
-### ❌ Error: `connect ECONNREFUSED 127.0.0.1:300X` di API Gateway
+### Error: `connect ECONNREFUSED 127.0.0.1:300X` di API Gateway
 - **Penyebab**: Mikroservis target (misal port `3002` atau `3003`) belum menyala, mengalami crash, atau mati saat proses *startup*.
 - **Solusi**:
-  1. Pastikan tidak ada proses lain yang memakai port `3000` - `3003` dan `5173` sebelum menjalankan aplikasi.
-  2. Periksa log terminal service yang bersangkutan untuk melihat pesan error spesifik (seperti *syntax error* atau masalah koneksi database).
+ 1. Pastikan tidak ada proses lain yang memakai port `3000` - `3003` dan `5173` sebelum menjalankan aplikasi.
+ 2. Periksa log terminal service yang bersangkutan untuk melihat pesan error spesifik (seperti *syntax error* atau masalah koneksi database).
 
-### ❌ Error: `EACCES` atau `ENOENT` pada `docker.sock` di Provisioning Service
+### Error: `EACCES` atau `ENOENT` pada `docker.sock` di Provisioning Service
 - **Penyebab**: Service tidak memiliki izin (*permission*) untuk mengakses daemon Docker, atau Docker belum dijalankan di sistem operasi Anda.
 - **Solusi**:
-  1. Pastikan aplikasi Docker Desktop / daemon Docker Linux sudah aktif (`sudo systemctl status docker`).
-  2. Pastikan user terminal Anda memiliki hak akses ke grup docker (`sudo usermod -aG docker $USER`), atau sesuaikan path `DOCKER_HOST` pada file `.env`.
+ 1. Pastikan aplikasi Docker Desktop / daemon Docker Linux sudah aktif (`sudo systemctl status docker`).
+ 2. Pastikan user terminal Anda memiliki hak akses ke grup docker (`sudo usermod -aG docker $USER`), atau sesuaikan path `DOCKER_HOST` pada file `.env`.
 
-### ❌ Error: `ERR_STREAM_WRITE_AFTER_END: write after end`
+### Error: `ERR_STREAM_WRITE_AFTER_END: write after end`
 - **Penyebab**: Terjadi panggilan `res.end()` ganda pada *native HTTP request response* di Node.js (misalnya oleh middleware otentikasi yang gagal sekaligus oleh handler rute).
 - **Solusi**: Pastikan selalu menyertakan `return;` setelah pemanggilan middleware otentikasi di setiap handler rute:
-  ```javascript
-  const user = authMiddleware(req, res);
-  if (!user) return; // Wajib dihentikan agar tidak melanjutkan eksekusi ke bawah
-  ```
+ ```javascript
+ const user = authMiddleware(req, res);
+ if (!user) return; // Wajib dihentikan agar tidak melanjutkan eksekusi ke bawah
+ ```

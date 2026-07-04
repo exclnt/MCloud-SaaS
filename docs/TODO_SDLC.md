@@ -1,4 +1,4 @@
-# 📋 TODO_SDLC.md (Microservices + SQLite + Drizzle ORM)
+# TODO_SDLC.md (Microservices + SQLite + Drizzle ORM)
 
 ## Fase 1: Local Environment, Monorepo & Database Setup
 

@@ -1,4 +1,4 @@
-# 🛡️ MCloud SaaS — Production Deployment Guide
+# MCloud SaaS — Production Deployment Guide
 
 Dokumen ini adalah panduan resmi dan komprehensif untuk mengimplementasikan dan menjalankan **MCloud SaaS** di lingkungan **Production** (VPS, Dedicated Server, atau Cloud Instance seperti AWS, DigitalOcean, Google Cloud, atau Biznet Gio). 
 
@@ -6,7 +6,7 @@ Panduan ini mencakup instalasi sistem operasi, konfigurasi **Docker Engine**, pe
 
 ---
 
-## 📑 Daftar Isi
+## Daftar Isi
 1. [Spesifikasi Perangkat Keras & Sistem Operasi](#1-spesifikasi-perangkat-keras--sistem-operasi)
 2. [Arsitektur Deployment Production](#2-arsitektur-deployment-production)
 3. [Persiapan Sistem & Instalasi Prasyarat](#3-persiapan-sistem--instalasi-prasyarat)
@@ -42,26 +42,26 @@ Di lingkungan production, seluruh trafik web HTTP/HTTPS dari klien akan diterima
 
 ```mermaid
 graph TD
-    Client([🌐 Client / Gamer]) -->|HTTPS / 443| Nginx[🛡️ Nginx Reverse Proxy + Certbot SSL]
-    Client -->|Game Traffic / TCP 25565 & UDP 19132| Docker[📦 Docker Minecraft Containers]
-    
-    subgraph MCloud Server Node
-        Nginx -->|Static Files| Dist[📁 /apps/frontend/dist]
-        Nginx -->|Proxy /api/* & WS| Gateway[🔄 API Gateway :3000]
-        
-        subgraph PM2 Cluster Process
-            Gateway <-->|/api/auth| Auth[🔐 Auth Service :3001]
-            Gateway <-->|/api/payments| Pay[💳 Payment Service :3002]
-            Gateway <-->|/api/servers| Prov[🐳 Provisioning Service :3003]
-        end
-        
-        Prov <-->|unix:///var/run/docker.sock| Docker
-        Auth --- DB[(🗄️ SQLite Database / Drizzle ORM)]
-        Pay --- DB
-        Prov --- DB
-    end
-    
-    Pay <-->|HTTPS Webhook Notification| Midtrans([💸 Midtrans Payment Gateway Production])
+ Client([Client / Gamer]) -->|HTTPS / 443| Nginx[Nginx Reverse Proxy + Certbot SSL]
+ Client -->|Game Traffic / TCP 25565 & UDP 19132| Docker[Docker Minecraft Containers]
+ 
+ subgraph MCloud Server Node
+ Nginx -->|Static Files| Dist[/apps/frontend/dist]
+ Nginx -->|Proxy /api/* & WS| Gateway[API Gateway :3000]
+ 
+ subgraph PM2 Cluster Process
+ Gateway <-->|/api/auth| Auth[Auth Service :3001]
+ Gateway <-->|/api/payments| Pay[Payment Service :3002]
+ Gateway <-->|/api/servers| Prov[Provisioning Service :3003]
+ end
+ 
+ Prov <-->|unix:///var/run/docker.sock| Docker
+ Auth --- DB[( SQLite Database / Drizzle ORM)]
+ Pay --- DB
+ Prov --- DB
+ end
+ 
+ Pay <-->|HTTPS Webhook Notification| Midtrans([Midtrans Payment Gateway Production])
 ```
 
 ---
@@ -83,8 +83,8 @@ curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs
 
 # Verifikasi instalasi
-node -v   # Harus v20.x.x
-npm -v    # Harus v10.x.x
+node -v # Harus v20.x.x
+npm -v # Harus v10.x.x
 ```
 
 ### 3.3. Instalasi Docker Engine & Docker Compose
@@ -209,13 +209,13 @@ Agar sistem pembayaran otomatis berfungsi di lingkungan live, lakukan penyesuaia
 3. Salin **Server Key** dan **Client Key**, lalu tempelkan ke dalam file `.env` di atas.
 4. Masuk ke menu **Settings -> Configuration**.
 5. Pada bagian **Notification URL (Webhook)**, masukkan endpoint resmi API Gateway MCloud Anda:
-   ```http
-   https://mcloud.domainanda.com/api/payments/notification
-   ```
+ ```http
+ https://mcloud.domainanda.com/api/payments/notification
+ ```
 6. Aktifkan **Finish Redirect URL**, **Unfinish Redirect URL**, dan **Error Redirect URL** dengan nilai:
-   ```http
-   https://mcloud.domainanda.com/client-area
-   ```
+ ```http
+ https://mcloud.domainanda.com/client-area
+ ```
 7. Klik **Save**. Pastikan saluran pembayaran seperti **QRIS**, **GoPay**, dan **Virtual Account (BCA, Mandiri, BNI, BRI)** telah diaktifkan pada perjanjian kontrak Midtrans Anda.
 
 ---
@@ -234,7 +234,7 @@ npm run db:push
 node create_admin.js
 ```
 
-> ⚠️ **TINDAKAN WAJIB KEAMANAN**:  
+> **TINDAKAN WAJIB KEAMANAN**: 
 > Setelah sistem berjalan, **SEGERA LOGIN** ke `https://mcloud.domainanda.com` menggunakan akun default (`admin` / `0987654321`), lalu masuk ke menu **Profil / Pengaturan Admin** untuk **MENGGANTI PASSWORD DEFAULT** dengan kata sandi baru yang sangat kuat!
 
 ---
@@ -284,61 +284,61 @@ Tempelkan konfigurasi profesional berikut (ganti `mcloud.domainanda.com` dengan 
 
 ```nginx
 server {
-    listen 80;
-    server_name mcloud.domainanda.com;
+ listen 80;
+ server_name mcloud.domainanda.com;
 
-    # Root folder tempat file statis hasil build Vite berada
-    root /var/www/mcloud/apps/frontend/dist;
-    index index.html;
+ # Root folder tempat file statis hasil build Vite berada
+ root /var/www/mcloud/apps/frontend/dist;
+ index index.html;
 
-    # Logging
-    access_log /var/log/nginx/mcloud.access.log;
-    error_log /var/log/nginx/mcloud.error.log;
+ # Logging
+ access_log /var/log/nginx/mcloud.access.log;
+ error_log /var/log/nginx/mcloud.error.log;
 
-    # 1. Frontend React Routing (Single Page Application Fallback)
-    location / {
-        try_files $uri $uri/ /index.html;
-        add_header Cache-Control "no-cache, no-store, must-revalidate";
-    }
+ # 1. Frontend React Routing (Single Page Application Fallback)
+ location / {
+ try_files $uri $uri/ /index.html;
+ add_header Cache-Control "no-cache, no-store, must-revalidate";
+ }
 
-    # 2. Cache untuk asset statis gambar/JS/CSS (Optimasi Performa)
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
+ # 2. Cache untuk asset statis gambar/JS/CSS (Optimasi Performa)
+ location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {
+ expires 1y;
+ add_header Cache-Control "public, immutable";
+ }
 
-    # 3. Reverse Proxy untuk API Gateway MCloud (/api/*)
-    location /api/ {
-        proxy_pass http://127.0.0.1:3000/api/;
-        proxy_http_version 1.1;
-        
-        # Header standar untuk meneruskan IP asli pengguna ke backend
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        
-        # Pengaturan Timeout (Penting untuk proses eksekusi Docker yang memakan waktu)
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
-    }
+ # 3. Reverse Proxy untuk API Gateway MCloud (/api/*)
+ location /api/ {
+ proxy_pass http://127.0.0.1:3000/api/;
+ proxy_http_version 1.1;
+ 
+ # Header standar untuk meneruskan IP asli pengguna ke backend
+ proxy_set_header Host $host;
+ proxy_set_header X-Real-IP $remote_addr;
+ proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+ proxy_set_header X-Forwarded-Proto $scheme;
+ 
+ # Pengaturan Timeout (Penting untuk proses eksekusi Docker yang memakan waktu)
+ proxy_connect_timeout 60s;
+ proxy_send_timeout 60s;
+ proxy_read_timeout 60s;
+ }
 
-    # 4. Reverse Proxy Khusus untuk WebSocket Console Server Minecraft (/api/servers/console/*)
-    location /api/servers/console/ {
-        proxy_pass http://127.0.0.1:3000/api/servers/console/;
-        proxy_http_version 1.1;
-        
-        # Header wajib untuk Upgrade koneksi HTTP ke WebSocket
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "Upgrade";
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        
-        # Nonaktifkan timeout untuk koneksi terminal yang aktif lama
-        proxy_read_timeout 3600s;
-        proxy_send_timeout 3600s;
-    }
+ # 4. Reverse Proxy Khusus untuk WebSocket Console Server Minecraft (/api/servers/console/*)
+ location /api/servers/console/ {
+ proxy_pass http://127.0.0.1:3000/api/servers/console/;
+ proxy_http_version 1.1;
+ 
+ # Header wajib untuk Upgrade koneksi HTTP ke WebSocket
+ proxy_set_header Upgrade $http_upgrade;
+ proxy_set_header Connection "Upgrade";
+ proxy_set_header Host $host;
+ proxy_set_header X-Real-IP $remote_addr;
+ 
+ # Nonaktifkan timeout untuk koneksi terminal yang aktif lama
+ proxy_read_timeout 3600s;
+ proxy_send_timeout 3600s;
+ }
 }
 ```
 
@@ -382,8 +382,8 @@ sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 
 # 4. Izinkan Port Game Minecraft (Standar Java & Bedrock)
-sudo ufw allow 25565/tcp   # Minecraft Java Edition Default
-sudo ufw allow 19132/udp   # Minecraft Bedrock Edition Default
+sudo ufw allow 25565/tcp # Minecraft Java Edition Default
+sudo ufw allow 19132/udp # Minecraft Bedrock Edition Default
 
 # 5. Izinkan Rentang Port untuk Server Game Tambahan yang Dipesan Klien
 # Mengizinkan port 25500 sampai 25600 (TCP & UDP) untuk alokasi server dinamis
@@ -419,12 +419,12 @@ TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 mkdir -p "$BACKUP_DIR"
 
 # Salin dan kompres file SQLite
-if [ -f "$DB_FILE" ]; then
-    cp "$DB_FILE" "$BACKUP_DIR/sqlite_$TIMESTAMP.db"
-    gzip "$BACKUP_DIR/sqlite_$TIMESTAMP.db"
-    echo "[$(date)] Backup sukses: sqlite_$TIMESTAMP.db.gz"
+if [-f "$DB_FILE" ]; then
+ cp "$DB_FILE" "$BACKUP_DIR/sqlite_$TIMESTAMP.db"
+ gzip "$BACKUP_DIR/sqlite_$TIMESTAMP.db"
+ echo "[$(date)] Backup sukses: sqlite_$TIMESTAMP.db.gz"
 else
-    echo "[$(date)] Error: File database tidak ditemukan!"
+ echo "[$(date)] Error: File database tidak ditemukan!"
 fi
 
 # Hapus file backup yang lebih tua dari 14 hari
@@ -468,5 +468,5 @@ Berikut adalah cheat-sheet perintah yang paling sering digunakan oleh System Adm
 
 ---
 <div align="center">
-  <p><b>MCloud SaaS Platform &copy; 2026 — Built for High Performance Bedrock Gaming</b></p>
+ <p><b>MCloud SaaS Platform &copy; 2026 — Built for High Performance Bedrock Gaming</b></p>
 </div>

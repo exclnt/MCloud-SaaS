@@ -3,11 +3,11 @@ Fokus: Version Control, Conventional Commits, & Documentation.
 
 ## Aturan Komit (Conventional Commits):
 1. Selalu gunakan format: `<type>(<scope>): <subject>`
-   - `feat`: Fitur baru.
-   - `fix`: Perbaikan bug.
-   - `chore`: Update build/konfigurasi (misal: update package.json).
-   - `docs`: Perubahan pada file dokumentasi (docs/ folder).
-   - `refactor`: Perubahan kode tanpa menambah fitur/memperbaiki bug.
+ - `feat`: Fitur baru.
+ - `fix`: Perbaikan bug.
+ - `chore`: Update build/konfigurasi (misal: update package.json).
+ - `docs`: Perubahan pada file dokumentasi (docs/ folder).
+ - `refactor`: Perubahan kode tanpa menambah fitur/memperbaiki bug.
 
 ## Aturan Operasional:
 1. Sebelum `git commit`, pastikan kode sudah rapi dan tidak ada *unused variable*.
