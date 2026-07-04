@@ -3,350 +3,215 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MCloud SaaS • Next-Gen Minecraft Bedrock Hosting Platform &amp; Portfolio Showcase</title>
-  <meta name="description" content="An autonomous, ultra-fast Minecraft Bedrock Cloud Hosting platform built with Monorepo Microservices, Docker Engine, PM2 Cluster, and Midtrans Snap." />
+  <title>MCloud SaaS — Technical Documentation &amp; Architecture Reference</title>
+  <meta name="description" content="Technical documentation and architecture reference for MCloud SaaS, an automated Minecraft Bedrock cloud hosting platform." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Background Glow Effects -->
-  <div class="glow-blob blob-1"></div>
-  <div class="glow-blob blob-2"></div>
-  <div class="glow-blob blob-3"></div>
-
-  <!-- Navbar -->
-  <nav class="navbar">
+  <header class="top-nav">
     <div class="nav-container">
-      <div class="brand">
-        <span class="logo-icon">🎮</span>
-        <span class="logo-text">MCloud<span class="badge-saas">SaaS</span></span>
+      <div class="nav-brand">
+        <span class="brand-name">MCloud SaaS</span>
+        <span class="brand-badge">v1.5.0</span>
       </div>
-      <div class="nav-links">
-        <a href="#showcase">Portfolio Showcase</a>
-        <a href="#features">Key Features</a>
+      <nav class="nav-links">
+        <a href="#overview">Overview</a>
         <a href="#architecture">Architecture</a>
-        <a href="#docs">Documentation Hub</a>
-        <a href="#tech">Tech Stack</a>
-        <a href="https://github.com/exclnt/MCloud-SaaS" target="_blank" class="btn-nav">GitHub Repo</a>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Hero Section -->
-  <header class="hero">
-    <div class="hero-content">
-      <div class="badge-pill">
-        <span class="status-dot"></span> Release v1.5.0 • Production Ready &amp; Open Source
-      </div>
-      <h1>Next-Gen Autonomous <br /><span class="gradient-text">Minecraft Bedrock</span> Cloud Hosting</h1>
-      <p class="hero-tagline">
-        A turnkey Software-as-a-Service platform engineered for ultra-fast server provisioning (&lt; 3s boot), real-time Docker socket orchestration, PM2 cluster management, and instant Midtrans payment integration.
-      </p>
-      <div class="hero-actions">
-        <a href="#showcase" class="btn btn-primary">Explore Portfolio Showcase</a>
-        <a href="#docs" class="btn btn-secondary">Read Documentation</a>
-        <a href="https://github.com/exclnt/MCloud-SaaS" target="_blank" class="btn btn-outline">View Source Code</a>
-      </div>
-      <div class="hero-stats">
-        <div class="stat-item">
-          <span class="stat-value">&lt; 3s</span>
-          <span class="stat-label">Docker Boot Time</span>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-          <span class="stat-value">4</span>
-          <span class="stat-label">Core Microservices</span>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-          <span class="stat-value">100%</span>
-          <span class="stat-label">Automated Billing</span>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-          <span class="stat-value">v1.5.0</span>
-          <span class="stat-label">Stable Release</span>
-        </div>
-      </div>
+        <a href="#specifications">Specifications</a>
+        <a href="#documentation">Documentation Index</a>
+        <a href="https://ekoramadani.my.id" target="_blank" class="nav-link-portfolio">Creator Portfolio</a>
+        <a href="https://github.com/exclnt/MCloud-SaaS" target="_blank" class="nav-btn-github">GitHub Repository</a>
+      </nav>
     </div>
   </header>
 
-  <main class="container">
-    <!-- Portfolio Showcase Section -->
-    <section id="showcase" class="section">
-      <div class="section-header">
-        <span class="section-badge">PORTFOLIO HIGHLIGHT</span>
-        <h2>Designed for Visual Excellence &amp; User Wow</h2>
-        <p>Experience the sleek dark-mode glassmorphism interfaces built for gamers and system administrators.</p>
+  <main class="main-content">
+    <section id="overview" class="doc-section">
+      <div class="section-heading">
+        <h1>MCloud SaaS Technical Documentation</h1>
+        <p class="subtitle">
+          An automated, autonomous Minecraft Bedrock Edition cloud hosting and server provisioning platform built on a monorepo microservices architecture.
+        </p>
       </div>
 
-      <div class="showcase-grid">
-        <!-- Showcase Card 1 -->
-        <div class="showcase-card">
-          <div class="card-header">
-            <span class="dot red"></span>
-            <span class="dot yellow"></span>
-            <span class="dot green"></span>
-            <span class="card-title">Client Dashboard &amp; Instant Provisioning</span>
-          </div>
-          <div class="card-body mockup-client">
-            <div class="mock-sidebar">
-              <div class="mock-item active">🚀 My Servers</div>
-              <div class="mock-item">💳 Billing History</div>
-              <div class="mock-item">🎧 Support Tickets</div>
-            </div>
-            <div class="mock-content">
-              <div class="mock-banner">
-                <div>
-                  <h4>Bedrock Survival SMP #01</h4>
-                  <p class="sub-text">Status: <span class="badge-online">● Online (25565)</span> • RAM: 4096 MB</p>
-                </div>
-                <button class="mock-btn-action">Restart Server</button>
-              </div>
-              <div class="mock-console">
-                <p class="console-line">[12:04:15 INFO] Starting Minecraft Bedrock Server v1.21...</p>
-                <p class="console-line">[12:04:16 INFO] IPv4 supported, port: 19132</p>
-                <p class="console-line">[12:04:17 INFO] Server started successfully in 1.84 seconds!</p>
-                <p class="console-cursor">&gt; _</p>
-              </div>
-            </div>
-          </div>
-          <div class="card-footer">
-            <p><strong>Real-Time WebSocket Terminal</strong> — Gamers can execute console commands directly from their browser with zero latency.</p>
-          </div>
-        </div>
+      <div class="callout-box">
+        <strong>Executive Summary:</strong> MCloud SaaS provides one-click deployment of Minecraft Bedrock game server nodes. The platform integrates real-time payment verification via Midtrans Snap, automated container orchestration via native Docker Engine socket commands, and self-healing process management using PM2 cluster mode.
+      </div>
 
-        <!-- Showcase Card 2 -->
-        <div class="showcase-card">
-          <div class="card-header">
-            <span class="dot red"></span>
-            <span class="dot yellow"></span>
-            <span class="dot green"></span>
-            <span class="card-title">Automated Midtrans Payment Gateway</span>
-          </div>
-          <div class="card-body mockup-payment">
-            <div class="payment-box">
-              <div class="pay-header">
-                <span class="pay-logo">💸 Midtrans Snap</span>
-                <span class="pay-amount">Rp 75.000</span>
-              </div>
-              <div class="pay-methods">
-                <div class="method active">QRIS / GoPay Instant</div>
-                <div class="method">BCA Virtual Account</div>
-                <div class="method">Mandiri Bill Payment</div>
-              </div>
-              <div class="pay-qr">
-                <div class="qr-placeholder">
-                  <span>📱 Scan QRIS</span>
-                  <small>Auto-Verified Webhook</small>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="card-footer">
-            <p><strong>Zero-Touch Deployment</strong> — As soon as the webhook verifies payment, the Docker container spawns within 3 seconds.</p>
-          </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-number">&lt; 3.0s</span>
+          <span class="stat-label">Container Boot Time</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number">4</span>
+          <span class="stat-label">Isolated Microservices</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number">100%</span>
+          <span class="stat-label">Automated Provisioning</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number">MIT</span>
+          <span class="stat-label">Open Source License</span>
         </div>
       </div>
     </section>
 
-    <!-- Key Features Section -->
-    <section id="features" class="section">
-      <div class="section-header">
-        <span class="section-badge">SYSTEM CAPABILITIES</span>
-        <h2>Why MCloud SaaS Stands Out</h2>
-        <p>Engineered from the ground up for high concurrency, robust security, and seamless developer experience.</p>
+    <section id="architecture" class="doc-section">
+      <h2>System Architecture &amp; Data Flow</h2>
+      <p>
+        The platform separates core responsibilities across four independent Node.js microservices. External traffic is terminated by an Nginx reverse proxy using Let's Encrypt SSL certificates before routing to the internal API Gateway.
+      </p>
+
+      <div class="diagram-box">
+        <img src="architecture.svg" alt="MCloud SaaS Architecture Schematic" class="schematic-img" />
       </div>
 
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">⚡</div>
-          <h3>Ultra-Fast Provisioning</h3>
-          <p>Powered by native Docker Engine socket binding (`unix:///var/run/docker.sock`). New game nodes are provisioned with volume isolation and custom port mapping in under 3 seconds.</p>
+      <div class="service-table-wrapper">
+        <table class="service-table">
+          <thead>
+            <tr>
+              <th>Service Name</th>
+              <th>Internal Port</th>
+              <th>Core Responsibility</th>
+              <th>Key Technologies</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>API Gateway</strong></td>
+              <td><code>3000</code></td>
+              <td>Central request proxy, rate limiting, and WebSocket upgrade handling for live terminal logs.</td>
+              <td>Node.js HTTP, http-proxy, WS</td>
+            </tr>
+            <tr>
+              <td><strong>Auth Service</strong></td>
+              <td><code>3001</code></td>
+              <td>User authentication, JWT access token issuance, bcrypt password hashing, and role validation.</td>
+              <td>Drizzle ORM, SQLite, JWT, Bcrypt</td>
+            </tr>
+            <tr>
+              <td><strong>Payment Service</strong></td>
+              <td><code>3002</code></td>
+              <td>Midtrans Snap API integration, transaction invoice generation, and HTTP webhook notification handling.</td>
+              <td>Midtrans Client, Axios, Crypto</td>
+            </tr>
+            <tr>
+              <td><strong>Provisioning Service</strong></td>
+              <td><code>3003</code></td>
+              <td>Direct Docker Daemon communication, container volume binding, port allocation, and resource polling.</td>
+              <td>Docker Socket API, Child Process</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="specifications" class="doc-section">
+      <h2>Technical Specifications &amp; Design Standards</h2>
+      <p>
+        The software engineering decisions behind MCloud SaaS prioritize execution speed, minimal memory overhead, and operational reliability.
+      </p>
+
+      <div class="specs-grid">
+        <div class="spec-item">
+          <h3>Native HTTP Execution</h3>
+          <p>Microservices are implemented using native Node.js HTTP modules without heavy web frameworks. This reduces cold-start latency and minimizes memory footprint per service instance.</p>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">🔄</div>
-          <h3>PM2 Cluster Self-Healing</h3>
-          <p>Orchestrated by a custom PM2 ecosystem configuration. All 4 microservices feature automatic memory overload restart, unified error logging, and system startup persistence.</p>
+        <div class="spec-item">
+          <h3>PM2 Cluster Orchestration</h3>
+          <p>Process management is handled via an ecosystem configuration file with automatic memory limit restarts (`max_memory_restart`), structured error logs, and system startup persistence.</p>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">🛡️</div>
-          <h3>Enterprise Security</h3>
-          <p>Equipped with Let's Encrypt SSL/TLS reverse proxying, UFW firewall rules protecting internal service ports (3000-3003), and anti-DDoS game port allocation (25500:25600).</p>
+        <div class="spec-item">
+          <h3>Docker Volume Isolation</h3>
+          <p>Each Minecraft Bedrock server runs in a dedicated container bound to a persistent host storage directory (`/opt/mcloud/volumes/`). Network access is isolated to designated UDP game ports.</p>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">📊</div>
-          <h3>Interactive Admin Suite</h3>
-          <p>A comprehensive React 19 control panel featuring live polling of CPU/RAM stats, structured Support Ticket management, historical release Changelogs, and system FAQs.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">💾</div>
-          <h3>Automated Maintenance</h3>
-          <p>Includes automated nightly Linux cron jobs that compress and archive SQLite databases while pruning dangling Docker images to optimize NVMe SSD storage.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🧩</div>
-          <h3>Monorepo Architecture</h3>
-          <p>Clean separation of concerns with dedicated apps for Gateway, Auth, Payment, and Provisioning, sharing common validation types and Drizzle ORM database schemas.</p>
+        <div class="spec-item">
+          <h3>Database Persistence</h3>
+          <p>Data relational modeling is executed through Drizzle ORM paired with SQLite. This eliminates database server network overhead while providing type-safe query execution.</p>
         </div>
       </div>
     </section>
 
-    <!-- Architecture Section -->
-    <section id="architecture" class="section">
-      <div class="section-header">
-        <span class="section-badge">TECHNICAL DESIGN</span>
-        <h2>Microservices &amp; Infrastructure Flow</h2>
-        <p>How our Nginx Reverse Proxy, PM2 Cluster, and Docker Engine collaborate in production.</p>
-      </div>
+    <section id="documentation" class="doc-section">
+      <h2>Documentation Index</h2>
+      <p>
+        Access complete deployment instructions, developer reference guides, and project roadmaps directly from our open-source documentation repositories.
+      </p>
 
-      <div class="architecture-container">
-        <div class="svg-wrapper">
-          <img src="architecture.svg" alt="MCloud SaaS Microservices Architecture Diagram" class="arch-img" />
-        </div>
-        <div class="arch-details">
-          <div class="arch-item">
-            <h4>🌐 API Gateway (Port 3000)</h4>
-            <p>The central entry point handling rate limiting, request validation, and WebSocket upgrades for live terminal streaming.</p>
+      <div class="doc-list">
+        <a href="https://github.com/exclnt/MCloud-SaaS/blob/main/docs/PRODUCTION_SETUP.md" target="_blank" class="doc-item">
+          <div class="doc-item-left">
+            <span class="doc-category">Production Guide</span>
+            <h4>Production Setup &amp; VPS Deployment Guide</h4>
+            <p>Complete guide for deploying on Ubuntu/Debian Linux, including Nginx reverse proxy configuration, Let's Encrypt SSL, PM2 cluster setup, Midtrans production keys, and UFW firewall rules.</p>
           </div>
-          <div class="arch-item">
-            <h4>🔐 Auth Service (Port 3001)</h4>
-            <p>Manages stateless JWT authentication, secure bcrypt password hashing, and user role authorization (Admin vs Client).</p>
-          </div>
-          <div class="arch-item">
-            <h4>💳 Payment Service (Port 3002)</h4>
-            <p>Directly interfaces with Midtrans Snap API (Production &amp; Sandbox) and processes real-time HTTP notification webhooks.</p>
-          </div>
-          <div class="arch-item">
-            <h4>🐳 Provisioning Service (Port 3003)</h4>
-            <p>Executes commands against the local Docker Daemon to create, start, stop, restart, and delete Minecraft server containers.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Documentation Hub Section -->
-    <section id="docs" class="section">
-      <div class="section-header">
-        <span class="section-badge">KNOWLEDGE BASE</span>
-        <h2>Structured Documentation Hub</h2>
-        <p>Comprehensive guides and technical documentation available directly in our open-source repository.</p>
-      </div>
-
-      <div class="docs-grid">
-        <a href="https://github.com/exclnt/MCloud-SaaS/blob/main/docs/PRODUCTION_SETUP.md" target="_blank" class="doc-card featured">
-          <div class="doc-icon">🛡️</div>
-          <div class="doc-content">
-            <span class="doc-tag">MOST POPULAR • OFFICIAL GUIDE</span>
-            <h3>Production Deployment Guide</h3>
-            <p>Step-by-step instructions for deploying on VPS/Cloud (Ubuntu/Debian) with Nginx SSL, Let's Encrypt Certbot, PM2 Cluster, Midtrans Production keys, and UFW firewall rules.</p>
-          </div>
-          <span class="doc-arrow">&rarr;</span>
+          <span class="doc-link-label">View Guide &rarr;</span>
         </a>
 
-        <a href="https://github.com/exclnt/MCloud-SaaS/blob/main/docs/SETUP.md" target="_blank" class="doc-card">
-          <div class="doc-icon">🔧</div>
-          <div class="doc-content">
-            <span class="doc-tag">LOCAL DEVELOPMENT</span>
-            <h3>Local Setup &amp; Installation Guide</h3>
-            <p>Everything you need to configure your `.env` file, initialize the SQLite database with Drizzle ORM, and run the Vite dev server locally.</p>
+        <a href="https://github.com/exclnt/MCloud-SaaS/blob/main/docs/SETUP.md" target="_blank" class="doc-item">
+          <div class="doc-item-left">
+            <span class="doc-category">Development Guide</span>
+            <h4>Local Setup &amp; Installation Reference</h4>
+            <p>Instructions for configuring local environment variables, initializing the SQLite database with Drizzle ORM migrations, and launching the Vite development server.</p>
           </div>
-          <span class="doc-arrow">&rarr;</span>
+          <span class="doc-link-label">View Guide &rarr;</span>
         </a>
 
-        <a href="https://github.com/exclnt/MCloud-SaaS/blob/main/docs/STRUKTURE_PROJEK.md" target="_blank" class="doc-card">
-          <div class="doc-icon">📂</div>
-          <div class="doc-content">
-            <span class="doc-tag">ARCHITECTURE MAP</span>
-            <h3>Directory Structure &amp; Code Map</h3>
-            <p>Detailed breakdown of the monorepo workspace, package dependencies, and file mapping across all 4 microservices.</p>
+        <a href="https://github.com/exclnt/MCloud-SaaS/blob/main/docs/STRUKTURE_PROJEK.md" target="_blank" class="doc-item">
+          <div class="doc-item-left">
+            <span class="doc-category">Architecture Map</span>
+            <h4>Monorepo Directory Structure &amp; Code Map</h4>
+            <p>Detailed documentation of the monorepo workspace structure, internal package dependencies, and file organization across all frontend and backend services.</p>
           </div>
-          <span class="doc-arrow">&rarr;</span>
+          <span class="doc-link-label">View Guide &rarr;</span>
         </a>
 
-        <a href="https://github.com/exclnt/MCloud-SaaS/blob/main/docs/PRD.md" target="_blank" class="doc-card">
-          <div class="doc-icon">📄</div>
-          <div class="doc-content">
-            <span class="doc-tag">PRODUCT SPECS</span>
-            <h3>Product Requirement Document (PRD)</h3>
-            <p>Deep dive into the target audience, user personas, monetization models, and end-to-end product user flows.</p>
+        <a href="https://github.com/exclnt/MCloud-SaaS/blob/main/docs/PRD.md" target="_blank" class="doc-item">
+          <div class="doc-item-left">
+            <span class="doc-category">Product Specification</span>
+            <h4>Product Requirement Document (PRD)</h4>
+            <p>Comprehensive overview of target personas, functional requirements, payment processing workflows, and system boundary specifications.</p>
           </div>
-          <span class="doc-arrow">&rarr;</span>
+          <span class="doc-link-label">View Guide &rarr;</span>
         </a>
 
-        <a href="https://github.com/exclnt/MCloud-SaaS/blob/main/docs/TODO_SDLC.md" target="_blank" class="doc-card">
-          <div class="doc-icon">✅</div>
-          <div class="doc-content">
-            <span class="doc-tag">ROADMAP</span>
-            <h3>SDLC Roadmap &amp; Checklist</h3>
-            <p>Track historical release tags from v1.0.0 through v1.5.0, current sprint accomplishments, and upcoming future enhancements.</p>
+        <a href="https://github.com/exclnt/MCloud-SaaS/blob/main/docs/TODO_SDLC.md" target="_blank" class="doc-item">
+          <div class="doc-item-left">
+            <span class="doc-category">Project Roadmap</span>
+            <h4>SDLC Roadmap &amp; Feature Checklist</h4>
+            <p>Historical changelog tracking release milestones from v1.0.0 to v1.5.0, active maintenance checklists, and planned future enhancements.</p>
           </div>
-          <span class="doc-arrow">&rarr;</span>
+          <span class="doc-link-label">View Guide &rarr;</span>
         </a>
 
-        <a href="https://github.com/exclnt/MCloud-SaaS/blob/main/CONTRIBUTING.md" target="_blank" class="doc-card">
-          <div class="doc-icon">🤝</div>
-          <div class="doc-content">
-            <span class="doc-tag">COMMUNITY</span>
-            <h3>Contributing Guidelines</h3>
-            <p>Learn how to fork the repo, format commit messages using Conventional Commits, and submit pull requests.</p>
+        <a href="https://github.com/exclnt/MCloud-SaaS/blob/main/CONTRIBUTING.md" target="_blank" class="doc-item">
+          <div class="doc-item-left">
+            <span class="doc-category">Community Standards</span>
+            <h4>Contributing Guidelines</h4>
+            <p>Standard operating procedures for contributing code, formatting commit messages using Conventional Commits, and submitting pull requests.</p>
           </div>
-          <span class="doc-arrow">&rarr;</span>
+          <span class="doc-link-label">View Guide &rarr;</span>
         </a>
-      </div>
-    </section>
-
-    <!-- Tech Stack Section -->
-    <section id="tech" class="section">
-      <div class="section-header">
-        <span class="section-badge">POWERED BY</span>
-        <h2>Modern Technology Stack</h2>
-        <p>We leverage industry-standard, lightweight, and ultra-reliable open-source technologies.</p>
-      </div>
-
-      <div class="tech-badges">
-        <div class="tech-badge"><span class="t-icon">⚛️</span> React 19</div>
-        <div class="tech-badge"><span class="t-icon">⚡</span> Vite</div>
-        <div class="tech-badge"><span class="t-icon">🟢</span> Node.js 20 LTS</div>
-        <div class="tech-badge"><span class="t-icon">🐳</span> Docker Engine</div>
-        <div class="tech-badge"><span class="t-icon">🚀</span> PM2 Cluster</div>
-        <div class="tech-badge"><span class="t-icon">🗄️</span> SQLite &amp; Drizzle ORM</div>
-        <div class="tech-badge"><span class="t-icon">🛡️</span> Nginx &amp; Certbot SSL</div>
-        <div class="tech-badge"><span class="t-icon">💸</span> Midtrans Snap API</div>
-        <div class="tech-badge"><span class="t-icon">🔒</span> JSON Web Tokens (JWT)</div>
-        <div class="tech-badge"><span class="t-icon">🎨</span> Vanilla CSS Glassmorphism</div>
-      </div>
-    </section>
-
-    <!-- CTA Section -->
-    <section class="cta-banner">
-      <div class="cta-content">
-        <h2>Ready to Deploy Your Own Minecraft Cloud SaaS?</h2>
-        <p>Clone the repository, configure your environment, and launch a production-grade hosting service in minutes.</p>
-        <div class="cta-buttons">
-          <a href="https://github.com/exclnt/MCloud-SaaS" target="_blank" class="btn btn-primary btn-large">Clone Repository on GitHub</a>
-          <a href="https://github.com/exclnt/MCloud-SaaS/blob/main/docs/PRODUCTION_SETUP.md" target="_blank" class="btn btn-outline btn-large">View Setup Guide</a>
-        </div>
       </div>
     </section>
   </main>
 
-  <footer class="footer">
+  <footer class="site-footer">
     <div class="footer-container">
-      <div class="footer-left">
-        <span class="logo-text">MCloud<span class="badge-saas">SaaS</span></span>
-        <p>Engineered with ❤️ for the Indonesian Minecraft Bedrock community.</p>
+      <div class="footer-info">
+        <p><strong>MCloud SaaS Project Documentation</strong></p>
+        <p class="copyright">Copyright &copy; 2026 Eko Ramadani. Licensed under the MIT License.</p>
       </div>
-      <div class="footer-right">
-        <a href="https://github.com/exclnt/MCloud-SaaS" target="_blank">GitHub</a>
-        <a href="https://github.com/exclnt/MCloud-SaaS/blob/main/LICENSE" target="_blank">MIT License</a>
-        <a href="https://github.com/exclnt/MCloud-SaaS/blob/main/CONTRIBUTING.md" target="_blank">Contribute</a>
+      <div class="footer-links">
+        <a href="https://ekoramadani.my.id" target="_blank" class="footer-link-portfolio">Creator Portfolio</a>
+        <a href="https://github.com/exclnt/MCloud-SaaS" target="_blank">GitHub Repository</a>
+        <a href="https://github.com/exclnt/MCloud-SaaS/blob/main/LICENSE" target="_blank">License Terms</a>
       </div>
-    </div>
-    <div class="footer-bottom">
-      <p>&copy; 2026 Eko Ramadani / Shinomiya — Open Source Project under MIT License.</p>
     </div>
   </footer>
 
