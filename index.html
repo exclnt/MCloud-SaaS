@@ -13,16 +13,24 @@
 <body>
   <header class="top-nav">
     <div class="nav-container">
-      <div class="nav-brand">
-        <span class="brand-name">MCloud SaaS</span>
-        <span class="brand-badge">v1.6.0</span>
+      <div class="nav-header">
+        <div class="nav-brand">
+          <span class="brand-name">MCloud SaaS</span>
+          <span class="brand-badge">v1.6.0</span>
+        </div>
+        <button id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+          <span class="toggle-bar"></span>
+          <span class="toggle-bar"></span>
+          <span class="toggle-bar"></span>
+        </button>
       </div>
-      <nav class="nav-links">
+      <nav id="nav-links" class="nav-links">
         <a href="#overview">Overview</a>
+        <a href="#ui-showcase">UI Showcase</a>
         <a href="#architecture">Architecture</a>
         <a href="#specifications">Specifications</a>
-        <a href="#releases">Releases</a>
         <a href="#documentation">Documentation Index</a>
+        <a href="#releases">Releases</a>
         <a href="https://ekoramadani.my.id" target="_blank" class="nav-link-portfolio">Creator Portfolio</a>
         <a href="https://github.com/exclnt/MCloud-SaaS" target="_blank" class="nav-btn-github">GitHub Repository</a>
       </nav>
@@ -62,6 +70,317 @@
         <div class="stat-card">
           <span class="stat-number">v1.6.0</span>
           <span class="stat-label">Latest Release</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="ui-showcase" class="doc-section">
+      <h2>User Interface Reference &amp; Screen Catalog</h2>
+      <p>
+        A comprehensive visual reference gallery of the MCloud SaaS platform across all user personas, from public storefronts and client provisioning consoles to executive administrative controls. Click any card to inspect the screenshot in high resolution.
+      </p>
+
+      <div class="gallery-filters">
+        <button class="filter-btn active" data-filter="all">All Screens (21)</button>
+        <button class="filter-btn" data-filter="public">Public &amp; Auth (4)</button>
+        <button class="filter-btn" data-filter="client">Client Panel (5)</button>
+        <button class="filter-btn" data-filter="admin">Admin Portal (8)</button>
+        <button class="filter-btn" data-filter="support">Help &amp; Support (4)</button>
+      </div>
+
+      <div class="gallery-grid" id="gallery-grid">
+        <div class="gallery-card" data-category="public" data-badge="Public &amp; Auth" data-title="Main Storefront Landing Page" data-src="docs/screen/landing-page.png" data-desc="High-conversion public storefront highlighting automated Bedrock server hosting, key platform metrics, and pricing tiers.">
+          <div class="card-img-wrapper">
+            <img src="docs/screen/landing-page.png" alt="Main Storefront Landing Page" loading="lazy" />
+            <span class="card-badge">Public &amp; Auth</span>
+          </div>
+          <div class="card-content">
+            <h3>Main Storefront Landing Page</h3>
+            <p>High-conversion public storefront highlighting automated Bedrock server hosting, key platform metrics, and pricing tiers.</p>
+            <div class="card-footer">
+              <span class="card-action">View Fullscreen &rarr;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="gallery-card" data-category="public" data-badge="Public &amp; Auth" data-title="Public Community Server Catalog" data-src="docs/screen/landingpage-serverlist.png" data-desc="Live public directory displaying active community game servers hosted on MCloud SaaS with real-time status indicators.">
+          <div class="card-img-wrapper">
+            <img src="docs/screen/landingpage-serverlist.png" alt="Public Community Server Catalog" loading="lazy" />
+            <span class="card-badge">Public &amp; Auth</span>
+          </div>
+          <div class="card-content">
+            <h3>Public Community Server Catalog</h3>
+            <p>Live public directory displaying active community game servers hosted on MCloud SaaS with real-time status indicators.</p>
+            <div class="card-footer">
+              <span class="card-action">View Fullscreen &rarr;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="gallery-card" data-category="public" data-badge="Public &amp; Auth" data-title="User Authentication Portal" data-src="docs/screen/login-page.png" data-desc="Secure login interface supporting email and password authentication with encrypted JWT session token issuance.">
+          <div class="card-img-wrapper">
+            <img src="docs/screen/login-page.png" alt="User Authentication Portal" loading="lazy" />
+            <span class="card-badge">Public &amp; Auth</span>
+          </div>
+          <div class="card-content">
+            <h3>User Authentication Portal</h3>
+            <p>Secure login interface supporting email and password authentication with encrypted JWT session token issuance.</p>
+            <div class="card-footer">
+              <span class="card-action">View Fullscreen &rarr;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="gallery-card" data-category="public" data-badge="Public &amp; Auth" data-title="Account Registration Portal" data-src="docs/screen/register-page.png" data-desc="New user onboarding interface with instant tenant workspace creation and credential validation.">
+          <div class="card-img-wrapper">
+            <img src="docs/screen/register-page.png" alt="Account Registration Portal" loading="lazy" />
+            <span class="card-badge">Public &amp; Auth</span>
+          </div>
+          <div class="card-content">
+            <h3>Account Registration Portal</h3>
+            <p>New user onboarding interface with instant tenant workspace creation and credential validation.</p>
+            <div class="card-footer">
+              <span class="card-action">View Fullscreen &rarr;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="gallery-card" data-category="client" data-badge="Client Panel" data-title="Client Server Directory" data-src="docs/screen/user-serverlist.png" data-desc="Central client dashboard to manage, monitor, and deploy Minecraft Bedrock game server instances.">
+          <div class="card-img-wrapper">
+            <img src="docs/screen/user-serverlist.png" alt="Client Server Directory" loading="lazy" />
+            <span class="card-badge">Client Panel</span>
+          </div>
+          <div class="card-content">
+            <h3>Client Server Directory</h3>
+            <p>Central client dashboard to manage, monitor, and deploy Minecraft Bedrock game server instances.</p>
+            <div class="card-footer">
+              <span class="card-action">View Fullscreen &rarr;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="gallery-card" data-category="client" data-badge="Client Panel" data-title="Server Overview &amp; Telemetry" data-src="docs/screen/user-serveroverview.png" data-desc="Real-time metrics dashboard showing container CPU, RAM utilization, uptime statistics, and quick power lifecycle controls.">
+          <div class="card-img-wrapper">
+            <img src="docs/screen/user-serveroverview.png" alt="Server Overview &amp; Telemetry" loading="lazy" />
+            <span class="card-badge">Client Panel</span>
+          </div>
+          <div class="card-content">
+            <h3>Server Overview &amp; Telemetry</h3>
+            <p>Real-time metrics dashboard showing container CPU, RAM utilization, uptime statistics, and quick power lifecycle controls.</p>
+            <div class="card-footer">
+              <span class="card-action">View Fullscreen &rarr;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="gallery-card" data-category="client" data-badge="Client Panel" data-title="Live Terminal Console" data-src="docs/screen/user-serverconsole.png" data-desc="Interactive WebSocket-streamed terminal console for monitoring real-time game server logs and sending commands.">
+          <div class="card-img-wrapper">
+            <img src="docs/screen/user-serverconsole.png" alt="Live Terminal Console" loading="lazy" />
+            <span class="card-badge">Client Panel</span>
+          </div>
+          <div class="card-content">
+            <h3>Live Terminal Console</h3>
+            <p>Interactive WebSocket-streamed terminal console for monitoring real-time game server logs and sending commands.</p>
+            <div class="card-footer">
+              <span class="card-action">View Fullscreen &rarr;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="gallery-card" data-category="client" data-badge="Client Panel" data-title="Instance Configuration Settings" data-src="docs/screen/user-serversetting.png" data-desc="Granular instance settings including server properties, environment variables, port allocations, and resource limits.">
+          <div class="card-img-wrapper">
+            <img src="docs/screen/user-serversetting.png" alt="Instance Configuration Settings" loading="lazy" />
+            <span class="card-badge">Client Panel</span>
+          </div>
+          <div class="card-content">
+            <h3>Instance Configuration Settings</h3>
+            <p>Granular instance settings including server properties, environment variables, port allocations, and resource limits.</p>
+            <div class="card-footer">
+              <span class="card-action">View Fullscreen &rarr;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="gallery-card" data-category="client" data-badge="Client Panel" data-title="Account &amp; Profile Settings" data-src="docs/screen/user-profile.png" data-desc="User profile management, security credential updates, active session tracking, and notification preferences.">
+          <div class="card-img-wrapper">
+            <img src="docs/screen/user-profile.png" alt="Account &amp; Profile Settings" loading="lazy" />
+            <span class="card-badge">Client Panel</span>
+          </div>
+          <div class="card-content">
+            <h3>Account &amp; Profile Settings</h3>
+            <p>User profile management, security credential updates, active session tracking, and notification preferences.</p>
+            <div class="card-footer">
+              <span class="card-action">View Fullscreen &rarr;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="gallery-card" data-category="admin" data-badge="Admin Portal" data-title="Executive Admin Dashboard" data-src="docs/screen/admin-overview.png" data-desc="System-wide telemetry, revenue analytics, host resource consumption, and global platform health indicators.">
+          <div class="card-img-wrapper">
+            <img src="docs/screen/admin-overview.png" alt="Executive Admin Dashboard" loading="lazy" />
+            <span class="card-badge">Admin Portal</span>
+          </div>
+          <div class="card-content">
+            <h3>Executive Admin Dashboard</h3>
+            <p>System-wide telemetry, revenue analytics, host resource consumption, and global platform health indicators.</p>
+            <div class="card-footer">
+              <span class="card-action">View Fullscreen &rarr;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="gallery-card" data-category="admin" data-badge="Admin Portal" data-title="Global Provisioning Control" data-src="docs/screen/admin-serverlist.png" data-desc="Administrative oversight of all tenant containers across Docker host nodes with emergency lifecycle overrides.">
+          <div class="card-img-wrapper">
+            <img src="docs/screen/admin-serverlist.png" alt="Global Provisioning Control" loading="lazy" />
+            <span class="card-badge">Admin Portal</span>
+          </div>
+          <div class="card-content">
+            <h3>Global Provisioning Control</h3>
+            <p>Administrative oversight of all tenant containers across Docker host nodes with emergency lifecycle overrides.</p>
+            <div class="card-footer">
+              <span class="card-action">View Fullscreen &rarr;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="gallery-card" data-category="admin" data-badge="Admin Portal" data-title="Registered User Management" data-src="docs/screen/admin-userlist.png" data-desc="Comprehensive user account directory with role assignment, status toggling, and tenant usage inspection.">
+          <div class="card-img-wrapper">
+            <img src="docs/screen/admin-userlist.png" alt="Registered User Management" loading="lazy" />
+            <span class="card-badge">Admin Portal</span>
+          </div>
+          <div class="card-content">
+            <h3>Registered User Management</h3>
+            <p>Comprehensive user account directory with role assignment, status toggling, and tenant usage inspection.</p>
+            <div class="card-footer">
+              <span class="card-action">View Fullscreen &rarr;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="gallery-card" data-category="admin" data-badge="Admin Portal" data-title="Financial Transactions &amp; Billing" data-src="docs/screen/admin-transaction.png" data-desc="Real-time invoice tracking, Midtrans Snap payment verification logs, and historical revenue reporting.">
+          <div class="card-img-wrapper">
+            <img src="docs/screen/admin-transaction.png" alt="Financial Transactions &amp; Billing" loading="lazy" />
+            <span class="card-badge">Admin Portal</span>
+          </div>
+          <div class="card-content">
+            <h3>Financial Transactions &amp; Billing</h3>
+            <p>Real-time invoice tracking, Midtrans Snap payment verification logs, and historical revenue reporting.</p>
+            <div class="card-footer">
+              <span class="card-action">View Fullscreen &rarr;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="gallery-card" data-category="admin" data-badge="Admin Portal" data-title="Subscription Plan Configuration" data-src="docs/screen/admin-pricelist.png" data-desc="Management of server hosting tiers, memory limits, CPU quotas, storage quotas, and billing models.">
+          <div class="card-img-wrapper">
+            <img src="docs/screen/admin-pricelist.png" alt="Subscription Plan Configuration" loading="lazy" />
+            <span class="card-badge">Admin Portal</span>
+          </div>
+          <div class="card-content">
+            <h3>Subscription Plan Configuration</h3>
+            <p>Management of server hosting tiers, memory limits, CPU quotas, storage quotas, and billing models.</p>
+            <div class="card-footer">
+              <span class="card-action">View Fullscreen &rarr;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="gallery-card" data-category="admin" data-badge="Admin Portal" data-title="Support Ticket Administration" data-src="docs/screen/admin-ticket.png" data-desc="Centralized administrative helpdesk for resolving client inquiries, technical support tickets, and billing requests.">
+          <div class="card-img-wrapper">
+            <img src="docs/screen/admin-ticket.png" alt="Support Ticket Administration" loading="lazy" />
+            <span class="card-badge">Admin Portal</span>
+          </div>
+          <div class="card-content">
+            <h3>Support Ticket Administration</h3>
+            <p>Centralized administrative helpdesk for resolving client inquiries, technical support tickets, and billing requests.</p>
+            <div class="card-footer">
+              <span class="card-action">View Fullscreen &rarr;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="gallery-card" data-category="admin" data-badge="Admin Portal" data-title="Platform System Configuration" data-src="docs/screen/admin-setting.png" data-desc="Global application variables, SMTP server configurations, Midtrans API credentials, and maintenance mode controls.">
+          <div class="card-img-wrapper">
+            <img src="docs/screen/admin-setting.png" alt="Platform System Configuration" loading="lazy" />
+            <span class="card-badge">Admin Portal</span>
+          </div>
+          <div class="card-content">
+            <h3>Platform System Configuration</h3>
+            <p>Global application variables, SMTP server configurations, Midtrans API credentials, and maintenance mode controls.</p>
+            <div class="card-footer">
+              <span class="card-action">View Fullscreen &rarr;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="gallery-card" data-category="admin" data-badge="Admin Portal" data-title="Audit &amp; System Activity Logs" data-src="docs/screen/admin-log.png" data-desc="Detailed diagnostic logging and audit trails tracking administrative actions, container events, and system errors.">
+          <div class="card-img-wrapper">
+            <img src="docs/screen/admin-log.png" alt="Audit &amp; System Activity Logs" loading="lazy" />
+            <span class="card-badge">Admin Portal</span>
+          </div>
+          <div class="card-content">
+            <h3>Audit &amp; System Activity Logs</h3>
+            <p>Detailed diagnostic logging and audit trails tracking administrative actions, container events, and system errors.</p>
+            <div class="card-footer">
+              <span class="card-action">View Fullscreen &rarr;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="gallery-card" data-category="support" data-badge="Help Center" data-title="Live Support Ticket Chat" data-src="docs/screen/ticket-chat.png" data-desc="Interactive real-time ticketing interface enabling seamless messaging and issue resolution between clients and support staff.">
+          <div class="card-img-wrapper">
+            <img src="docs/screen/ticket-chat.png" alt="Live Support Ticket Chat" loading="lazy" />
+            <span class="card-badge">Help Center</span>
+          </div>
+          <div class="card-content">
+            <h3>Live Support Ticket Chat</h3>
+            <p>Interactive real-time ticketing interface enabling seamless messaging and issue resolution between clients and support staff.</p>
+            <div class="card-footer">
+              <span class="card-action">View Fullscreen &rarr;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="gallery-card" data-category="support" data-badge="Help Center" data-title="Interactive Knowledge Base" data-src="docs/screen/dokumentasi.png" data-desc="User-facing technical documentation center with step-by-step deployment guides, server rules, and platform tutorials.">
+          <div class="card-img-wrapper">
+            <img src="docs/screen/dokumentasi.png" alt="Interactive Knowledge Base" loading="lazy" />
+            <span class="card-badge">Help Center</span>
+          </div>
+          <div class="card-content">
+            <h3>Interactive Knowledge Base</h3>
+            <p>User-facing technical documentation center with step-by-step deployment guides, server rules, and platform tutorials.</p>
+            <div class="card-footer">
+              <span class="card-action">View Fullscreen &rarr;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="gallery-card" data-category="support" data-badge="Help Center" data-title="Frequently Asked Questions" data-src="docs/screen/faq.png" data-desc="Curated repository of common client inquiries, troubleshooting workflows, network guides, and billing explanations.">
+          <div class="card-img-wrapper">
+            <img src="docs/screen/faq.png" alt="Frequently Asked Questions" loading="lazy" />
+            <span class="card-badge">Help Center</span>
+          </div>
+          <div class="card-content">
+            <h3>Frequently Asked Questions</h3>
+            <p>Curated repository of common client inquiries, troubleshooting workflows, network guides, and billing explanations.</p>
+            <div class="card-footer">
+              <span class="card-action">View Fullscreen &rarr;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="gallery-card" data-category="support" data-badge="Help Center" data-title="Platform Release Changelog" data-src="docs/screen/changelog.png" data-desc="Public timeline of system updates, new feature releases, performance optimizations, and infrastructure enhancements.">
+          <div class="card-img-wrapper">
+            <img src="docs/screen/changelog.png" alt="Platform Release Changelog" loading="lazy" />
+            <span class="card-badge">Help Center</span>
+          </div>
+          <div class="card-content">
+            <h3>Platform Release Changelog</h3>
+            <p>Public timeline of system updates, new feature releases, performance optimizations, and infrastructure enhancements.</p>
+            <div class="card-footer">
+              <span class="card-action">View Fullscreen &rarr;</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -284,6 +603,31 @@
       </div>
     </div>
   </footer>
+
+  <!-- Lightbox Modal -->
+  <div id="lightbox-modal" class="lightbox-modal" aria-hidden="true">
+    <div class="lightbox-backdrop" id="lightbox-backdrop"></div>
+    <div class="lightbox-container">
+      <div class="lightbox-header">
+        <div class="lightbox-title-area">
+          <span id="lightbox-badge" class="card-badge">Public &amp; Auth</span>
+          <h3 id="lightbox-title">Screenshot Title</h3>
+        </div>
+        <button id="lightbox-close" class="lightbox-btn" aria-label="Close modal">Close &times;</button>
+      </div>
+      <div class="lightbox-body">
+        <button id="lightbox-prev" class="lightbox-nav-btn prev-btn" aria-label="Previous screenshot">&larr;</button>
+        <div class="lightbox-img-wrapper">
+          <img id="lightbox-img" src="" alt="Fullscreen UI Preview" />
+        </div>
+        <button id="lightbox-next" class="lightbox-nav-btn next-btn" aria-label="Next screenshot">&rarr;</button>
+      </div>
+      <div class="lightbox-footer">
+        <p id="lightbox-desc">Description goes here.</p>
+        <span id="lightbox-counter" class="lightbox-counter">1 / 21</span>
+      </div>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>
