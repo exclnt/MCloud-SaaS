@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
-import { eq } from 'drizzle-orm';
+import { eq, or } from 'drizzle-orm';
 import { db } from '../../../database/db.js';
 import { users, activity_logs, transactions, servers, settings } from '../../../database/schema.js';
 import { parseJSON } from './utils/parser.js';
@@ -90,7 +90,7 @@ const server = http.createServer(async (req, res) => {
       const body = await parseJSON(req);
       const { username, password } = body;
 
-      const user = db.select().from(users).where(eq(users.username, username)).get();
+      const user = db.select().from(users).where(or(eq(users.username, username), eq(users.email, username))).get();
       if (!user) {
         res.statusCode = 401;
         return res.end(JSON.stringify({ error: 'Invalid credentials' }));

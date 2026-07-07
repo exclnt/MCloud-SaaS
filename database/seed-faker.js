@@ -69,8 +69,8 @@ async function seed() {
   // 2. Ensure Admin User
   console.log('👑 Memeriksa Akun Administrator...');
   let adminUser = db.select().from(users).where(eq(users.role, 'admin')).get();
+  const adminPasswordHash = bcrypt.hashSync('0987654321', 10);
   if (!adminUser) {
-    const adminPasswordHash = bcrypt.hashSync('admin123', 10);
     const res = db.insert(users).values({
       email: 'admin@mcloud.id',
       username: 'admin',
@@ -79,9 +79,10 @@ async function seed() {
       createdAt: new Date(),
     }).run();
     adminUser = db.select().from(users).where(eq(users.id, res.lastInsertRowid)).get();
-    console.log('   ✅ Akun Admin baru dibuat (username: admin, password: admin123)');
+    console.log('   ✅ Akun Admin baru dibuat (username: admin, password: 0987654321)');
   } else {
-    console.log(`   ✅ Akun Admin tersedia (username: ${adminUser.username})`);
+    db.update(users).set({ password: adminPasswordHash, role: 'admin' }).where(eq(users.id, adminUser.id)).run();
+    console.log(`   ✅ Akun Admin tersedia dan password diatur ke 0987654321 (username: ${adminUser.username})`);
   }
 
   // 3. Generate Users
