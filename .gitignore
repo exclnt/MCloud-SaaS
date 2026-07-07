@@ -3,3 +3,4 @@ node_modules/
 tmp/
 /logs
 /wiki
+sqlite.db
